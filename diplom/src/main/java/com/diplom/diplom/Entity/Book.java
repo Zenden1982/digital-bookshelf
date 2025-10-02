@@ -1,30 +1,26 @@
 package com.diplom.diplom.Entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.validator.constraints.URL;
 import org.springframework.data.annotation.CreatedDate;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+@Data
 @Table(name = "books")
 public class Book {
 
@@ -50,21 +46,19 @@ public class Book {
 
     private LocalDateTime publishedDate;
 
+    private Boolean isAdded;
     @URL
     private String coverUrl;
-
-    @NotNull(message = "Статус книги не может быть пустым")
-    private Status status;
-
-    @Min(value = 0, message = "Прогресс не может быть отрицательным")
-    @Max(value = 100, message = "Прогресс не может быть больше 100")
-    private Integer progress;
-
-    @Min(value = 0, message = "Рейтинг должен быть от 0 до 5")
-    @Max(value = 5, message = "Рейтинг должен быть от 0 до 5")
-    private Integer rating;
 
     @CreatedDate
     private LocalDateTime addedAt;
 
+    @OneToMany(mappedBy = "book")
+    private List<ShelfItem> shelfItems = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "book")
+    private List<UserBook> userBooks = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Note> notes = new java.util.ArrayList<>();
 }

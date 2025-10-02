@@ -1,15 +1,19 @@
 package com.diplom.diplom.Entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,17 +32,25 @@ public class UserBook {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
-    private Long bookId;
-    private Integer progress; // Progress in percentage (0-100)
-    private Status status; // e.g., PLAN_TO_READ, READING, COMPLETED,
-    private Integer rating; // User's rating for the book (1-5)
-    private List<Note> notes; // User's personal notes about the book
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "book_id")
+    private Book book;
+
+    private Integer progress;
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
+    private Integer rating;
+    // private List<Note> notes;
 
     @CreatedDate
-    private LocalDateTime addedAt; // Timestamp when the book was added to the user's list
+    private LocalDateTime addedAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt; // Timestamp of the last update to this entry
+    private LocalDateTime updatedAt;
 
 }
