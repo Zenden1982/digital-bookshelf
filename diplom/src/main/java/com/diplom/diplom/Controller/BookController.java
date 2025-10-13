@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.diplom.diplom.Entity.Book;
-import com.diplom.diplom.Entity.BookDTO;
+import com.diplom.diplom.Entity.DTO.BookDTO;
 import com.diplom.diplom.Repository.BookRepository;
 
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.diplom.diplom.Entity;
+package com.diplom.diplom.Entity.DTO;
 
 import lombok.Data;
 
