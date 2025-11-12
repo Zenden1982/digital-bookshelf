@@ -1,15 +1,15 @@
 package com.diplom.diplom.Controller;
 
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.diplom.diplom.Entity.Book;
-import com.diplom.diplom.Entity.DTO.BookDTO;
-import com.diplom.diplom.Repository.BookRepository;
+import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
+import com.diplom.diplom.Entity.DTO.BookReadDTO;
+import com.diplom.diplom.Service.BookService;
 
 import lombok.Data;
 
@@ -17,23 +17,16 @@ import lombok.Data;
 @Data
 public class BookController {
 
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
     @GetMapping("/books")
-    public ResponseEntity<?> getAllBooks(int page, int size) {
-        return ResponseEntity.ok(bookRepository.findAll(PageRequest.of(page, size)).map((book) -> {
-            BookDTO dto = new BookDTO();
-            dto.setTitle(book.getTitle());
-            dto.setAuthor(book.getAuthor());
-            dto.setImageUrl(book.getCoverUrl());
-            dto.setDescription(book.getAnnotation());
-            return dto;
-        }));
+    public ResponseEntity<Page<BookReadDTO>> getAllBooks(int page, int size) {
+        return ResponseEntity.ok(bookService.getAllBooks(page, size));
     }
 
     @PostMapping("/books/add")
-    public ResponseEntity<?> createBook(@RequestBody Book book) {
-        bookRepository.save(book);
+    public ResponseEntity<?> createBook(@RequestBody BookCreateUpdateDTO book) {
+        bookService.addBook(book);
         return ResponseEntity.ok("Book created successfully");
     }
 }
