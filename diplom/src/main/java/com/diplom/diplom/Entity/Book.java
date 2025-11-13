@@ -3,9 +3,11 @@ package com.diplom.diplom.Entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.validator.constraints.URL;
 import org.springframework.data.annotation.CreatedDate;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +15,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,22 +36,20 @@ public class Book {
     private Long id;
 
     @NotEmpty(message = "Название книги не может быть пустым")
-    // @Size(min = 1, max = 1000, message = "Длина названия должна быть от 1 до 1000
-    // символов")
-    // @Column(length = 1000)
+    @Size(min = 1, max = 1000, message = "Длина названия должна быть от 1 до 1000символов")
+    @Column(length = 1000)
     private String title;
 
     @NotEmpty(message = "Имя автора не может быть пустым")
-    // @Size(min = 1, max = 1000, message = "Длина имени автора должна быть от 1 до
-    // 255 символов")
-    // @Column(length = 1000)
+    @Size(min = 1, max = 1000, message = "Длина имени автора должна быть от 1 до255 символов")
+    @Column(length = 1000)
     private String author;
 
-    // @Size(max = 20000, message = "Аннотация не может быть длиннее 2000 символов")
-    // @Column(length = 20000)
+    @Size(max = 20000, message = "Аннотация не может быть длиннее 2000 символов")
+    @Column(length = 20000)
     private String annotation;
 
-    // @Min(value = 1, message = "Количество страниц должно быть больше 0")
+    @Min(value = 1, message = "Количество страниц должно быть больше 0")
     private Integer pageCount;
 
     private String isbn;
@@ -56,7 +58,7 @@ public class Book {
 
     private Boolean isAdded;
 
-    // @URL
+    @URL
     private String coverUrl;
 
     @CreatedDate

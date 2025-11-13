@@ -5,12 +5,17 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +41,9 @@ public class BookService {
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate;
 
+    private final EmbeddingModel embeddingClient;
+    private final VectorStore vectorStore;
+
     @Value("${google.books.api.url}")
     private String googleBooksApiUrl;
 
@@ -46,10 +54,8 @@ public class BookService {
 
     @Transactional
     public BookReadDTO addBook(BookCreateUpdateDTO bookCreateUpdateDTO) {
-        Book book = BookCreateUpdateDTO.toBook(bookCreateUpdateDTO);
-        book.setAddedAt(LocalDateTime.now());
-        book.setIsAdded(true);
-        return BookReadDTO.toDTO(bookRepository.save(book));
+        Book savedBook = saveManualBook(bookCreateUpdateDTO);
+        return BookReadDTO.toDTO(savedBook);
     }
 
     @Transactional
@@ -94,6 +100,7 @@ public class BookService {
                     if (bookCreateUpdateDTO.getCoverUrl() != null) {
                         existingBook.setCoverUrl(bookCreateUpdateDTO.getCoverUrl());
                     }
+                    generateAndSetEmbedding(existingBook);
                     return BookReadDTO.toDTO(bookRepository.save(existingBook));
                 })
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
@@ -149,6 +156,7 @@ public class BookService {
             // Формирование URL без deprecated методов
             String urlString = googleBooksApiUrl +
                     "?q=" + encodedQuery +
+                    "&langRestrict=ru" +
                     "&maxResults=" + (maxResults != null ? maxResults : 20) +
                     "&key=" + googleBooksApiKey;
 
@@ -214,8 +222,9 @@ public class BookService {
 
             Book book = BookCreateUpdateDTO.toBook(createDTO);
             book.setAddedAt(LocalDateTime.now());
-
-            return bookRepository.save(book);
+            Book savedBook = bookRepository.save(book);
+            generateAndSetEmbedding(savedBook);
+            return savedBook;
 
         } catch (Exception e) {
             log.error("Ошибка при сохранении книги из Google Books: {}", e.getMessage(), e);
@@ -237,7 +246,11 @@ public class BookService {
         book.setIsAdded(true);
         book.setAddedAt(LocalDateTime.now());
 
-        return bookRepository.save(book);
+        Book savedBook = bookRepository.save(book);
+
+        generateAndSetEmbedding(savedBook);
+
+        return savedBook;
     }
 
     public boolean bookExists(String title, String author) {
@@ -245,6 +258,69 @@ public class BookService {
     }
 
     // ========== Вспомогательные методы ==========
+
+    public List<BookReadDTO> findSimilarBooks(String query, int topK) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        log.info("Поиск похожих книг по запросу: '{}'", query);
+
+        // 1. Создаем запрос для поиска похожих векторов
+        SearchRequest request = SearchRequest.builder().query(query).topK(topK).similarityThreshold(0.5).build();
+
+        // 2. Ищем похожие документы в VectorStore
+        List<Document> similarDocuments = vectorStore.similaritySearch(request);
+
+        log.info("Найдено {} похожих документов", similarDocuments.size());
+
+        if (similarDocuments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 3. Извлекаем ID книг из метаданных
+        List<Long> similarBookIds = similarDocuments.stream()
+                .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
+                .collect(Collectors.toList());
+
+        // 4. Загружаем книги из репозитория
+        return bookRepository.findAllById(similarBookIds)
+                .stream()
+                .map(BookReadDTO::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Генерирует и сохраняет вектор для книги в VectorStore
+     */
+    private void generateAndSetEmbedding(Book book) {
+        if (book.getTitle() == null || book.getAnnotation() == null) {
+            log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название или аннотация",
+                    book.getId());
+            return;
+        }
+
+        log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
+
+        // 1. Формируем текст для генерации вектора
+        String textToEmbed = book.getTitle() + ". " + book.getAnnotation();
+
+        // 2. Создаем метаданные для связи вектора с книгой
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("book_id", book.getId());
+        metadata.put("title", book.getTitle());
+        metadata.put("author", book.getAuthor());
+
+        // 3. Создаем объект Document
+        Document document = new Document(textToEmbed, metadata);
+
+        // 4. Добавляем документ в VectorStore
+        // Spring AI сам вызовет EmbeddingModel, сгенерирует вектор и сохранит его в
+        // PostgreSQL
+        vectorStore.add(List.of(document));
+
+        log.info("Вектор для книги '{}' успешно сохранен в VectorStore", book.getTitle());
+    }
 
     private BookReadDTO convertGoogleBookToDTO(Map<String, Object> googleBook) {
         try {

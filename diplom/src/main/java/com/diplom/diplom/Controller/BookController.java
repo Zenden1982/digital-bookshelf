@@ -1,5 +1,7 @@
 package com.diplom.diplom.Controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -67,9 +69,9 @@ public class BookController {
     }
 
     @PostMapping("/save-from-google/{googleBookId}")
-    public ResponseEntity<Book> saveFromGoogleBooks(@PathVariable String googleBookId) {
+    public ResponseEntity<BookReadDTO> saveFromGoogleBooks(@PathVariable String googleBookId) {
         Book savedBook = bookService.saveBookFromGoogleBooks(googleBookId);
-        return ResponseEntity.ok(savedBook);
+        return ResponseEntity.ok(BookReadDTO.toDTO(savedBook));
     }
 
     @GetMapping("/exists")
@@ -79,5 +81,14 @@ public class BookController {
 
         boolean exists = bookService.bookExists(title, author);
         return ResponseEntity.ok(exists);
+    }
+
+    @GetMapping("/similar")
+    public ResponseEntity<List<BookReadDTO>> findSimilarBooks(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "5") int topK) {
+
+        List<BookReadDTO> similarBooks = bookService.findSimilarBooks(query, topK);
+        return ResponseEntity.ok(similarBooks);
     }
 }
