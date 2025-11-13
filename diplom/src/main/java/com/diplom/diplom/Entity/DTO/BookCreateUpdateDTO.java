@@ -27,8 +27,11 @@ public class BookCreateUpdateDTO {
 
     private Boolean isAdded;
 
-    private String coverUrl;
+    private String source;
 
+    private String googleBookId;
+
+    private String coverUrl;
 
     static public Book toBook(BookCreateUpdateDTO bookCreateUpdateDTO) {
         return Book.builder()
@@ -44,6 +47,3 @@ public class BookCreateUpdateDTO {
                 .build();
     }
 }
-
-
-

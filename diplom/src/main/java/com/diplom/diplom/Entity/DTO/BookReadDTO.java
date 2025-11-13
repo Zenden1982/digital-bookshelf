@@ -11,24 +11,19 @@ import lombok.Data;
 @Builder
 public class BookReadDTO {
     private Long id;
-
     private String title;
-
     private String author;
-
     private String annotation;
-
     private Integer pageCount;
-
     private String isbn;
-
     private LocalDateTime publishedDate;
-
     private Boolean isAdded;
-
     private String coverUrl;
-
     private LocalDateTime addedAt;
+
+    // Новые поля для идентификации источника
+    private String source; // "MY_LIBRARY" или "GOOGLE_API"
+    private String googleBookId; // ID книги в Google Books (если source = GOOGLE_API)
 
     static public BookReadDTO toDTO(Book book) {
         return BookReadDTO.builder()
@@ -42,6 +37,7 @@ public class BookReadDTO {
                 .isAdded(book.getIsAdded())
                 .coverUrl(book.getCoverUrl())
                 .addedAt(book.getAddedAt())
+                .source("MY_LIBRARY")
                 .build();
     }
 }
