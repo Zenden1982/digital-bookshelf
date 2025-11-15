@@ -73,6 +73,16 @@ public class UserBookController {
         userBookService.deleteMyUserBook(id, getCurrentUsername());
     }
 
+    @GetMapping("/by-status")
+    public ResponseEntity<Page<UserBookReadDTO>> getMyShelfByStatus(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam String status) {
+        String username = getCurrentUsername();
+        Page<UserBookReadDTO> userBooks = userBookService.getMyShelfByStatus(page, size, username, status);
+        return ResponseEntity.ok(userBooks);
+    }
+
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

@@ -24,4 +24,5 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
     Page<UserBook> findByUser(User user, Pageable pageable);
 
+    Page<UserBook> findByUserAndStatus(User user, String status, Pageable pageable);
 }

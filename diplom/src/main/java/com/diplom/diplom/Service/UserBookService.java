@@ -105,6 +105,7 @@ public class UserBookService {
     /**
      * Удалить книгу с "моей" полки.
      */
+    @Transactional
     public void deleteMyUserBook(Long userBookId, String currentUsername) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
@@ -116,5 +117,13 @@ public class UserBookService {
         }
 
         userBookRepository.deleteById(userBookId);
+    }
+
+    @Transactional
+    public Page<UserBookReadDTO> getMyShelfByStatus(int page, int size, String currentUsername, String status) {
+        User currentUser = userRepository.findByUsername(currentUsername)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
+        return userBookRepository.findByUserAndStatus(currentUser, status, PageRequest.of(page, size))
+                .map(this::map);
     }
 }
