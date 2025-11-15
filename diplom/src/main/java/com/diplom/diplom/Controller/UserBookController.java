@@ -16,14 +16,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.UserBookCreateDTO;
+import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookUpdateDTO;
 import com.diplom.diplom.Service.UserBookService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/shelf")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class UserBookController {
 
     private final UserBookService userBookService;
@@ -53,11 +56,11 @@ public class UserBookController {
      * GET /api/shelf?page=0&size=20
      */
     @GetMapping
-    public ResponseEntity<Page<UserBook>> getMyShelf(
+    public ResponseEntity<Page<UserBookReadDTO>> getMyShelf(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         String username = getCurrentUsername();
-        Page<UserBook> userBooks = userBookService.getMyShelf(page, size, username);
+        Page<UserBookReadDTO> userBooks = userBookService.getMyShelf(page, size, username);
         return ResponseEntity.ok(userBooks);
     }
 

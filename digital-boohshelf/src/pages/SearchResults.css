@@ -1,0 +1,53 @@
+/* src/pages/SearchResults.css */
+
+.search-results-page {
+  padding: 48px;
+  background-color: #f5f1e8; /* Фон "Бумага" */
+  flex-grow: 1;
+}
+
+.search-title {
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  color: #2c3e50; /* Primary */
+  margin-bottom: 48px;
+  text-align: center;
+}
+
+.search-title span {
+  color: #8b4513; /* Secondary */
+}
+
+/* Секция для одного типа результатов (наши или гугл) */
+.results-section {
+  margin-bottom: 64px;
+}
+
+.results-section h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  color: #2c3e50;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #d4af37; /* Accent */
+  display: inline-block;
+}
+
+/* Сетка для карточек книг */
+.books-grid {
+  display: grid;
+  /* Адаптивная сетка */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px;
+}
+
+/* Сообщения */
+.not-found-message {
+  text-align: center;
+  padding: 80px 20px;
+  font-family: "Lora", serif;
+  font-size: 20px;
+  color: #546e7a;
+  border: 2px dashed #95a5a6;
+  border-radius: 8px;
+}

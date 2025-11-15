@@ -7,13 +7,17 @@ import org.springframework.stereotype.Service;
 import com.diplom.diplom.Entity.Book;
 import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.UserBook;
+import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookCreateDTO;
+import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookUpdateDTO;
+import com.diplom.diplom.Entity.DTO.UserReadDTO;
 import com.diplom.diplom.Repository.BookRepository;
 import com.diplom.diplom.Repository.UserBookRepository;
 import com.diplom.diplom.Repository.UserRepository;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -78,10 +82,24 @@ public class UserBookService {
     /**
      * Получить "мою" полку (полку текущего пользователя).
      */
-    public Page<UserBook> getMyShelf(int page, int size, String currentUsername) {
+    @Transactional
+    public Page<UserBookReadDTO> getMyShelf(int page, int size, String currentUsername) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
-        return userBookRepository.findByUser(currentUser, PageRequest.of(page, size));
+        return userBookRepository.findByUser(currentUser, PageRequest.of(page, size))
+                .map(this::map);
+    }
+
+    public UserBookReadDTO map(UserBook userBook) {
+        return UserBookReadDTO.builder()
+                .id(userBook.getId())
+                .book(BookReadDTO.toDTO(userBook.getBook()))
+                .user(UserReadDTO.toDTO(userBook.getUser()))
+                .progress(userBook.getProgress())
+                .currentPage(userBook.getCurrentPage())
+                .status(userBook.getStatus())
+                .rating(userBook.getRating())
+                .build();
     }
 
     /**

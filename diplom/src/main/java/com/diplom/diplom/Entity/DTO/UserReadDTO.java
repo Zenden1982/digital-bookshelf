@@ -21,4 +21,13 @@ public class UserReadDTO {
     private List<Role> roles;
     private LocalDateTime createdAt;
 
+    static public UserReadDTO toDTO(com.diplom.diplom.Entity.User user) {
+        return UserReadDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .roles(user.getRoles())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
 }
