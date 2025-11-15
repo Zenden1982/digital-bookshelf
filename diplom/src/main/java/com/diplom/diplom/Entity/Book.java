@@ -6,13 +6,12 @@ import java.util.List;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.data.annotation.CreatedDate;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
@@ -59,6 +58,7 @@ public class Book {
     private Boolean isAdded;
 
     @URL
+    @Lob
     private String coverUrl;
 
     @CreatedDate
@@ -72,7 +72,4 @@ public class Book {
     @Builder.Default
     private List<UserBook> userBooks = new java.util.ArrayList<>();
 
-    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Note> notes = new java.util.ArrayList<>();
 }

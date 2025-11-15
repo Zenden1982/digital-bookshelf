@@ -24,7 +24,7 @@ import lombok.Data;
 
 @RestController
 @Data
-@RequestMapping("/api/books")
+@RequestMapping("/api/v1/books")
 public class BookController {
 
     private final BookService bookService;

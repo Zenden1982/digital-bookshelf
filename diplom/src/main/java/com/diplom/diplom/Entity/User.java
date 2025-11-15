@@ -12,10 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -70,9 +68,6 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Shelf> shelves = new java.util.ArrayList<>();
-
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Note> notes = new java.util.ArrayList<>();
 
     @OneToMany(mappedBy = "user")
     private List<UserBook> userBooks = new java.util.ArrayList<>();

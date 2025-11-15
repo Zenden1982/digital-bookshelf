@@ -1,0 +1,161 @@
+/* src/components/shelf/Bookshelf.css */
+
+/* === Общий контейнер для всей библиотеки === */
+.library-container {
+  width: 100%;
+  max-width: 1200px; /* Ограничиваем максимальную ширину */
+  margin: 0 auto;
+}
+
+/* === Обертка для всех полок === */
+.bookshelf-wrapper {
+  display: flex;
+  flex-direction: column;
+  /* Расстояние между полками */
+  gap: 60px;
+  /* Анимация появления всей библиотеки */
+  animation: fadeIn 1s ease-out;
+}
+
+/* === Одна книжная полка === */
+.bookshelf {
+  position: relative;
+  width: 100%;
+  /* Отступ снизу, равный толщине доски */
+  padding-bottom: 16px;
+}
+
+/* Ряд книг на полке */
+.books-row {
+  display: flex;
+  align-items: flex-end; /* Книги стоят на полке */
+  justify-content: center;
+  gap: 4px;
+  min-height: 220px; /* Чтобы пустая полка не схлопывалась */
+}
+
+/* Деревянная доска полки */
+.shelf-board {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background-color: #6b4423; /* Тёмное дерево */
+  border-radius: 2px;
+  /* Тень под полкой для объема */
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* === Корешок одной книги === */
+.book-spine {
+  position: relative;
+  border-radius: 2px 2px 0 0;
+  /* Тень справа от книги для глубины */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  /* Легкий градиент для объема */
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.1),
+    transparent 20%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.1)
+  );
+}
+
+/* Анимация при наведении */
+.book-spine:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Обертка для вертикального текста */
+.book-title-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.book-title {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  /* Магия вертикального текста */
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  padding: 8px 0;
+  transition: color 0.3s ease;
+}
+
+.book-spine:hover .book-title {
+  color: #d4af37; /* Золотой акцент при наведении */
+}
+
+/* === Индикатор прогресса чтения === */
+.book-progress-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* Цвет "Читаю" */
+  background-color: #27ae60;
+  opacity: 0.8;
+  transition: height 0.5s ease;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* === Сообщение о пустой полке === */
+.empty-shelf-container {
+  padding: 40px 0;
+}
+.empty-shelf-message {
+  text-align: center;
+  padding: 60px 40px;
+  border: 2px dashed #95a5a6; /* Удовлетворение серый */
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-shelf-message h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 16px;
+}
+
+.empty-shelf-message p {
+  font-family: "Lora", serif;
+  color: #546e7a;
+  margin-bottom: 24px;
+}
+
+/* Кнопка */
+.action-button.primary {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 24px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.action-button.primary:hover {
+  background-color: #6b3410;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}

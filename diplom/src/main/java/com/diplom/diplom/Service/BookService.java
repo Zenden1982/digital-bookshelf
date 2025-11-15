@@ -131,8 +131,7 @@ public class BookService {
 
     public List<BookReadDTO> searchInMyLibrary(String query) {
         try {
-            List<Book> books = bookRepository
-                    .findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(query, query);
+            List<Book> books = bookRepository.searchByTitleOrAuthor(query);
 
             return books.stream()
                     .map(BookReadDTO::toDTO)

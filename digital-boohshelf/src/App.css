@@ -1,7 +1,13 @@
 /* src/App.css */
 
 .App {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-height: 100vh; /* Минимальная высота в размер всего экрана */
+  background-color: #f5f1e8; /* Основной фон "Бумага" */
+}
+
+.main-content {
+  flex-grow: 1; /* Основной контент занимает все доступное пространство, отталкивая футер вниз */
+  width: 100%;
 }

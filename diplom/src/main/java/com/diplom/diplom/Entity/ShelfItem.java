@@ -10,11 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "shelf_items")
+@Builder
 public class ShelfItem {
 
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
