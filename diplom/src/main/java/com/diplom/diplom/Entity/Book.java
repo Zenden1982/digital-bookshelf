@@ -53,6 +53,8 @@ public class Book {
 
     private String isbn;
 
+    private String googleBookId;
+
     private LocalDateTime publishedDate;
 
     private Boolean isAdded;

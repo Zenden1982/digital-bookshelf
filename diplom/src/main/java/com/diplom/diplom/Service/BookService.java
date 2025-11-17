@@ -216,6 +216,7 @@ public class BookService {
                     .isbn(bookDTO.getIsbn())
                     .publishedDate(bookDTO.getPublishedDate())
                     .coverUrl(bookDTO.getCoverUrl())
+                    .googleBookId(googleBookId)
                     .isAdded(true)
                     .build();
 
@@ -302,7 +303,7 @@ public class BookService {
         log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
 
         // 1. Формируем текст для генерации вектора
-        String textToEmbed = book.getTitle() + ". " + book.getAnnotation();
+        String textToEmbed = book.getTitle() + ". " + book.getAuthor() + ". " + book.getAnnotation();
 
         // 2. Создаем метаданные для связи вектора с книгой
         Map<String, Object> metadata = new HashMap<>();

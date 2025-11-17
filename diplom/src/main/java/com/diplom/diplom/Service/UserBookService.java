@@ -32,7 +32,7 @@ public class UserBookService {
     /**
      * Добавить книгу на полку ТЕКУЩЕГО пользователя, сразу указав статус.
      */
-    public UserBook addBookToMyShelf(UserBookCreateDTO dto, String currentUsername) {
+    public UserBookReadDTO addBookToMyShelf(UserBookCreateDTO dto, String currentUsername) {
         Book book = bookRepository.findById(dto.getBookId())
                 .orElseThrow(() -> new IllegalArgumentException("Книга не найдена: " + dto.getBookId()));
         User currentUser = userRepository.findByUsername(currentUsername)
@@ -50,13 +50,13 @@ public class UserBookService {
                 .status(dto.getStatus()) // Дефолтный статус
                 .build();
 
-        return userBookRepository.save(userBook);
+        return map(userBookRepository.save(userBook));
     }
 
     /**
      * Обновить состояние книги на полке ТЕКУЩЕГО пользователя.
      */
-    public UserBook updateMyUserBook(UserBookUpdateDTO dto, String currentUsername) {
+    public UserBookReadDTO updateMyUserBook(UserBookUpdateDTO dto, String currentUsername) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
         UserBook userBook = userBookRepository.findById(dto.getUserBookId())
@@ -76,7 +76,7 @@ public class UserBookService {
         if (dto.getRating() != null)
             userBook.setRating(dto.getRating());
 
-        return userBookRepository.save(userBook);
+        return map(userBookRepository.save(userBook));
     }
 
     /**

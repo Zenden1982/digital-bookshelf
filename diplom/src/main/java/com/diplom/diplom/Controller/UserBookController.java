@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.UserBookCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookUpdateDTO;
@@ -36,9 +35,9 @@ public class UserBookController {
      * POST /api/shelf
      */
     @PostMapping
-    public UserBook addBookToMyShelf(@RequestBody UserBookCreateDTO dto) {
+    public ResponseEntity<UserBookReadDTO> addBookToMyShelf(@RequestBody UserBookCreateDTO dto) {
         String username = getCurrentUsername();
-        return userBookService.addBookToMyShelf(dto, username);
+        return ResponseEntity.ok().body(userBookService.addBookToMyShelf(dto, username));
     }
 
     /**
@@ -46,9 +45,9 @@ public class UserBookController {
      * PATCH /api/shelf
      */
     @PatchMapping
-    public UserBook updateMyUserBook(@RequestBody UserBookUpdateDTO dto) {
+    public ResponseEntity<UserBookReadDTO> updateMyUserBook(@RequestBody UserBookUpdateDTO dto) {
         // userBookId теперь приходит в теле запроса (в DTO)
-        return userBookService.updateMyUserBook(dto, getCurrentUsername());
+        return ResponseEntity.ok(userBookService.updateMyUserBook(dto, getCurrentUsername()));
     }
 
     /**

@@ -35,6 +35,7 @@ public class BookReadDTO {
                 .isbn(book.getIsbn())
                 .publishedDate(book.getPublishedDate())
                 .isAdded(book.getIsAdded())
+                .googleBookId(book.getGoogleBookId())
                 .coverUrl(book.getCoverUrl())
                 .addedAt(book.getAddedAt())
                 .source("MY_LIBRARY")
