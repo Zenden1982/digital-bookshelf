@@ -4,85 +4,57 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.diplom.diplom.Entity.Book;
-import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
-import com.diplom.diplom.Entity.DTO.BookSearchResultDTO;
 import com.diplom.diplom.Service.BookService;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@Data
 @RequestMapping("/api/v1/books")
+@RequiredArgsConstructor
 public class BookController {
 
     private final BookService bookService;
 
-    @GetMapping("/")
-    public ResponseEntity<Page<BookReadDTO>> getAllBooks(@RequestParam(required = false, defaultValue = "0") int page,
-            @RequestParam(required = false, defaultValue = "20") int size) {
-        return ResponseEntity.ok(bookService.getAllBooks(page, size));
+    /**
+     * Получить все книги из нашей базы с пагинацией.
+     */
+    @GetMapping
+    public ResponseEntity<Page<BookReadDTO>> getAllBooks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        Page<BookReadDTO> books = bookService.getAllBooks(page, size);
+        return ResponseEntity.ok(books);
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<BookReadDTO> createBook(@RequestBody BookCreateUpdateDTO book) {
-
-        return ResponseEntity.ok(bookService.addBook(book));
-    }
-
+    /**
+     * Получить конкретную книгу по ее ID.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<BookReadDTO> getBookById(@PathVariable Long id) {
-        return ResponseEntity.ok(bookService.getBookById(id));
+        BookReadDTO book = bookService.getBookById(id);
+        return ResponseEntity.ok(book);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<BookReadDTO> updateBook(
-            @PathVariable Long id,
-            @RequestBody BookCreateUpdateDTO book) {
-        return ResponseEntity.ok(bookService.updateBook(id, book));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
-        bookService.deleteBook(id);
-        return ResponseEntity.ok("Book deleted successfully");
-    }
-
+    /**
+     * Поиск книг в нашей библиотеке по названию, автору или ISBN.
+     */
     @GetMapping("/search")
-    public ResponseEntity<BookSearchResultDTO> combinedSearch(
-            @RequestParam String query,
-            @RequestParam(required = false, defaultValue = "20") Integer maxResults) {
-
-        BookSearchResultDTO result = bookService.combinedSearch(query, maxResults);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<List<BookReadDTO>> searchInLibrary(@RequestParam String query) {
+        List<BookReadDTO> books = bookService.searchInMyLibrary(query);
+        return ResponseEntity.ok(books);
     }
 
-    @PostMapping("/save-from-google/{googleBookId}")
-    public ResponseEntity<BookReadDTO> saveFromGoogleBooks(@PathVariable String googleBookId) {
-        Book savedBook = bookService.saveBookFromGoogleBooks(googleBookId);
-        return ResponseEntity.ok(BookReadDTO.toDTO(savedBook));
-    }
-
-    @GetMapping("/exists")
-    public ResponseEntity<Boolean> checkBookExists(
-            @RequestParam String title,
-            @RequestParam String author) {
-
-        boolean exists = bookService.bookExists(title, author);
-        return ResponseEntity.ok(exists);
-    }
-
+    /**
+     * Найти книги, похожие на заданный текст (семантический поиск).
+     */
     @GetMapping("/similar")
     public ResponseEntity<List<BookReadDTO>> findSimilarBooks(
             @RequestParam String query,

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.diplom.diplom.Entity.Status;
 import com.diplom.diplom.Entity.DTO.UserBookCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookUpdateDTO;
@@ -50,17 +51,16 @@ public class UserBookController {
         return ResponseEntity.ok(userBookService.updateMyUserBook(dto, getCurrentUsername()));
     }
 
-    /**
-     * Получить "мою" полку.
-     * GET /api/shelf?page=0&size=20
-     */
     @GetMapping
     public ResponseEntity<Page<UserBookReadDTO>> getMyShelf(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Status status, // Фильтр по статусу
+            @RequestParam(defaultValue = "id") String sort, // Сортировка по умолчанию по id
+            @RequestParam(defaultValue = "DESC") String direction) {
         String username = getCurrentUsername();
-        Page<UserBookReadDTO> userBooks = userBookService.getMyShelf(page, size, username);
-        return ResponseEntity.ok(userBooks);
+        Page<UserBookReadDTO> shelf = userBookService.getMyShelf(username, page, size, status, sort, direction);
+        return ResponseEntity.ok(shelf);
     }
 
     /**

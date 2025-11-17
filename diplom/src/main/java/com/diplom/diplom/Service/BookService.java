@@ -21,12 +21,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.diplom.diplom.Entity.Book;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
-import com.diplom.diplom.Entity.DTO.BookSearchResultDTO;
+import com.diplom.diplom.Exception.ApiIntegrationException;
+import com.diplom.diplom.Exception.DuplicateResourceException;
+import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.BookRepository;
 
 import jakarta.transaction.Transactional;
@@ -53,12 +54,6 @@ public class BookService {
     // ========== CRUD операции ==========
 
     @Transactional
-    public BookReadDTO addBook(BookCreateUpdateDTO bookCreateUpdateDTO) {
-        Book savedBook = saveManualBook(bookCreateUpdateDTO);
-        return BookReadDTO.toDTO(savedBook);
-    }
-
-    @Transactional
     public Page<BookReadDTO> getAllBooks(int page, int size) {
         return bookRepository.findAll(PageRequest.of(page, size))
                 .map(BookReadDTO::toDTO);
@@ -68,7 +63,7 @@ public class BookService {
     public BookReadDTO getBookById(Long id) {
         return bookRepository.findById(id)
                 .map(BookReadDTO::toDTO)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Книга с ID: " + id + " не найдена"));
     }
 
     @Transactional
@@ -103,72 +98,50 @@ public class BookService {
                     generateAndSetEmbedding(existingBook);
                     return BookReadDTO.toDTO(bookRepository.save(existingBook));
                 })
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Книга с id: " + id + " не найдена"));
     }
 
     @Transactional
     public void deleteBook(Long id) {
         if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Book not found with id: " + id);
+            throw new ResourceNotFoundException("Книга с id: " + id + " не найдена");
         }
         bookRepository.deleteById(id);
     }
 
-    // ========== Поиск ==========
-
-    public BookSearchResultDTO combinedSearch(String query, Integer maxResults) {
-        List<BookReadDTO> myBooks = searchInMyLibrary(query);
-        List<BookReadDTO> googleBooks = searchBooks(query, maxResults);
-
-        return BookSearchResultDTO.builder()
-                .myLibraryBooks(myBooks)
-                .googleBooks(googleBooks)
-                .query(query)
-                .totalMyBooks(myBooks.size())
-                .totalGoogleBooks(googleBooks.size())
-                .build();
-    }
-
+    @Transactional
     public List<BookReadDTO> searchInMyLibrary(String query) {
-        try {
-            List<Book> books = bookRepository.searchByTitleOrAuthor(query);
-
-            return books.stream()
-                    .map(BookReadDTO::toDTO)
-                    .collect(Collectors.toList());
-
-        } catch (Exception e) {
-            log.error("Ошибка при поиске в своей библиотеке: {}", e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    public List<BookReadDTO> searchBooks(String query, Integer maxResults) {
         if (query == null || query.trim().isEmpty()) {
             return Collections.emptyList();
         }
-
         try {
-            // Явное кодирование query параметра
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
+            List<Book> books = bookRepository.searchByTitleOrAuthorOrIsbn(query);
+            return books.stream()
+                    .map(this::mapToBookReadDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Ошибка при поиске в своей библиотеке: {}", e.getMessage(), e);
+            throw new ApiIntegrationException("Ошибка при поиске в Google Books API: " + e.getMessage(), e);
+        }
+    }
 
-            // Формирование URL без deprecated методов
-            String urlString = googleBooksApiUrl +
-                    "?q=" + encodedQuery +
-                    "&langRestrict=ru" +
-                    "&maxResults=" + (maxResults != null ? maxResults : 20) +
-                    "&key=" + googleBooksApiKey;
+    public List<BookReadDTO> searchInGoogleBooks(String query, int maxResults) {
+        if (query == null || query.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            String searchQuery = isIsbnFormat(query) ? "isbn:" + query.replace("-", "") : query;
+            String encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8);
 
-            URI uri = URI.create(urlString);
+            URI uri = URI.create(googleBooksApiUrl + "?q=" + encodedQuery + "&langRestrict=ru"
+                    + "&maxResults=" + maxResults + "&key=" + googleBooksApiKey);
 
-            log.info("Выполняется запрос к Google Books API: {}", uri.toString());
+            log.info("Запрос к Google Books API: {}", uri);
             Map<String, Object> response = restTemplate.getForObject(uri, Map.class);
 
             if (response == null || !response.containsKey("items")) {
-                log.info("Не найдено книг по запросу: {}", query);
                 return Collections.emptyList();
             }
-
             List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("items");
             return items.stream()
                     .map(this::convertGoogleBookToDTO)
@@ -181,80 +154,45 @@ public class BookService {
         }
     }
 
-    // ========== Google Books интеграция ==========
-
     @Transactional
-    public Book saveBookFromGoogleBooks(String googleBookId) {
-        try {
-            String url = UriComponentsBuilder.fromHttpUrl(googleBooksApiUrl + "/" + googleBookId)
-                    .queryParam("key", googleBooksApiKey)
-                    .toUriString();
-
-            Map<String, Object> googleBook = restTemplate.getForObject(url, Map.class);
-
-            if (googleBook == null) {
-                throw new RuntimeException("Книга не найдена в Google Books");
-            }
-
-            BookReadDTO bookDTO = convertGoogleBookToDTO(googleBook);
-
-            // Проверка на существование
-            Optional<Book> existing = bookRepository.findByTitleAndAuthor(
-                    bookDTO.getTitle(),
-                    bookDTO.getAuthor());
-
-            if (existing.isPresent()) {
-                log.warn("Книга уже существует: {} - {}", bookDTO.getTitle(), bookDTO.getAuthor());
-                return existing.get();
-            }
-
-            BookCreateUpdateDTO createDTO = BookCreateUpdateDTO.builder()
-                    .title(bookDTO.getTitle())
-                    .author(bookDTO.getAuthor())
-                    .annotation(bookDTO.getAnnotation())
-                    .pageCount(bookDTO.getPageCount())
-                    .isbn(bookDTO.getIsbn())
-                    .publishedDate(bookDTO.getPublishedDate())
-                    .coverUrl(bookDTO.getCoverUrl())
-                    .googleBookId(googleBookId)
-                    .isAdded(true)
-                    .build();
-
-            Book book = BookCreateUpdateDTO.toBook(createDTO);
-            book.setAddedAt(LocalDateTime.now());
-            Book savedBook = bookRepository.save(book);
-            generateAndSetEmbedding(savedBook);
-            return savedBook;
-
-        } catch (Exception e) {
-            log.error("Ошибка при сохранении книги из Google Books: {}", e.getMessage(), e);
-            throw new RuntimeException("Не удалось сохранить книгу: " + e.getMessage());
+    public Book importBookByIsbn(String isbn) {
+        if (isbn == null || isbn.trim().isEmpty()) {
+            throw new IllegalArgumentException("ISBN не может быть пустым");
         }
+        Optional<Book> existingBook = bookRepository.findByIsbn(isbn);
+        if (existingBook.isPresent()) {
+            throw new DuplicateResourceException("Книга с ISBN" + isbn + "уже существует.");
+        }
+
+        List<BookReadDTO> googleResults = searchInGoogleBooks(isbn, 1);
+        if (googleResults.isEmpty() || googleResults.get(0) == null) {
+            throw new ResourceNotFoundException("Книга с ISBN " + isbn + " не найдена в Google Books.");
+        }
+
+        return importBook(googleResults.get(0));
     }
 
-    @Transactional
-    public Book saveManualBook(BookCreateUpdateDTO bookDTO) {
-        Optional<Book> existingBook = bookRepository.findByTitleAndAuthor(
-                bookDTO.getTitle(),
-                bookDTO.getAuthor());
+    private Book importBook(BookReadDTO bookDTO) {
+        Book bookToSave = Book.builder()
+                .title(bookDTO.getTitle())
+                .author(bookDTO.getAuthor())
+                .annotation(bookDTO.getAnnotation())
+                .pageCount(bookDTO.getPageCount())
+                .isbn(bookDTO.getIsbn())
+                .publishedDate(bookDTO.getPublishedDate())
+                .coverUrl(bookDTO.getCoverUrl())
+                .googleBookId(bookDTO.getGoogleBookId())
+                .addedAt(LocalDateTime.now())
+                .build();
 
-        if (existingBook.isPresent()) {
-            throw new IllegalArgumentException("Книга уже существует");
-        }
-
-        Book book = BookCreateUpdateDTO.toBook(bookDTO);
-        book.setIsAdded(true);
-        book.setAddedAt(LocalDateTime.now());
-
-        Book savedBook = bookRepository.save(book);
-
+        Book savedBook = bookRepository.save(bookToSave);
         generateAndSetEmbedding(savedBook);
-
+        log.info("Книга '{}' успешно импортирована.", savedBook.getTitle());
         return savedBook;
     }
 
-    public boolean bookExists(String title, String author) {
-        return bookRepository.findByTitleAndAuthor(title, author).isPresent();
+    private boolean isIsbnFormat(String query) {
+        return query.matches("^[0-9\\-]+$");
     }
 
     // ========== Вспомогательные методы ==========
@@ -263,30 +201,17 @@ public class BookService {
         if (query == null || query.trim().isEmpty()) {
             return Collections.emptyList();
         }
-
-        log.info("Поиск похожих книг по запросу: '{}'", query);
-
-        // 1. Создаем запрос для поиска похожих векторов
-        SearchRequest request = SearchRequest.builder().query(query).topK(topK).similarityThreshold(0.5).build();
-
-        // 2. Ищем похожие документы в VectorStore
-        List<Document> similarDocuments = vectorStore.similaritySearch(request);
-
-        log.info("Найдено {} похожих документов", similarDocuments.size());
-
-        if (similarDocuments.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        // 3. Извлекаем ID книг из метаданных
-        List<Long> similarBookIds = similarDocuments.stream()
+        SearchRequest request = SearchRequest.builder()
+                .query(query)
+                .topK(topK)
+                .similarityThreshold(0.5)
+                .build();
+        List<Document> similarDocs = vectorStore.similaritySearch(request);
+        List<Long> bookIds = similarDocs.stream()
                 .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
                 .collect(Collectors.toList());
-
-        // 4. Загружаем книги из репозитория
-        return bookRepository.findAllById(similarBookIds)
-                .stream()
-                .map(BookReadDTO::toDTO)
+        return bookRepository.findAllById(bookIds).stream()
+                .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
     }
 
@@ -393,5 +318,19 @@ public class BookService {
         } else {
             return LocalDateTime.parse(dateStr + "T00:00:00");
         }
+    }
+
+    private BookReadDTO mapToBookReadDTO(Book book) {
+        return BookReadDTO.builder()
+                .id(book.getId())
+                .title(book.getTitle())
+                .author(book.getAuthor())
+                .annotation(book.getAnnotation())
+                .pageCount(book.getPageCount())
+                .isbn(book.getIsbn())
+                .publishedDate(book.getPublishedDate())
+                .coverUrl(book.getCoverUrl())
+                .googleBookId(book.getGoogleBookId())
+                .build();
     }
 }

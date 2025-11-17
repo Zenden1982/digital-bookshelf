@@ -1,8 +1,10 @@
 package com.diplom.diplom.Entity.DTO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.diplom.diplom.Entity.Status;
+import com.diplom.diplom.Entity.Tag;
 
 import lombok.Builder;
 import lombok.Data;
@@ -16,8 +18,11 @@ public class UserBookReadDTO {
     private UserReadDTO user;
     private Integer progress;
     private Integer currentPage;
+    private Integer totalPages;
     private Status status;
     private Integer rating;
     private LocalDateTime addedAt;
     private LocalDateTime updatedAt;
+    private List<Tag> tags;
+    private Boolean isFavorite;
 }

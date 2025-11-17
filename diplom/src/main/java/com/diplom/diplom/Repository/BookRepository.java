@@ -13,10 +13,14 @@ import com.diplom.diplom.Entity.Book;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
+    Optional<Book> findByIsbn(String isbn);
+
+    Optional<Book> findByGoogleBookId(String googleBookId);
+
     Optional<Book> findByTitleAndAuthor(String title, String author);
 
-    @Query("SELECT b FROM Book b WHERE " +
-            "LOWER(CAST(b.title AS string)) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(CAST(b.author AS string)) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Book> searchByTitleOrAuthor(@Param("query") String query);
+    @Query("SELECT b FROM Book b WHERE b.isbn = :query OR " +
+            "LOWER(b.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<Book> searchByTitleOrAuthorOrIsbn(@Param("query") String query);
 }

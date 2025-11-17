@@ -17,6 +17,7 @@ import com.diplom.diplom.Entity.Role;
 import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.DTO.UserCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserReadDTO;
+import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.RoleRepository;
 import com.diplom.diplom.Repository.UserRepository;
 
@@ -62,7 +63,7 @@ public class UserService implements UserDetailsService {
 
     public UserReadDTO getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
         UserReadDTO userReadDTO = UserReadDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -114,7 +115,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
         return user;
     }
 
@@ -132,7 +133,7 @@ public class UserService implements UserDetailsService {
 
     public UserReadDTO getMe(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
         UserReadDTO userReadDTO = UserReadDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())

@@ -2,9 +2,13 @@ package com.diplom.diplom.Service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.diplom.diplom.Entity.Book;
+import com.diplom.diplom.Entity.Status;
 import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
@@ -12,9 +16,13 @@ import com.diplom.diplom.Entity.DTO.UserBookCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Entity.DTO.UserBookUpdateDTO;
 import com.diplom.diplom.Entity.DTO.UserReadDTO;
+import com.diplom.diplom.Exception.AccessDeniedException;
+import com.diplom.diplom.Exception.DuplicateResourceException;
+import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.BookRepository;
 import com.diplom.diplom.Repository.UserBookRepository;
 import com.diplom.diplom.Repository.UserRepository;
+import com.diplom.diplom.Specification.UserBookSpecification;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.transaction.Transactional;
@@ -34,12 +42,12 @@ public class UserBookService {
      */
     public UserBookReadDTO addBookToMyShelf(UserBookCreateDTO dto, String currentUsername) {
         Book book = bookRepository.findById(dto.getBookId())
-                .orElseThrow(() -> new IllegalArgumentException("Книга не найдена: " + dto.getBookId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + dto.getBookId()));
         User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + currentUsername));
         // Запретить дубликаты
         userBookRepository.findByUserAndBook(currentUser, book).ifPresent(ub -> {
-            throw new IllegalArgumentException("Эта книга уже есть на вашей полке");
+            throw new DuplicateResourceException("Эта книга уже есть на вашей полке");
         });
 
         UserBook userBook = UserBook.builder()
@@ -58,13 +66,13 @@ public class UserBookService {
      */
     public UserBookReadDTO updateMyUserBook(UserBookUpdateDTO dto, String currentUsername) {
         User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + currentUsername));
         UserBook userBook = userBookRepository.findById(dto.getUserBookId())
-                .orElseThrow(() -> new IllegalArgumentException("UserBook не найден: " + dto.getUserBookId()));
+                .orElseThrow(() -> new ResourceNotFoundException("UserBook не найден: " + dto.getUserBookId()));
 
         // Проверка, что пользователь не пытается обновить чужую запись
         if (!userBook.getUser().getId().equals(currentUser.getId())) {
-            throw new SecurityException("Нет доступа к этой записи");
+            throw new AccessDeniedException("Нет доступа к этой записи");
         }
 
         if (dto.getProgress() != null)
@@ -83,11 +91,30 @@ public class UserBookService {
      * Получить "мою" полку (полку текущего пользователя).
      */
     @Transactional
-    public Page<UserBookReadDTO> getMyShelf(int page, int size, String currentUsername) {
+    public Page<UserBookReadDTO> getMyShelf(
+            String currentUsername,
+            int page,
+            int size,
+            Status status, // Фильтр по статусу (может быть null)
+            String sort, // Поле для сортировки (например, "rating")
+            String direction // "ASC" или "DESC"
+    ) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
-        return userBookRepository.findByUser(currentUser, PageRequest.of(page, size))
-                .map(this::map);
+
+        // 1. Создаем объект сортировки
+        Sort sorting = Sort.by(Sort.Direction.fromString(direction), sort);
+
+        // 2. Создаем объект пагинации с сортировкой
+        Pageable pageable = PageRequest.of(page, size, sorting);
+
+        // 3. Создаем спецификацию (фильтры)
+        Specification<UserBook> spec = Specification
+                .where(UserBookSpecification.hasUser(currentUser))
+                .and(UserBookSpecification.hasStatus(status));
+
+        // 4. Выполняем запрос
+        return userBookRepository.findAll(spec, pageable).map(this::map);
     }
 
     public UserBookReadDTO map(UserBook userBook) {

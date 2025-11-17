@@ -37,7 +37,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-
 public class User implements UserDetails {
 
     @Id

@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -55,6 +56,9 @@ public class UserBook {
     private Integer currentPage;
     private Integer totalPages;
 
+    @Column(nullable = false)
+    private boolean isFavorite;
+
     @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Note> notes = new ArrayList<>();
@@ -64,5 +68,8 @@ public class UserBook {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tag> tags = new ArrayList<>();
 
 }
