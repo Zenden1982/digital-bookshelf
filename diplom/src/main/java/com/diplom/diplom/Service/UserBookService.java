@@ -126,6 +126,9 @@ public class UserBookService {
                 .currentPage(userBook.getCurrentPage())
                 .status(userBook.getStatus())
                 .rating(userBook.getRating())
+                .totalPages(userBook.getTotalPages())
+                .isFavorite(userBook.isFavorite())
+                .tags(userBook.getTags())
                 .build();
     }
 
