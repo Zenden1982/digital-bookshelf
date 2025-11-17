@@ -16,11 +16,13 @@ import com.diplom.diplom.Entity.DTO.UserCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserReadDTO;
 import com.diplom.diplom.Service.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("api/v1/users")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class UserController {
 
     private final UserService userService;

@@ -13,11 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Service.BookService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class BookController {
 
     private final BookService bookService;

@@ -19,6 +19,7 @@ import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Service.BookService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 // @PreAuthorize("hasRole('ADMIN')") // Раскомментируй, когда подключишь Spring
 // Security
+@SecurityRequirement(name = "BearerAuth")
 public class ImportController {
 
     private final BookService bookService;

@@ -16,11 +16,13 @@ import com.diplom.diplom.Entity.Tag;
 import com.diplom.diplom.Entity.DTO.UserBookReadDTO;
 import com.diplom.diplom.Service.TagService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/tags")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "BearerAuth")
 public class TagController {
 
     private final TagService tagService;

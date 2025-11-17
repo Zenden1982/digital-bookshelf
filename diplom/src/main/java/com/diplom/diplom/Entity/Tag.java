@@ -24,4 +24,8 @@ public class Tag {
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "user_book_id", nullable = false)
+    private UserBook userBook;
 }
