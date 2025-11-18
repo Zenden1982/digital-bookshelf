@@ -1,0 +1,63 @@
+/* src/components/book/TagManager.css */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  background-color: #e0e0e0;
+  color: #333;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.tag-remove-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.tag-remove-btn .MuiSvgIcon-root {
+  font-size: 16px;
+  color: #95a5a6;
+  transition: color 0.2s;
+}
+.tag-remove-btn:hover .MuiSvgIcon-root {
+  color: #e74c3c;
+}
+
+.add-tag-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8b4513;
+}
+
+.add-tag-form {
+  display: flex;
+  gap: 4px;
+}
+.add-tag-form input {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+.add-tag-form button {
+  border: none;
+  background-color: #8b4513;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 4px 8px;
+  cursor: pointer;
+}

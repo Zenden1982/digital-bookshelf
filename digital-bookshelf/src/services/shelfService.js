@@ -57,7 +57,7 @@ export const shelfService = {
    */
   updateMyUserBook: async (userBookId, dto) => {
     try {
-      const response = await api.patch(`/shelf/${userBookId}`, dto);
+      const response = await api.put(`/shelf/${userBookId}`, dto);
       return response.data;
     } catch (error) {
       console.error(

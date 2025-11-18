@@ -1,5 +1,7 @@
 package com.diplom.diplom.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,10 +23,12 @@ public class Tag {
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_book_id", nullable = false)
     private UserBook userBook;

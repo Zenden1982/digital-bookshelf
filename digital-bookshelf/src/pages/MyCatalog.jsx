@@ -2,19 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import BookCard from "../components/book/BookCard";
+import UserBookCard from "../components/book/UserBookCard"; // Используем новую карточку
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
 import "./MyCatalog.css";
 
-// Опции статусов
+// <<< ВАШИ НОВЫЕ ОПЦИИ СТАТУСОВ >>>
 const STATUS_OPTIONS = [
   { value: "FINISHED", label: "Прочитано" },
   { value: "READING", label: "Читаю" },
   { value: "PLAN_TO_READ", label: "В планах" },
 ];
 
-// Опции сортировки: поле + направление
+// <<< ВАШИ НОВЫЕ ОПЦИИ СОРТИРОВКИ >>>
 const SORT_OPTIONS = [
   { sort: "addedAt", direction: "DESC", label: "По дате добавления (новые)" },
   { sort: "addedAt", direction: "ASC", label: "По дате добавления (старые)" },
@@ -26,16 +26,19 @@ const SORT_OPTIONS = [
 const MyCatalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Читаем значения из URL или берём дефолты
-  const defaultSort = searchParams.get("sort") || SORT_OPTIONS[0].sort;
-  const defaultDirection =
-    searchParams.get("direction") || SORT_OPTIONS[0].direction;
+  // Инициализация состояния на основе URL и ваших новых опций
+  const initialSortOption =
+    SORT_OPTIONS.find(
+      (opt) =>
+        opt.sort === searchParams.get("sort") &&
+        opt.direction === searchParams.get("direction")
+    ) || SORT_OPTIONS[0];
 
   const [filters, setFilters] = useState({
     query: searchParams.get("query") || "",
     status: searchParams.getAll("status") || [],
-    sort: defaultSort, // например "addedAt"
-    direction: defaultDirection, // "DESC"
+    sort: initialSortOption.sort,
+    direction: initialSortOption.direction,
     page: parseInt(searchParams.get("page") || "0", 10),
   });
 
@@ -43,58 +46,50 @@ const MyCatalog = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Обновляем URL при изменении фильтров
+  // Функция для обновления URL
   const updateUrlParams = useCallback(
     (newFilters) => {
       const params = new URLSearchParams();
-
       if (newFilters.query) params.set("query", newFilters.query);
       if (newFilters.sort) params.set("sort", newFilters.sort);
       if (newFilters.direction) params.set("direction", newFilters.direction);
-
-      // Страницу лучше всегда задавать явно
       params.set("page", newFilters.page ?? 0);
-
       newFilters.status.forEach((s) => params.append("status", s));
-
       setSearchParams(params);
     },
     [setSearchParams]
   );
 
-  // Загрузка данных при изменении фильтров
-  useEffect(() => {
+  // Функция для загрузки данных
+  const fetchCatalogData = useCallback(() => {
     setLoading(true);
+    // shelfService должен уметь принимать sort и direction
     shelfService
-      .getMyShelf(filters) // важно, чтобы сервис учитывал sort и direction
+      .getMyShelf(filters)
       .then((data) => {
-        setUserBooks(data.content);
+        setUserBooks(data.content ?? []);
         setTotalPages(data.totalPages);
       })
       .catch((err) => console.error("Ошибка загрузки каталога:", err))
       .finally(() => setLoading(false));
   }, [filters]);
 
-  // Универсальный обработчик изменения фильтра
-  const handleFilterChange = (key, value) => {
-    const newStatus = filters.status[0] === statusValue ? [] : [statusValue];
-    handleFilterChange("status", newStatus);
-  };
+  useEffect(() => {
+    fetchCatalogData();
+  }, [fetchCatalogData]);
 
-  // Отдельный обработчик статусов (массив)
+  // Обработчик статусов (логика радиокнопок)
   const handleStatusChange = (statusValue) => {
-    const newStatus = filters.status.includes(statusValue)
-      ? filters.status.filter((s) => s !== statusValue)
-      : [...filters.status, statusValue];
-
-    handleFilterChange("status", newStatus);
+    const newStatus = filters.status[0] === statusValue ? [] : [statusValue];
+    const newFilters = { ...filters, status: newStatus, page: 0 };
+    setFilters(newFilters);
+    updateUrlParams(newFilters);
   };
 
-  // Обработчик смены опции сортировки (по ключу select'а)
+  // Обработчик смены сортировки
   const handleSortChange = (e) => {
     const selectedLabel = e.target.value;
     const option = SORT_OPTIONS.find((opt) => opt.label === selectedLabel);
-
     if (!option) return;
 
     const newFilters = {
@@ -103,22 +98,27 @@ const MyCatalog = () => {
       direction: option.direction,
       page: 0,
     };
-
     setFilters(newFilters);
     updateUrlParams(newFilters);
   };
 
-  // Текущее значение select'а нужно связать с label (или собрать value вручную)
-  const currentSortOption =
+  // Обработчик смены страницы
+  const handlePageChange = (newPage) => {
+    const newFilters = { ...filters, page: newPage };
+    setFilters(newFilters);
+    updateUrlParams(newFilters);
+  };
+
+  // Вычисляем текущую выбранную опцию для select'а
+  const currentSortOptionLabel = (
     SORT_OPTIONS.find(
       (opt) => opt.sort === filters.sort && opt.direction === filters.direction
-    ) || SORT_OPTIONS[0];
+    ) || SORT_OPTIONS[0]
+  ).label;
 
   return (
     <div className="catalog-page">
       <h1 className="catalog-title">Мой каталог</h1>
-
-      {/* Панель фильтров */}
       <div className="filter-panel">
         <div className="status-filters">
           {STATUS_OPTIONS.map((opt) => (
@@ -133,10 +133,9 @@ const MyCatalog = () => {
             </button>
           ))}
         </div>
-
         <select
           className="sort-select"
-          value={currentSortOption.label}
+          value={currentSortOptionLabel}
           onChange={handleSortChange}
         >
           {SORT_OPTIONS.map((opt) => (
@@ -146,21 +145,23 @@ const MyCatalog = () => {
           ))}
         </select>
       </div>
-
-      {/* Сетка с книгами */}
       {loading ? (
         <div className="loader">Загрузка каталога...</div>
       ) : userBooks.length > 0 ? (
         <>
           <div className="books-grid">
             {userBooks.map((userBook) => (
-              <BookCard key={userBook.id} book={userBook.book} />
+              <UserBookCard
+                key={userBook.id}
+                userBook={userBook}
+                onUpdate={fetchCatalogData}
+              />
             ))}
           </div>
           <Pagination
             currentPage={filters.page}
             totalPages={totalPages}
-            onPageChange={(newPage) => handleFilterChange("page", newPage)}
+            onPageChange={handlePageChange}
           />
         </>
       ) : (

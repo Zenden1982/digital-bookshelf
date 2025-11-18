@@ -40,6 +40,7 @@ public class UserBookService {
     /**
      * Добавить книгу на полку ТЕКУЩЕГО пользователя, сразу указав статус.
      */
+    @Transactional
     public UserBookReadDTO addBookToMyShelf(UserBookCreateDTO dto, String currentUsername) {
         Book book = bookRepository.findById(dto.getBookId())
                 .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + dto.getBookId()));
@@ -64,6 +65,7 @@ public class UserBookService {
     /**
      * Обновить состояние книги на полке ТЕКУЩЕГО пользователя.
      */
+    @Transactional
     public UserBookReadDTO updateMyUserBook(UserBookUpdateDTO dto, String currentUsername) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + currentUsername));

@@ -47,6 +47,7 @@ public class TagService {
                 .orElseGet(() -> {
                     Tag newTag = new Tag();
                     newTag.setName(tagName);
+                    newTag.setUserBook(userBook);
                     newTag.setUser(currentUser);
                     return tagRepository.save(newTag);
                 });
