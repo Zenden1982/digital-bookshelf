@@ -49,7 +49,6 @@ const SearchResults = () => {
     setSearchParams({ q: query, page: newPage });
   };
 
-  // Условие показа результатов (для краткости)
   const hasResults = !loading && books.length > 0;
 
   return (
@@ -63,12 +62,17 @@ const SearchResults = () => {
       )}
       {error && <div className="error-message">{error}</div>}
 
-      {/* --- Сетка с результатами поиска --- */}
       {hasResults && (
         <>
           <div className="books-grid">
             {books.map((book) => (
-              <BookCard key={book.id} book={book} />
+              <Link
+                to={`/book/${book.id}`}
+                key={book.id}
+                className="book-card-linl"
+              >
+                <BookCard key={book.id} book={book} />
+              </Link>
             ))}
           </div>
           <Pagination
@@ -79,7 +83,6 @@ const SearchResults = () => {
         </>
       )}
 
-      {/* --- Блок импорта, который показывается ВСЕГДА, когда есть поисковый запрос --- */}
       {!loading && query && (
         <div className="import-prompt-persistent">
           <SearchIcon sx={{ fontSize: 40, color: "#546E7A" }} />

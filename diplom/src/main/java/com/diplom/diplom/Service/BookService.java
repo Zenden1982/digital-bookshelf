@@ -28,7 +28,9 @@ import org.springframework.web.client.RestTemplate;
 
 import com.diplom.diplom.Entity.Book;
 import com.diplom.diplom.Entity.User;
+import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
+import com.diplom.diplom.Entity.DTO.BookDetailDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Exception.ApiIntegrationException;
 import com.diplom.diplom.Exception.DuplicateResourceException;
@@ -70,10 +72,21 @@ public class BookService {
     }
 
     @Transactional
-    public BookReadDTO getBookById(Long id) {
-        return bookRepository.findById(id)
-                .map(BookReadDTO::toDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Книга с ID: " + id + " не найдена"));
+    public BookDetailDTO getBookById(Long id) {
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(userName)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + userName));
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + id));
+
+        // 2. Пытаемся найти эту книгу на полке текущего пользователя.
+        // Этот метод может вернуть null, и это нормально.
+        UserBook userBook = userBookRepository.findByUserAndBook(user, book).orElse(null);
+
+        // 3. Собираем финальный DTO из книги и (возможно) userBook.
+        BookDetailDTO responseDTO = BookDetailDTO.toDTO(book, userBook);
+
+        return responseDTO;
     }
 
     @Transactional

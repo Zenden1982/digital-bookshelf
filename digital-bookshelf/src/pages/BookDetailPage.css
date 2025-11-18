@@ -1,0 +1,128 @@
+/* src/pages/BookDetailPage.css */
+
+.book-detail-page {
+  padding: 48px;
+  background-color: #f5f1e8; /* Фон "Бумага" */
+  flex-grow: 1;
+}
+
+.book-detail-main {
+  display: grid;
+  /* Две колонки: левая фиксированная, правая занимает остальное место */
+  grid-template-columns: 300px 1fr;
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: start; /* Выравниваем колонки по верхнему краю */
+}
+
+/* --- Левая колонка --- */
+.book-cover-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: sticky; /* Делаем колонку "липкой" при прокрутке */
+  top: 24px;
+}
+
+.book-detail-cover {
+  width: 100%;
+  max-width: 300px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  margin-bottom: 24px;
+}
+
+.action-widget {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Переопределяем стили для карточек, когда они используются как виджет */
+.action-widget .book-card,
+.action-widget .user-book-card {
+  box-shadow: none;
+  border: 1px solid #e0e0e0;
+  background-color: #fdfdfd;
+}
+
+/* Скрываем лишние элементы внутри виджетов, чтобы не было дублирования */
+.action-widget .book-card-cover,
+.action-widget .book-card-title,
+.action-widget .book-card-author {
+  display: none;
+}
+.action-widget .user-book-card .book-card-cover,
+.action-widget .user-book-card .book-card-title,
+.action-widget .user-book-card .book-card-author {
+  display: none;
+}
+.action-widget .user-book-card .book-card-body {
+  padding: 8px; /* Уменьшаем внутренние отступы в виджете */
+}
+
+.read-button {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  background-color: #8b4513; /* Secondary */
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+}
+.read-button:hover {
+  background-color: #6b3410;
+}
+
+/* --- Правая колонка --- */
+.book-info {
+  background-color: #ffffff;
+  padding: 32px;
+  border-radius: 8px;
+}
+
+.book-info h1.book-title {
+  font-family: "Playfair Display", serif;
+  font-size: 40px;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.book-info h2.book-author {
+  font-family: "Lora", serif;
+  font-size: 22px;
+  font-style: italic;
+  color: #546e7a;
+  margin: 0 0 24px 0;
+  font-weight: 400;
+}
+
+.book-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  font-size: 14px;
+  color: #95a5a6;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.book-meta span {
+  white-space: nowrap;
+}
+
+.book-info h3 {
+  font-family: "Playfair Display", serif;
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+.book-info .book-annotation {
+  font-family: "Lora", serif;
+  line-height: 1.8;
+  color: #333;
+  white-space: pre-wrap; /* Сохраняем переносы строк в аннотации */
+}

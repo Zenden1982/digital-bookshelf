@@ -5,163 +5,379 @@
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  overflow: visible; /* Меняем на visible, чтобы меню не обрезалось */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  height: 100%;
 }
 
 .user-book-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
 }
 
-/* Общие стили из BookCard, которые мы переиспользуем */
-.user-book-card .book-card-cover {
+/* Контейнер обложки */
+.book-card-cover-container {
+  position: relative;
   width: 100%;
-  height: 250px;
-  object-fit: cover;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-}
-
-.user-book-card .book-card-body {
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  flex-grow: 1;
-}
-
-.user-book-card .book-card-title {
-  font-family: "Playfair Display", serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0;
-  line-height: 1.3;
-  height: 2.6em; /* Две строки */
+  height: 320px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  background: linear-gradient(135deg, #f5f1e8 0%, #e8dcc8 100%);
 }
 
-.user-book-card .book-card-author {
-  font-family: "Lora", serif;
-  font-size: 14px;
-  color: #546e7a;
-  margin: 4px 0 12px 0; /* Отступ до тегов */
+.book-card-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.user-book-card:hover .book-card-cover {
+  transform: scale(1.05);
+}
+
+/* Градиентный оверлей для читаемости бейджей */
+.cover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
 }
 
 /* Плашка со статусом */
 .status-badge {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
-  background-color: rgba(44, 62, 80, 0.85); /* Primary с прозрачностью */
-  color: #ffffff;
-  padding: 6px 10px;
-  border-radius: 15px;
-  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 13px;
   font-weight: 600;
+  color: #ffffff;
   z-index: 2;
-  backdrop-filter: blur(2px); /* Эффект размытия */
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .status-badge .MuiSvgIcon-root {
+  font-size: 18px;
+}
+
+.user-book-card:hover .status-badge {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Рейтинг */
+.rating-badge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(212, 175, 55, 0.95);
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.rating-badge .MuiSvgIcon-root {
   font-size: 16px;
 }
 
-/* Контейнер и кнопка для меню */
+/* Прогресс (на обложке) */
+.progress-badge {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  background: rgba(44, 62, 80, 0.9);
+  color: #ffffff;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Тело карточки */
+.book-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  flex-grow: 1;
+  gap: 8px;
+}
+
+.book-card-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.8em;
+  transition: color 0.3s ease;
+}
+
+.user-book-card:hover .book-card-title {
+  color: #8b4513;
+}
+
+.book-card-author {
+  font-family: "Lora", serif;
+  font-size: 0.875rem;
+  color: #546e7a;
+  margin: 0;
+  font-style: italic;
+}
+
+.book-card-meta {
+  font-size: 0.75rem;
+  color: #95a5a6;
+  margin: 0;
+}
+
+/* Прогресс бар внутри карточки */
+.progress-bar-container {
+  margin-top: 8px;
+}
+
+.progress-bar {
+  position: relative;
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #27ae60 0%, #d4af37 100%);
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Контейнер меню */
 .card-menu-container {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 3;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
 }
 
 .menu-toggle {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.95);
   border: none;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #2c3e50;
 }
+
 .menu-toggle:hover {
   background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.menu-toggle .MuiSvgIcon-root {
+  font-size: 24px;
+}
+
+/* Backdrop для меню */
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
 }
 
 /* Выпадающее меню */
 .status-menu {
   position: absolute;
-  top: 42px; /* Чуть ниже кнопки */
+  top: 48px;
   right: 0;
-  background-color: white;
-  border-radius: 6px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-  width: 200px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  min-width: 220px;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  animation: fadeIn 0.2s ease-out;
+  animation: menuFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 11;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-@keyframes fadeIn {
+@keyframes menuFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
-.status-menu p {
-  font-size: 12px;
-  color: #95a5a6;
-  margin: 4px 8px 8px;
-  font-weight: bold;
-  text-transform: uppercase;
+.menu-header {
+  padding: 12px 12px 8px;
 }
 
-.status-menu button {
+.menu-header p {
+  font-size: 11px;
+  color: #95a5a6;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Опции меню */
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   border: none;
   background: none;
   text-align: left;
   font-size: 14px;
   font-family: "Inter", sans-serif;
+  font-weight: 500;
+  color: #2c3e50;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.status-menu button:hover {
-  background-color: #f5f5f5;
+.menu-option:hover {
+  background-color: #f5f1e8;
 }
 
+.menu-option.active {
+  background-color: #e8dcc8;
+  color: #8b4513;
+  font-weight: 600;
+}
+
+.menu-option-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.menu-option-icon .MuiSvgIcon-root {
+  font-size: 20px;
+}
+
+.menu-option .check-icon {
+  margin-left: auto;
+  font-size: 18px;
+  color: #8b4513;
+}
+
+/* Разделитель */
 .menu-divider {
   height: 1px;
-  background-color: #efefef;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #e8e8e8 50%,
+    transparent 100%
+  );
   margin: 8px 0;
+}
+
+/* Кнопки действий */
+.menu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-action-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.menu-action-button .MuiSvgIcon-root {
+  font-size: 20px;
+}
+
+.edit-button {
+  color: #3498db;
+}
+
+.edit-button:hover {
+  background-color: #ebf5fb;
 }
 
 .delete-button {
   color: #e74c3c;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
+
 .delete-button:hover {
-  background-color: #fbecec !important;
+  background-color: #fdedec;
 }
 
 /* Оверлей загрузки */
@@ -171,12 +387,81 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.95);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   color: #8b4513;
-  font-weight: bold;
-  z-index: 4;
-  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 20;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e8e8e8;
+  border-top-color: #8b4513;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .book-card-cover-container {
+    height: 280px;
+  }
+
+  .book-card-body {
+    padding: 16px;
+  }
+
+  .book-card-title {
+    font-size: 1rem;
+  }
+
+  .status-badge,
+  .rating-badge,
+  .progress-badge {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .status-menu {
+    min-width: 200px;
+  }
+}
+
+/* Улучшенная доступность */
+.menu-toggle:focus-visible,
+.menu-option:focus-visible,
+.menu-action-button:focus-visible {
+  outline: 2px solid #8b4513;
+  outline-offset: 2px;
+}
+
+/* Анимация при добавлении/удалении */
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.user-book-card {
+  animation: cardAppear 0.3s ease-out;
 }

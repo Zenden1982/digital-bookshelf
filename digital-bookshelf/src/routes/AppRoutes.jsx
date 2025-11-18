@@ -7,13 +7,13 @@ import PublicRoute from "./PublicRoute";
 // Импорт страниц
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
+import BookDetailPage from "../pages/BookDetailPage";
 import Chat from "../pages/Chat";
 import Home from "../pages/Home";
-import ImportPage from "../pages/ImportPage"; // <<< ИМПОРТИРУЕМ НОВУЮ СТРАНИЦУ
+import ImportPage from "../pages/ImportPage";
 import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
 import SearchResults from "../pages/SearchResults";
-
 const AppRoutes = () => {
   return (
     <Routes>
@@ -61,7 +61,15 @@ const AppRoutes = () => {
         }
       />
 
-      {/* НОВЫЙ МАРШРУТ ДЛЯ ИМПОРТА */}
+      <Route
+        path="/book/:bookId"
+        element={
+          <PrivateRoute>
+            <BookDetailPage />
+          </PrivateRoute>
+        }
+      />
+
       <Route
         path="/import"
         element={

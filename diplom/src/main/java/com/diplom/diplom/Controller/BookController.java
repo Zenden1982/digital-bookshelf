@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.diplom.diplom.Entity.DTO.BookDetailDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Service.BookService;
 
@@ -38,8 +39,8 @@ public class BookController {
      * Получить конкретную книгу по ее ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<BookReadDTO> getBookById(@PathVariable Long id) {
-        BookReadDTO book = bookService.getBookById(id);
+    public ResponseEntity<BookDetailDTO> getBookById(@PathVariable Long id) {
+        BookDetailDTO book = bookService.getBookById(id);
         return ResponseEntity.ok(book);
     }
 
@@ -66,4 +67,5 @@ public class BookController {
         Page<BookReadDTO> similarBooks = bookService.findSimilarBooks(query, topK, page, size);
         return ResponseEntity.ok(similarBooks);
     }
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.diplom.diplom.Entity.Status;
 import com.diplom.diplom.Entity.Tag;
+import com.diplom.diplom.Entity.UserBook;
 
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +26,21 @@ public class UserBookReadDTO {
     private LocalDateTime updatedAt;
     private List<Tag> tags;
     private Boolean isFavorite;
+
+    public static UserBookReadDTO toDTO(UserBook userBook) {
+        return UserBookReadDTO.builder()
+                .id(userBook.getId())
+                .book(BookReadDTO.toDTO(userBook.getBook()))
+                .user(UserReadDTO.toDTO(userBook.getUser()))
+                .progress(userBook.getProgress())
+                .currentPage(userBook.getCurrentPage())
+                .totalPages(userBook.getTotalPages())
+                .status(userBook.getStatus())
+                .rating(userBook.getRating())
+                .addedAt(userBook.getAddedAt())
+                .updatedAt(userBook.getUpdatedAt())
+                .tags(userBook.getTags())
+                .isFavorite(userBook.getIsFavorite())
+                .build();
+    }
 }

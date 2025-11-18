@@ -1,20 +1,17 @@
 // src/pages/MyCatalog.jsx
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import UserBookCard from "../components/book/UserBookCard"; // Используем новую карточку
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
 import "./MyCatalog.css";
-
-// <<< ВАШИ НОВЫЕ ОПЦИИ СТАТУСОВ >>>
 const STATUS_OPTIONS = [
   { value: "FINISHED", label: "Прочитано" },
   { value: "READING", label: "Читаю" },
   { value: "PLAN_TO_READ", label: "В планах" },
 ];
 
-// <<< ВАШИ НОВЫЕ ОПЦИИ СОРТИРОВКИ >>>
 const SORT_OPTIONS = [
   { sort: "addedAt", direction: "DESC", label: "По дате добавления (новые)" },
   { sort: "addedAt", direction: "ASC", label: "По дате добавления (старые)" },
@@ -26,7 +23,6 @@ const SORT_OPTIONS = [
 const MyCatalog = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Инициализация состояния на основе URL и ваших новых опций
   const initialSortOption =
     SORT_OPTIONS.find(
       (opt) =>
@@ -46,7 +42,6 @@ const MyCatalog = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Функция для обновления URL
   const updateUrlParams = useCallback(
     (newFilters) => {
       const params = new URLSearchParams();
@@ -60,10 +55,8 @@ const MyCatalog = () => {
     [setSearchParams]
   );
 
-  // Функция для загрузки данных
   const fetchCatalogData = useCallback(() => {
     setLoading(true);
-    // shelfService должен уметь принимать sort и direction
     shelfService
       .getMyShelf(filters)
       .then((data) => {
@@ -78,7 +71,6 @@ const MyCatalog = () => {
     fetchCatalogData();
   }, [fetchCatalogData]);
 
-  // Обработчик статусов (логика радиокнопок)
   const handleStatusChange = (statusValue) => {
     const newStatus = filters.status[0] === statusValue ? [] : [statusValue];
     const newFilters = { ...filters, status: newStatus, page: 0 };
@@ -102,14 +94,12 @@ const MyCatalog = () => {
     updateUrlParams(newFilters);
   };
 
-  // Обработчик смены страницы
   const handlePageChange = (newPage) => {
     const newFilters = { ...filters, page: newPage };
     setFilters(newFilters);
     updateUrlParams(newFilters);
   };
 
-  // Вычисляем текущую выбранную опцию для select'а
   const currentSortOptionLabel = (
     SORT_OPTIONS.find(
       (opt) => opt.sort === filters.sort && opt.direction === filters.direction
@@ -151,11 +141,17 @@ const MyCatalog = () => {
         <>
           <div className="books-grid">
             {userBooks.map((userBook) => (
-              <UserBookCard
+              <Link
                 key={userBook.id}
-                userBook={userBook}
-                onUpdate={fetchCatalogData}
-              />
+                to={`/book/${userBook.book.id}`}
+                className="book-card-link"
+              >
+                <UserBookCard
+                  key={userBook.id}
+                  userBook={userBook}
+                  onUpdate={fetchCatalogData}
+                />
+              </Link>
             ))}
           </div>
           <Pagination

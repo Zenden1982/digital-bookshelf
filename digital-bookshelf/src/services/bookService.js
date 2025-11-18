@@ -74,4 +74,17 @@ export const bookService = {
       throw error;
     }
   },
+
+  getBookDetail: async (bookId) => {
+    try {
+      const response = await api.get(`/books/${bookId}`);
+      return response.data; // { book: {...}, userBook: {...} }
+    } catch (error) {
+      console.error(
+        `Ошибка при получении детализации книги (ID=${bookId}):`,
+        error
+      );
+      throw error;
+    }
+  },
 };
