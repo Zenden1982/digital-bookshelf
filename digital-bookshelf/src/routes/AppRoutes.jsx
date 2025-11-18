@@ -7,16 +7,17 @@ import PublicRoute from "./PublicRoute";
 // Импорт страниц
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
-import Books from "../pages/Books";
 import Chat from "../pages/Chat";
 import Home from "../pages/Home";
+import ImportPage from "../pages/ImportPage"; // <<< ИМПОРТИРУЕМ НОВУЮ СТРАНИЦУ
+import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
-import SearchResults from "../pages/SearchResults"; // <<< ИМПОРТИРУЕМ НОВУЮ СТРАНИЦУ
+import SearchResults from "../pages/SearchResults";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* === ПУБЛИЧНЫЕ МАРШРУТЫ === */}
+      {/* ПУБЛИЧНЫЕ МАРШРУТЫ */}
       <Route
         path="/login"
         element={
@@ -34,7 +35,7 @@ const AppRoutes = () => {
         }
       />
 
-      {/* === ПРИВАТНЫЕ МАРШРУТЫ === */}
+      {/* ПРИВАТНЫЕ МАРШРУТЫ */}
       <Route
         path="/"
         element={
@@ -43,8 +44,6 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
-
-      {/* === НОВЫЙ МАРШРУТ ДЛЯ СТРАНИЦЫ ПОИСКА === */}
       <Route
         path="/search"
         element={
@@ -53,16 +52,26 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
-
-      {/* --- Заглушки для будущих страниц из хедера --- */}
       <Route
         path="/my-catalog"
         element={
           <PrivateRoute>
-            <Books />
+            <MyCatalog />
           </PrivateRoute>
         }
       />
+
+      {/* НОВЫЙ МАРШРУТ ДЛЯ ИМПОРТА */}
+      <Route
+        path="/import"
+        element={
+          <PrivateRoute>
+            <ImportPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* --- Заглушки --- */}
       <Route
         path="/reader/:bookId"
         element={
@@ -77,7 +86,7 @@ const AppRoutes = () => {
           <PrivateRoute>
             <Chat />
           </PrivateRoute>
-        } // Используем заглушку Chat для Карты
+        }
       />
       <Route
         path="/analytics"
@@ -85,10 +94,10 @@ const AppRoutes = () => {
           <PrivateRoute>
             <Chat />
           </PrivateRoute>
-        } // Используем заглушку Chat для Аналитики
+        }
       />
 
-      {/* Страница не найдена - редирект на главную */}
+      {/* Редирект */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

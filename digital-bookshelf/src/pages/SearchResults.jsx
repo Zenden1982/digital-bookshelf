@@ -1,27 +1,27 @@
 // src/pages/SearchResults.jsx
 
+import SearchIcon from "@mui/icons-material/Search";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import BookCard from "../components/book/BookCard"; // Создадим этот компонент дальше
+import { Link, useSearchParams } from "react-router-dom";
+import BookCard from "../components/book/BookCard";
+import Pagination from "../components/common/Pagination";
 import { bookService } from "../services/bookService";
-import "./SearchResults.css"; // И стили тоже
+import "./SearchResults.css";
 
 const SearchResults = () => {
-  const [searchParams] = useSearchParams();
-  const query = searchParams.get("q"); // Получаем поисковый запрос из URL ?q=...
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = searchParams.get("q") || "";
+  const page = parseInt(searchParams.get("page") || "0", 10);
 
-  // Состояния для результатов, загрузки и ошибок
-  const [myLibraryBooks, setMyLibraryBooks] = useState([]);
-  const [googleBooks, setGoogleBooks] = useState([]);
+  const [books, setBooks] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Эффект для выполнения поиска при изменении query
   useEffect(() => {
-    // Не выполняем поиск, если запроса нет
     if (!query) {
-      setMyLibraryBooks([]);
-      setGoogleBooks([]);
+      setBooks([]);
+      setTotalPages(0);
       return;
     }
 
@@ -29,11 +29,13 @@ const SearchResults = () => {
       setLoading(true);
       setError("");
       try {
-        const results = await bookService.searchBooks(query);
-        setMyLibraryBooks(results.myLibraryBooks || []);
-        setGoogleBooks(results.googleBooks || []);
+        const results = await bookService.searchLocal(query, page, 20);
+        setBooks(results?.content || []);
+        setTotalPages(results?.totalPages || 0);
       } catch (err) {
         setError("Произошла ошибка во время поиска. Попробуйте снова.");
+        setBooks([]);
+        setTotalPages(0);
         console.error("Ошибка поиска:", err);
       } finally {
         setLoading(false);
@@ -41,14 +43,14 @@ const SearchResults = () => {
     };
 
     fetchResults();
-  }, [query]); // Перезапускаем эффект каждый раз, когда меняется query в URL
+  }, [query, page]);
 
-  // Сообщение, если ничего не найдено
-  const isNotFound =
-    !loading &&
-    !error &&
-    myLibraryBooks.length === 0 &&
-    googleBooks.length === 0;
+  const handlePageChange = (newPage) => {
+    setSearchParams({ q: query, page: newPage });
+  };
+
+  // Условие показа результатов (для краткости)
+  const hasResults = !loading && books.length > 0;
 
   return (
     <div className="search-results-page">
@@ -56,44 +58,43 @@ const SearchResults = () => {
         Результаты поиска по запросу: <span>"{query}"</span>
       </h1>
 
-      {loading && <div className="loader">Идет поиск...</div>}
+      {loading && (
+        <div className="loader">Идет поиск по нашей библиотеке...</div>
+      )}
       {error && <div className="error-message">{error}</div>}
-      {isNotFound && (
-        <div className="not-found-message">
-          К сожалению, по вашему запросу ничего не найдено.
+
+      {/* --- Сетка с результатами поиска --- */}
+      {hasResults && (
+        <>
+          <div className="books-grid">
+            {books.map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </>
+      )}
+
+      {/* --- Блок импорта, который показывается ВСЕГДА, когда есть поисковый запрос --- */}
+      {!loading && query && (
+        <div className="import-prompt-persistent">
+          <SearchIcon sx={{ fontSize: 40, color: "#546E7A" }} />
+          <h3>Не нашли то, что искали?</h3>
+          <p>
+            Попробуйте найти книгу в глобальном каталоге и добавить её на наш
+            сайт.
+          </p>
+          <Link
+            to={`/import?q=${encodeURIComponent(query)}`}
+            className="action-button primary"
+          >
+            Перейти к импорту
+          </Link>
         </div>
-      )}
-
-      {/* --- Секция с книгами из вашей библиотеки --- */}
-      {!loading && myLibraryBooks.length > 0 && (
-        <section className="results-section">
-          <h2>Найдено в вашей библиотеке</h2>
-          <div className="books-grid">
-            {myLibraryBooks.map((book) => (
-              <BookCard
-                key={`mylib-${book.id}`}
-                book={book}
-                type="my-library"
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* --- Секция с книгами из Google Books --- */}
-      {!loading && googleBooks.length > 0 && (
-        <section className="results-section">
-          <h2>Найдено в сети</h2>
-          <div className="books-grid">
-            {googleBooks.map((book) => (
-              <BookCard
-                key={`google-${book.googleBookId}`}
-                book={book}
-                type="google"
-              />
-            ))}
-          </div>
-        </section>
       )}
     </div>
   );

@@ -1,0 +1,76 @@
+/* src/pages/ImportPage.css */
+
+.import-page {
+  padding: 48px;
+  background-color: #f5f1e8;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.import-title {
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  color: #2c3e50;
+}
+
+.import-subtitle {
+  font-family: "Lora", serif;
+  font-size: 18px;
+  color: #546e7a;
+  margin-bottom: 32px;
+}
+
+/* Поисковая строка на странице импорта */
+.import-search-bar {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 48px;
+}
+
+.import-search-bar input {
+  flex-grow: 1;
+  font-family: "Lora", serif;
+  font-size: 16px;
+  padding: 12px 16px;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  transition: border-color 0.3s ease;
+}
+
+.import-search-bar input:focus {
+  outline: none;
+  border-color: #8b4513; /* Secondary */
+}
+
+.import-search-bar button {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.import-search-bar button:hover {
+  background-color: #6b3410;
+}
+
+.import-search-bar button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Стили для сетки и пагинации будут общими,
+   но можно добавить специфичные отступы, если нужно. */
+.import-page .books-grid {
+  width: 100%;
+  max-width: 1200px;
+}

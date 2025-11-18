@@ -1,0 +1,77 @@
+/* src/pages/MyCatalog.css */
+
+.catalog-page {
+  padding: 48px;
+  background-color: #f5f1e8; /* Фон "Бумага" */
+  flex-grow: 1;
+}
+
+.catalog-title {
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  color: #2c3e50; /* Primary */
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+/* Панель фильтров */
+.filter-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 48px;
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.status-filters {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-button {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+  background-color: #efefef;
+  color: #546e7a;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-button:hover {
+  background-color: #e0e0e0;
+  color: #2c3e50;
+}
+
+.filter-button.active {
+  background-color: #8b4513; /* Secondary */
+  color: #ffffff;
+  border-color: #d4af37; /* Accent */
+}
+
+/* Выпадающий список сортировки */
+.sort-select {
+  font-family: "Lora", serif;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #bdbdbd;
+  background-color: #ffffff;
+}
+
+/* Сообщение о пустом каталоге */
+.empty-catalog {
+  text-align: center;
+  padding: 80px 20px;
+  font-family: "Lora", serif;
+  font-size: 20px;
+  color: #546e7a;
+  border: 2px dashed #95a5a6;
+  border-radius: 8px;
+}

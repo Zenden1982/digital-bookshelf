@@ -51,3 +51,65 @@
   border: 2px dashed #95a5a6;
   border-radius: 8px;
 }
+
+.import-prompt {
+  display: flex;
+  flex-direction: column; /* Выстраиваем элементы в колонку */
+  align-items: center; /* Центрируем по горизонтали */
+  text-align: center; /* Центрируем текст внутри элементов */
+
+  padding: 60px 40px;
+  margin-top: 40px;
+  border: 2px dashed #95a5a6;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.import-prompt h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  color: #2c3e50;
+  margin-top: 16px; /* Отступ от иконки */
+  margin-bottom: 16px;
+}
+
+.import-prompt p {
+  font-family: "Lora", serif;
+  color: #546e7a;
+  margin-bottom: 32px; /* Увеличиваем отступ до кнопки */
+  max-width: 450px;
+}
+
+/* Кнопка наследует стили, но мы можем добавить отступ, если нужно */
+.import-prompt .action-button.primary {
+  /* Стили для кнопки уже есть в BookCard.css, они применятся */
+}
+
+/* Добавить в конец src/pages/SearchResults.css */
+
+.import-prompt-persistent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  margin-top: 64px; /* Большой отступ сверху */
+  padding: 32px 40px;
+  border-top: 2px solid #d4af37; /* Акцентная линия сверху */
+  background-color: #fdfbf5; /* Чуть темнее основного фона */
+}
+
+.import-prompt-persistent h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 22px;
+  color: #2c3e50;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+
+.import-prompt-persistent p {
+  font-family: "Lora", serif;
+  color: #546e7a;
+  margin-bottom: 24px;
+  max-width: 450px;
+}

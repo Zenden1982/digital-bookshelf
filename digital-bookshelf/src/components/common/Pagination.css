@@ -1,0 +1,50 @@
+/* src/components/common/Pagination.css */
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+}
+
+.pagination-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+
+.pagination-item button {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #bdbdbd;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-item button:hover {
+  background-color: #f5f1e8;
+  border-color: #8b4513;
+}
+
+/* Активная страница */
+.pagination-item.active button {
+  background-color: #8b4513; /* Secondary */
+  color: #ffffff;
+  border-color: #8b4513;
+}
+
+/* Отключенные кнопки */
+.pagination-item.disabled button {
+  background-color: #efefef;
+  color: #bdbdbd;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}

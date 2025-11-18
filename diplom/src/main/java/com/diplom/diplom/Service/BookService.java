@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.ai.document.Document;
@@ -18,17 +19,23 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.diplom.diplom.Entity.Book;
+import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Exception.ApiIntegrationException;
 import com.diplom.diplom.Exception.DuplicateResourceException;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.BookRepository;
+import com.diplom.diplom.Repository.UserBookRepository;
+import com.diplom.diplom.Repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,11 +52,14 @@ public class BookService {
     private final EmbeddingModel embeddingClient;
     private final VectorStore vectorStore;
 
+    private final UserBookRepository userBookRepository;
     @Value("${google.books.api.url}")
     private String googleBooksApiUrl;
 
     @Value("${google.books.api.key}")
     private String googleBooksApiKey;
+
+    private final UserRepository userRepository;
 
     // ========== CRUD операции ==========
 
@@ -110,47 +120,75 @@ public class BookService {
     }
 
     @Transactional
-    public List<BookReadDTO> searchInMyLibrary(String query) {
+    public Page<BookReadDTO> searchInMyLibrary(String query, int page, int size) {
+
         if (query == null || query.trim().isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty(PageRequest.of(page, size));
         }
         try {
-            List<Book> books = bookRepository.searchByTitleOrAuthorOrIsbn(query);
-            return books.stream()
-                    .map(this::mapToBookReadDTO)
-                    .collect(Collectors.toList());
+            User user = getCurrentUser();
+            Page<Book> books = bookRepository.searchByTitleOrAuthorOrIsbn(
+                    query,
+                    PageRequest.of(page, size));
+            List<Long> bookIds = books.map(Book::getId).getContent();
+            Set<Long> addedBookIds = userBookRepository.findBookIdsByUser(user.getId(), bookIds);
+            return books.map(book -> {
+                BookReadDTO dto = mapToBookReadDTO(book);
+                dto.setIsAdded(addedBookIds.contains(book.getId()));
+                return dto;
+            });
+
         } catch (Exception e) {
             log.error("Ошибка при поиске в своей библиотеке: {}", e.getMessage(), e);
-            throw new ApiIntegrationException("Ошибка при поиске в Google Books API: " + e.getMessage(), e);
+            throw new ApiIntegrationException("Ошибка при поиске в своей библиотеке: " + e.getMessage(), e);
         }
     }
 
-    public List<BookReadDTO> searchInGoogleBooks(String query, int maxResults) {
+    public Page<BookReadDTO> searchInGoogleBooks(String query, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty(PageRequest.of(page, size));
         }
         try {
             String searchQuery = isIsbnFormat(query) ? "isbn:" + query.replace("-", "") : query;
             String encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8);
 
-            URI uri = URI.create(googleBooksApiUrl + "?q=" + encodedQuery + "&langRestrict=ru"
-                    + "&maxResults=" + maxResults + "&key=" + googleBooksApiKey);
+            // пусть size = сколько книг мы хотим максимум получить от Google за один запрос
+            int maxResults = size * 3; // запас, можно 40 (лимит Google по умолчанию)
+
+            URI uri = URI.create(googleBooksApiUrl
+                    + "?q=" + encodedQuery
+                    + "&langRestrict=ru"
+                    + "&maxResults=" + maxResults
+                    + "&key=" + googleBooksApiKey);
 
             log.info("Запрос к Google Books API: {}", uri);
             Map<String, Object> response = restTemplate.getForObject(uri, Map.class);
 
             if (response == null || !response.containsKey("items")) {
-                return Collections.emptyList();
+                return Page.empty(PageRequest.of(page, size));
             }
+
             List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("items");
-            return items.stream()
+
+            List<BookReadDTO> allResults = items.stream()
                     .map(this::convertGoogleBookToDTO)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
+            // Ручная пагинация по списку allResults
+            Pageable pageable = PageRequest.of(page, size);
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), allResults.size());
+            if (start >= allResults.size()) {
+                return new PageImpl<>(Collections.emptyList(), pageable, allResults.size());
+            }
+
+            List<BookReadDTO> pageContent = allResults.subList(start, end);
+            return new PageImpl<>(pageContent, pageable, allResults.size());
+
         } catch (Exception e) {
             log.error("Ошибка при поиске в Google Books API: {}", e.getMessage(), e);
-            return Collections.emptyList();
+            return Page.empty(PageRequest.of(page, size));
         }
     }
 
@@ -164,7 +202,7 @@ public class BookService {
             throw new DuplicateResourceException("Книга с ISBN" + isbn + "уже существует.");
         }
 
-        List<BookReadDTO> googleResults = searchInGoogleBooks(isbn, 1);
+        List<BookReadDTO> googleResults = searchInGoogleBooks(isbn, 0, 1).getContent();
         if (googleResults.isEmpty() || googleResults.get(0) == null) {
             throw new ResourceNotFoundException("Книга с ISBN " + isbn + " не найдена в Google Books.");
         }
@@ -197,22 +235,33 @@ public class BookService {
 
     // ========== Вспомогательные методы ==========
 
-    public List<BookReadDTO> findSimilarBooks(String query, int topK) {
+    public Page<BookReadDTO> findSimilarBooks(String query, int topK, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
-            return Collections.emptyList();
+            return Page.empty(PageRequest.of(page, size));
         }
+
         SearchRequest request = SearchRequest.builder()
                 .query(query)
                 .topK(topK)
                 .similarityThreshold(0.5)
                 .build();
+
         List<Document> similarDocs = vectorStore.similaritySearch(request);
         List<Long> bookIds = similarDocs.stream()
                 .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
                 .collect(Collectors.toList());
-        return bookRepository.findAllById(bookIds).stream()
+
+        List<BookReadDTO> dtoList = bookRepository.findAllById(bookIds).stream()
                 .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
+
+        // Простая "ручная" обёртка в Page
+        PageRequest pageRequest = PageRequest.of(page, size);
+        int start = (int) pageRequest.getOffset();
+        int end = Math.min(start + pageRequest.getPageSize(), dtoList.size());
+        List<BookReadDTO> pageContent = start >= dtoList.size() ? List.of() : dtoList.subList(start, end);
+
+        return new PageImpl<>(pageContent, pageRequest, dtoList.size());
     }
 
     /**
@@ -333,4 +382,11 @@ public class BookService {
                 .googleBookId(book.getGoogleBookId())
                 .build();
     }
+
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
+    }
+
 }

@@ -3,77 +3,75 @@
 import api from "./api"; // Наш настроенный axios-клиент
 
 /**
- * Сервис для работы с глобальным каталогом книг (API /api/books)
+ * Сервис для работы с локальным каталогом книг (API /api/books)
  */
 export const bookService = {
   /**
-   * Выполняет комбинированный поиск по внутренней библиотеке и Google Books.
+   * Выполняет поиск по локальной базе данных.
    * Вызывает: GET /api/books/search
    *
-   * @param {string} query - Поисковый запрос (название, автор, ISBN и т.д.).
-   * @param {number} maxResults - Максимальное количество результатов (по умолчанию 20).
-   * @returns {Promise<BookSearchResultDTO>} - Объект с результатами поиска,
-   *   содержащий списки myLibraryBooks и googleBooks.
+   * @param {string} query - Поисковый запрос.
+   * @param {number} page - Номер страницы.
+   * @param {number} size - Количество элементов на странице.
+   * @returns {Promise<Page<BookReadDTO>>} - Объект страницы (Page) с результатами поиска.
    */
-  searchBooks: async (query, maxResults = 20) => {
+  searchLocal: async (query, page = 0, size = 20) => {
     try {
-      // Предотвращаем отправку пустого запроса на бэкенд
       if (!query || query.trim() === "") {
-        return {
-          myLibraryBooks: [],
-          googleBooks: [],
-          query: "",
-          totalMyBooks: 0,
-          totalGoogleBooks: 0,
-        };
+        // Если запрос пустой, возвращаем пустую страницу, чтобы не дергать бэкенд
+        return { content: [], totalElements: 0, totalPages: 0, number: 0 };
       }
 
-      // Делаем GET запрос, axios автоматически преобразует params в URL-параметры
-      // /api/books/search?query=...&maxResults=...
       const response = await api.get("/books/search", {
         params: {
           query,
-          maxResults,
+          page,
+          size,
         },
       });
 
-      // Бэкенд возвращает готовый BookSearchResultDTO
+      // Бэкенд возвращает стандартный объект Page<BookReadDTO>
       return response.data;
     } catch (error) {
-      console.error("Ошибка при поиске книг:", error);
+      console.error("Ошибка при поиске по локальной базе:", error);
       throw error;
     }
   },
 
   /**
-   * Сохраняет книгу из Google Books в локальную базу данных.
-   * Эта функция вызывается, когда пользователь хочет добавить книгу, которой нет в нашей базе.
-   * Вызывает: POST /api/books/save-from-google/{googleBookId}
+   * Получает детальную информацию о книге по её ID.
+   * Вызывает: GET /api/books/{id}
    *
-   * @param {string} googleBookId - ID книги в Google Books.
-   * @returns {Promise<BookReadDTO>} - Возвращает BookReadDTO сохраненной книги
-   *   с новым ID из нашей локальной базы данных.
+   * @param {number} bookId - ID книги.
+   * @returns {Promise<BookReadDTO>} - DTO с детальной информацией о книге.
    */
-  saveFromGoogle: async (googleBookId) => {
+  getBookById: async (bookId) => {
     try {
-      if (!googleBookId) {
-        throw new Error("googleBookId не может быть пустым");
-      }
-
-      // Делаем POST-запрос. Тело запроса не нужно, т.к. ID передается в URL.
-      const response = await api.post(
-        `/books/save-from-google/${googleBookId}`
-      );
-
-      // Бэкенд возвращает BookReadDTO новой созданной книги
+      const response = await api.get(`/books/${bookId}`);
       return response.data;
     } catch (error) {
-      console.error("Ошибка при сохранении книги из Google Books:", error);
+      console.error(`Ошибка при получении книги с ID ${bookId}:`, error);
       throw error;
     }
   },
 
-  // Здесь в будущем можно будет добавить остальные функции для работы с книгами,
-  // например, получение детальной информации о книге по ее ID.
-  // getBookById: async (bookId) => { ... }
+  /**
+   * Получает все книги с пагинацией.
+   * Вызывает: GET /api/books
+   *
+   * @param {number} page - Номер страницы.
+   * @param {number} size - Количество элементов на странице.
+   * @returns {Promise<Page<BookReadDTO>>} - Объект страницы (Page).
+   */
+  getAllBooks: async (page = 0, size = 20) => {
+    try {
+      const response = await api.get("/books", {
+        params: { page, size },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при получении списка всех книг:", error);
+      throw error;
+    }
+  },
 };

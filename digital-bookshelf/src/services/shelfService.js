@@ -7,30 +7,31 @@ import api from "./api"; // Наш настроенный axios-клиент
  */
 export const shelfService = {
   /**
-   * Получить книги с полки текущего пользователя.
+   * Получает книги с полки текущего пользователя с возможностью фильтрации, сортировки и поиска.
    * Вызывает: GET /api/shelf
    *
-   * @param {number} page - Номер страницы для пагинации (по умолчанию 0).
-   * @param {number} size - Количество книг на странице (по умолчанию 100, чтобы загрузить побольше для полки).
-   * @returns {Promise<Page<UserBookReadDTO>>} - Объект страницы, где `content` - это массив книг.
+   * @param {object} params - Объект с параметрами запроса.
+   * @param {number} [params.page=0] - Номер страницы.
+   * @param {number} [params.size=20] - Количество элементов на странице.
+   * @param {string} [params.query] - Поисковый запрос по названию или автору.
+   * @param {string[]} [params.status] - Массив статусов для фильтрации (['READING', 'READ']).
+   * @param {string} [params.sort] - Строка сортировки (например, 'book.title,asc').
+   * @returns {Promise<Page<UserBookReadDTO>>} - Объект страницы с книгами пользователя.
    */
-  getMyShelf: async (page = 0, size = 100) => {
+  getMyShelf: async (params = {}) => {
     try {
-      // Делаем GET запрос с параметрами пагинации
-      const response = await api.get("/shelf", {
-        params: { page, size },
-      });
-      // Бэкенд возвращает объект Page, где книги лежат в поле "content"
+      // Axios умеет корректно сериализовывать массив в параметры URL
+      // (например, status=READING&status=READ), что Spring понимает по умолчанию.
+      const response = await api.get("/shelf", { params });
       return response.data;
     } catch (error) {
       console.error("Ошибка при загрузке полки пользователя:", error);
-      // Пробрасываем ошибку выше, чтобы компонент мог ее обработать
       throw error;
     }
   },
 
   /**
-   * Добавить книгу на свою полку.
+   * Добавляет книгу на свою полку.
    * Вызывает: POST /api/shelf
    *
    * @param {UserBookCreateDTO} dto - Объект { bookId: number, status: string }.
@@ -47,25 +48,28 @@ export const shelfService = {
   },
 
   /**
-   * Обновить статус, прогресс или рейтинг книги на своей полке.
-   * Вызывает: PATCH /api/shelf
+   * Обновляет статус, прогресс или рейтинг книги на своей полке.
+   * Вызывает: PATCH /api/shelf/{id}
    *
-   * @param {UserBookUpdateDTO} dto - Объект { userBookId, progress, status, rating, currentPage }.
+   * @param {number} userBookId - ID записи UserBook, которую нужно обновить.
+   * @param {UserBookUpdateDTO} dto - Объект с обновляемыми полями { progress, status, rating, currentPage }.
    * @returns {Promise<UserBookReadDTO>} - Возвращает обновленную запись UserBook.
    */
-  updateMyUserBook: async (dto) => {
+  updateMyUserBook: async (userBookId, dto) => {
     try {
-      // Используем PATCH, так как обновляем только часть данных
-      const response = await api.patch("/shelf", dto);
+      const response = await api.patch(`/shelf/${userBookId}`, dto);
       return response.data;
     } catch (error) {
-      console.error("Ошибка при обновлении книги на полке:", error);
+      console.error(
+        `Ошибка при обновлении книги ${userBookId} на полке:`,
+        error
+      );
       throw error;
     }
   },
 
   /**
-   * Удалить книгу со своей полки.
+   * Удаляет книгу со своей полки.
    * Вызывает: DELETE /api/shelf/{id}
    *
    * @param {number} userBookId - ID записи UserBook, которую нужно удалить.
@@ -73,10 +77,9 @@ export const shelfService = {
    */
   deleteMyUserBook: async (userBookId) => {
     try {
-      // Делаем DELETE запрос на /shelf/123, где 123 - это userBookId
       await api.delete(`/shelf/${userBookId}`);
     } catch (error) {
-      console.error("Ошибка при удалении книги с полки:", error);
+      console.error(`Ошибка при удалении книги ${userBookId} с полки:`, error);
       throw error;
     }
   },

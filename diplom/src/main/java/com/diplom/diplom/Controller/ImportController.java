@@ -1,7 +1,6 @@
 package com.diplom.diplom.Controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,11 +35,12 @@ public class ImportController {
      * (АДМИН) Поиск книг в Google Books для импорта.
      */
     @GetMapping("/search-google")
-    public ResponseEntity<List<BookReadDTO>> searchGoogleBooks(
+    public ResponseEntity<Page<BookReadDTO>> searchGoogleBooks(
             @RequestParam String query,
-            @RequestParam(defaultValue = "20") int maxResults) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
 
-        List<BookReadDTO> results = bookService.searchInGoogleBooks(query, maxResults);
+        Page<BookReadDTO> results = bookService.searchInGoogleBooks(query, page, size);
         return ResponseEntity.ok(results);
     }
 

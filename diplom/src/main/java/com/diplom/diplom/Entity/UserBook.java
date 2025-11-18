@@ -8,7 +8,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -56,8 +55,7 @@ public class UserBook {
     private Integer currentPage;
     private Integer totalPages;
 
-    @Column(nullable = false)
-    private boolean isFavorite;
+    private Boolean isFavorite;
 
     @OneToMany(mappedBy = "userBook", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
