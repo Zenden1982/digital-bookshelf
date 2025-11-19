@@ -289,24 +289,51 @@ public class BookService {
 
         log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
 
-        // 1. Формируем текст для генерации вектора
         String textToEmbed = book.getTitle() + ". " + book.getAuthor() + ". " + book.getAnnotation();
 
-        // 2. Создаем метаданные для связи вектора с книгой
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("book_id", book.getId());
         metadata.put("title", book.getTitle());
         metadata.put("author", book.getAuthor());
 
-        // 3. Создаем объект Document
         Document document = new Document(textToEmbed, metadata);
 
-        // 4. Добавляем документ в VectorStore
-        // Spring AI сам вызовет EmbeddingModel, сгенерирует вектор и сохранит его в
-        // PostgreSQL
         vectorStore.add(List.of(document));
 
         log.info("Вектор для книги '{}' успешно сохранен в VectorStore", book.getTitle());
+    }
+
+    public List<BookReadDTO> findSimilarBooksByBookId(Long bookId, int limit) {
+        Book sourceBook = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Книга с ID " + bookId + " не найдена"));
+
+        if (sourceBook.getTitle() == null || sourceBook.getAnnotation() == null) {
+            log.warn("Невозможно найти похожие книги для bookId={}, т.к. отсутствуют данные.", bookId);
+            return Collections.emptyList();
+        }
+        String queryText = sourceBook.getTitle() + ". " + sourceBook.getAuthor() + ". " + sourceBook.getAnnotation();
+
+        SearchRequest request = SearchRequest.builder()
+                .query(queryText)
+                .topK(limit + 1)
+                .similarityThreshold(0.8)
+                .build();
+
+        List<Document> similarDocuments = vectorStore.similaritySearch(request);
+
+        List<Long> similarBookIds = similarDocuments.stream()
+                .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
+                .filter(id -> !id.equals(bookId))
+                .limit(limit)
+                .collect(Collectors.toList());
+
+        if (similarBookIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return bookRepository.findAllById(similarBookIds).stream()
+                .map(this::mapToBookReadDTO)
+                .collect(Collectors.toList());
     }
 
     private BookReadDTO convertGoogleBookToDTO(Map<String, Object> googleBook) {

@@ -315,14 +315,17 @@
   padding-bottom: 2rem;
   border-bottom: 2px solid #e8e8e8;
 }
-
-.book-title {
+.book-detail-page .book-title {
   font-family: "Playfair Display", serif;
   font-size: 3rem;
   font-weight: 700;
   color: #2c3e50;
   margin: 0 0 1rem 0;
   line-height: 1.2;
+
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .book-author {
@@ -552,4 +555,36 @@
 
 .book-detail-container {
   animation: fadeIn 0.5s ease-out;
+}
+
+.similar-books-section {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.similar-books-grid {
+  display: grid;
+  /* Адаптивная сетка для карточек */
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.similar-book-link {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.similar-book-link:hover {
+  transform: translateY(-5px);
+}
+
+/* Немного уменьшим карточки в блоке "Похожие", чтобы они не спорили с основным контентом */
+.similar-books-grid .book-card {
+  font-size: 0.9em;
+}
+.similar-books-grid .book-card-cover {
+  height: 220px; /* Чуть меньше стандартной обложки */
 }

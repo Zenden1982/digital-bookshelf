@@ -83,7 +83,7 @@
   justify-content: center;
 }
 
-.book-title {
+.library-container .book-title {
   font-family: "Inter", sans-serif;
   font-size: 10px;
   font-weight: 600;

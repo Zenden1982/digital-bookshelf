@@ -1,5 +1,7 @@
 package com.diplom.diplom.Controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,12 +61,22 @@ public class BookController {
      * Найти книги, похожие на заданный текст (семантический поиск).
      */
     @GetMapping("/similar")
-    public ResponseEntity<Page<BookReadDTO>> findSimilarBooks(
+    public ResponseEntity<Page<BookReadDTO>> findSimilarBooksByQuery(
             @RequestParam String query,
             @RequestParam(defaultValue = "5") int topK, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
         Page<BookReadDTO> similarBooks = bookService.findSimilarBooks(query, topK, page, size);
+        return ResponseEntity.ok(similarBooks);
+    }
+
+
+    @GetMapping("{id}/similar")
+    public ResponseEntity<List<BookReadDTO>> findSimilarBooks(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "5") int limit) {
+        
+        List<BookReadDTO> similarBooks = bookService.findSimilarBooksByBookId(id, limit);
         return ResponseEntity.ok(similarBooks);
     }
 

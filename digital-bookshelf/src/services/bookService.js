@@ -88,7 +88,7 @@ export const bookService = {
     }
   },
 
-  findSimilarBooks: async (query, topK = 5, page = 0, size = 5) => {
+  findSimilarBooksByQuery: async (query, topK = 5, page = 0, size = 5) => {
     try {
       const response = await api.get(`/books/similar`, {
         params: { query, topK, page, size },
@@ -99,6 +99,18 @@ export const bookService = {
     }
     {
       console.error(`Ошибка поиска при запросе ${query}`, query);
+    }
+  },
+
+  findSimilarBooks: async (bookId, limit = 5) => {
+    try {
+      const response = await api.get(`/books/${bookId}/similar`, {
+        params: { limit },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при поиске похожих книг для ID=${bookId}:`, error);
+      return [];
     }
   },
 };

@@ -7,13 +7,20 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
+// Компоненты
+import BookCard from "../components/book/BookCard";
+
 // MUI Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import PauseCircleFilledIcon from "@mui/icons-material/PauseCircleFilled";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 
@@ -24,10 +31,13 @@ const BookDetailPage = () => {
   const navigate = useNavigate();
 
   const [bookData, setBookData] = useState(null);
+  const [similarBooks, setSimilarBooks] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Загрузка основной информации о книге
   const fetchBookData = useCallback(() => {
     setLoading(true);
     bookService
@@ -43,13 +53,21 @@ const BookDetailPage = () => {
       .finally(() => setLoading(false));
   }, [bookId]);
 
-  // const fetchSimilarBooks = useCallback(()=>{
-  //   setLoading(true);
-  //   bookService.findSimilarBooks
-  // })
+  // Загрузка похожих книг
+  const fetchSimilarBooks = useCallback(() => {
+    // Не блокируем основной UI
+    bookService
+      .findSimilarBooks(bookId, 4)
+      .then((data) => {
+        setSimilarBooks(data);
+      })
+      .catch((err) => console.error("Ошибка загрузки похожих книг:", err));
+  }, [bookId]);
+
   useEffect(() => {
     fetchBookData();
-  }, [fetchBookData]);
+    fetchSimilarBooks();
+  }, [fetchBookData, fetchSimilarBooks]);
 
   // Обновление рейтинга
   const handleRatingChange = async (newRating) => {
@@ -69,7 +87,7 @@ const BookDetailPage = () => {
   };
 
   // Добавление книги на полку
-  const handleAddToShelf = async (status = "PLANNED") => {
+  const handleAddToShelf = async (status = "PLAN_TO_READ") => {
     setIsUpdating(true);
     try {
       await shelfService.addBookToMyShelf({
@@ -129,7 +147,6 @@ const BookDetailPage = () => {
               alt={`Обложка ${book.title}`}
               className="book-cover"
             />
-
             {/* Градиентный оверлей */}
             <div className="cover-gradient"></div>
           </div>
@@ -221,21 +238,21 @@ const BookDetailPage = () => {
                   className="btn-primary"
                   disabled={isUpdating}
                 >
-                  📖 Читаю
+                  <AutoStoriesIcon /> Читаю
                 </button>
                 <button
-                  onClick={() => handleAddToShelf("PLANNED")}
+                  onClick={() => handleAddToShelf("PLAN_TO_READ")}
                   className="btn-secondary"
                   disabled={isUpdating}
                 >
-                  📋 В планах
+                  <PlaylistAddIcon /> В планах
                 </button>
                 <button
-                  onClick={() => handleAddToShelf("COMPLETED")}
+                  onClick={() => handleAddToShelf("FINISHED")}
                   className="btn-secondary"
                   disabled={isUpdating}
                 >
-                  ✅ Прочитано
+                  <CheckCircleIcon /> Прочитано
                 </button>
               </>
             )}
@@ -306,22 +323,55 @@ const BookDetailPage = () => {
                 <div className="info-card">
                   <p className="info-label">Статус</p>
                   <p className="info-value status-value">
-                    {userBook.status === "READING" && "📖 Читаю"}
-                    {userBook.status === "PLAN_TO_READ" && "📋 В планах"}
-                    {userBook.status === "FINISHED" && "✅ Прочитано"}
-                    {userBook.status === "ABANDONED" && "⏸️ Отложено"}
+                    {userBook.status === "READING" && (
+                      <>
+                        <AutoStoriesIcon fontSize="small" /> Читаю
+                      </>
+                    )}
+                    {userBook.status === "PLAN_TO_READ" && (
+                      <>
+                        <PlaylistAddIcon fontSize="small" /> В планах
+                      </>
+                    )}
+                    {userBook.status === "FINISHED" && (
+                      <>
+                        <CheckCircleIcon fontSize="small" /> Прочитано
+                      </>
+                    )}
+                    {userBook.status === "ABANDONED" && (
+                      <>
+                        <PauseCircleFilledIcon fontSize="small" /> Отложено
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
             </section>
           )}
 
-          {/* Кнопка редактирования (для админа) */}
-          {/* Можно добавить проверку прав */}
+          {/* Кнопка редактирования */}
           <button className="btn-secondary btn-edit">
             <EditIcon />
             <span>Редактировать информацию</span>
           </button>
+
+          {/* Похожие книги */}
+          {similarBooks.length > 0 && (
+            <section className="similar-books-section">
+              <h3 className="section-title">Похожие книги</h3>
+              <div className="similar-books-grid">
+                {similarBooks.map((similarBook) => (
+                  <Link
+                    to={`/book/${similarBook.id}`}
+                    key={similarBook.id}
+                    className="similar-book-link"
+                  >
+                    <BookCard book={similarBook} />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
         </main>
       </div>
 
@@ -331,8 +381,6 @@ const BookDetailPage = () => {
           <div className="loader-spinner"></div>
         </div>
       )}
-
-      <div></div>
     </div>
   );
 };
