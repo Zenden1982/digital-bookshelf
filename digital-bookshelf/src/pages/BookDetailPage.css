@@ -1,128 +1,555 @@
 /* src/pages/BookDetailPage.css */
 
 .book-detail-page {
-  padding: 48px;
-  background-color: #f5f1e8; /* Фон "Бумага" */
-  flex-grow: 1;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f1e8 0%, #e8dcc8 100%);
+  padding: 2rem;
+  position: relative;
 }
 
-.book-detail-main {
-  display: grid;
-  /* Две колонки: левая фиксированная, правая занимает остальное место */
-  grid-template-columns: 300px 1fr;
-  gap: 48px;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: start; /* Выравниваем колонки по верхнему краю */
-}
-
-/* --- Левая колонка --- */
-.book-cover-actions {
-  display: flex;
-  flex-direction: column;
+/* Кнопка назад */
+.back-button {
+  display: inline-flex;
   align-items: center;
-  position: sticky; /* Делаем колонку "липкой" при прокрутке */
-  top: 24px;
-}
-
-.book-detail-cover {
-  width: 100%;
-  max-width: 300px;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #ffffff;
+  border: 2px solid #8b4513;
+  color: #8b4513;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  margin-bottom: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.action-widget {
-  width: 100%;
-  margin-bottom: 16px;
+.back-button:hover {
+  background: #8b4513;
+  color: #ffffff;
+  transform: translateX(-4px);
 }
 
-/* Переопределяем стили для карточек, когда они используются как виджет */
-.action-widget .book-card,
-.action-widget .user-book-card {
-  box-shadow: none;
-  border: 1px solid #e0e0e0;
-  background-color: #fdfdfd;
-}
-
-/* Скрываем лишние элементы внутри виджетов, чтобы не было дублирования */
-.action-widget .book-card-cover,
-.action-widget .book-card-title,
-.action-widget .book-card-author {
-  display: none;
-}
-.action-widget .user-book-card .book-card-cover,
-.action-widget .user-book-card .book-card-title,
-.action-widget .user-book-card .book-card-author {
-  display: none;
-}
-.action-widget .user-book-card .book-card-body {
-  padding: 8px; /* Уменьшаем внутренние отступы в виджете */
-}
-
-.read-button {
-  display: block;
-  width: 100%;
-  text-align: center;
-  padding: 14px;
-  background-color: #8b4513; /* Secondary */
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: background-color 0.3s;
-}
-.read-button:hover {
-  background-color: #6b3410;
-}
-
-/* --- Правая колонка --- */
-.book-info {
-  background-color: #ffffff;
-  padding: 32px;
-  border-radius: 8px;
-}
-
-.book-info h1.book-title {
-  font-family: "Playfair Display", serif;
-  font-size: 40px;
-  margin: 0 0 8px 0;
-  line-height: 1.2;
-}
-
-.book-info h2.book-author {
-  font-family: "Lora", serif;
-  font-size: 22px;
-  font-style: italic;
-  color: #546e7a;
-  margin: 0 0 24px 0;
-  font-weight: 400;
-}
-
-.book-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  font-size: 14px;
-  color: #95a5a6;
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
-}
-.book-meta span {
-  white-space: nowrap;
-}
-
-.book-info h3 {
-  font-family: "Playfair Display", serif;
-  margin-bottom: 12px;
+.back-button .MuiSvgIcon-root {
   font-size: 20px;
 }
 
-.book-info .book-annotation {
+/* Контейнер страницы */
+.book-detail-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* === ЛЕВАЯ КОЛОНКА === */
+.book-sidebar {
+  position: sticky;
+  top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Обложка */
+.cover-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cover-wrapper:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.3);
+}
+
+.book-cover {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+}
+
+.cover-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+/* Действия */
+.book-actions {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Рейтинг */
+.rating-section {
+  text-align: center;
+}
+
+.rating-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.75rem 0;
+}
+
+.rating-stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.star-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.star-button:hover:not(.disabled) {
+  transform: scale(1.2);
+}
+
+.star-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.star-button .MuiSvgIcon-root {
+  font-size: 2rem;
+}
+
+.star-filled {
+  color: #d4af37;
+}
+
+.star-empty {
+  color: #e8e8e8;
+}
+
+.rating-text {
+  font-size: 0.875rem;
+  color: #95a5a6;
+  margin: 0;
+}
+
+/* Прогресс */
+.progress-section {
+  padding: 1rem 0;
+  border-top: 1px solid #e8e8e8;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.progress-percent {
+  color: #8b4513;
+  font-size: 1.125rem;
+}
+
+.progress-bar {
+  position: relative;
+  height: 10px;
+  background: #e8e8e8;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #27ae60 0%, #d4af37 100%);
+  border-radius: 5px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-pages {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #546e7a;
+  margin: 0;
+}
+
+/* Кнопки */
+.btn-primary,
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  border: none;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #8b4513;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #6b3410;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 69, 19, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #8b4513;
+  border: 2px solid #8b4513;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f5f1e8;
+  transform: translateY(-2px);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-read {
+  font-size: 1.125rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.add-to-shelf-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  text-align: center;
+}
+
+/* Теги */
+.tags-section {
+  padding-top: 1rem;
+  border-top: 1px solid #e8e8e8;
+}
+
+.tags-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.75rem 0;
+}
+
+.tags-label .MuiSvgIcon-root {
+  font-size: 18px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tag {
+  padding: 0.5rem 1rem;
+  background: #e8dcc8;
+  color: #2c3e50;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* === ПРАВАЯ КОЛОНКА === */
+.book-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 3rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Заголовок */
+.book-header {
+  padding-bottom: 2rem;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.book-title {
+  font-family: "Playfair Display", serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.book-author {
   font-family: "Lora", serif;
+  font-size: 1.5rem;
+  font-style: italic;
+  color: #546e7a;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Метаинформация */
+.book-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #546e7a;
+  font-size: 1rem;
+}
+
+.meta-item .MuiSvgIcon-root {
+  font-size: 20px;
+  color: #8b4513;
+}
+
+.isbn-label {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Секции */
+.section-title {
+  font-family: "Playfair Display", serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0 0 1rem 0;
+}
+
+.annotation-section {
+  padding-top: 1rem;
+}
+
+.annotation-content p {
+  font-family: "Lora", serif;
+  font-size: 1.125rem;
   line-height: 1.8;
-  color: #333;
-  white-space: pre-wrap; /* Сохраняем переносы строк в аннотации */
+  color: #2c3e50;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.no-annotation {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+/* Дополнительная информация */
+.additional-info {
+  padding-top: 1rem;
+  border-top: 1px solid #e8e8e8;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.info-card {
+  background: #f5f1e8;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #95a5a6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.5rem 0;
+}
+
+.info-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.status-value {
+  font-size: 1rem;
+}
+
+.btn-edit {
+  margin-top: auto;
+}
+
+/* Загрузчик */
+.loader-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+}
+
+.loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e8e8e8;
+  border-top-color: #8b4513;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loader-container p {
+  font-size: 1.125rem;
+  color: #546e7a;
+  font-weight: 600;
+}
+
+.error-message {
+  font-size: 1.25rem;
+  color: #e74c3c;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Оверлей обновления */
+.updating-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .book-detail-container {
+    grid-template-columns: 320px 1fr;
+    gap: 2rem;
+  }
+
+  .book-title {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .book-detail-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .book-sidebar {
+    position: static;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .book-content {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .book-detail-page {
+    padding: 1rem;
+  }
+
+  .book-title {
+    font-size: 2rem;
+  }
+
+  .book-author {
+    font-size: 1.25rem;
+  }
+
+  .book-content {
+    padding: 1.5rem;
+  }
+
+  .annotation-content p {
+    font-size: 1rem;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.book-detail-container {
+  animation: fadeIn 0.5s ease-out;
 }

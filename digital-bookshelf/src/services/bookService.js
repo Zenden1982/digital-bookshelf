@@ -87,4 +87,18 @@ export const bookService = {
       throw error;
     }
   },
+
+  findSimilarBooks: async (query, topK = 5, page = 0, size = 5) => {
+    try {
+      const response = await api.get(`/books/similar`, {
+        params: { query, topK, page, size },
+      });
+      return response.data;
+    } catch {
+      error;
+    }
+    {
+      console.error(`Ошибка поиска при запросе ${query}`, query);
+    }
+  },
 };
