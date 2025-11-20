@@ -287,6 +287,21 @@ const BookDetailPage = () => {
                 <span>{book.isbn}</span>
               </div>
             )}
+            {book.genres && book.genres.length > 0 && (
+              <div className="genres-section">
+                <p className="genres-label">
+                  <LocalOfferIcon fontSize="small" />
+                  <span>Жанры</span>
+                </p>
+                <div className="genres-list">
+                  {book.genres.map((genre, index) => (
+                    <span key={index} className="genre-tag">
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Аннотация */}

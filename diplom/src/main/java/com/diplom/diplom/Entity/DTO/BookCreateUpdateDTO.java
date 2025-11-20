@@ -1,6 +1,7 @@
 package com.diplom.diplom.Entity.DTO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.diplom.diplom.Entity.Book;
 
@@ -27,6 +28,7 @@ public class BookCreateUpdateDTO {
 
     private Boolean isAdded;
 
+    private List<String> genres;
     private String source;
 
     private String googleBookId;
@@ -41,6 +43,7 @@ public class BookCreateUpdateDTO {
                 .annotation(bookCreateUpdateDTO.getAnnotation())
                 .pageCount(bookCreateUpdateDTO.getPageCount())
                 .isbn(bookCreateUpdateDTO.getIsbn())
+                .genres(bookCreateUpdateDTO.getGenres())
                 .publishedDate(bookCreateUpdateDTO.getPublishedDate())
                 .isAdded(bookCreateUpdateDTO.getIsAdded())
                 .coverUrl(bookCreateUpdateDTO.getCoverUrl())

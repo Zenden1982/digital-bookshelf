@@ -53,6 +53,8 @@ public class Book {
 
     private String isbn;
 
+    private List<String> genres;
+
     private String googleBookId;
 
     private LocalDateTime publishedDate;

@@ -1,6 +1,7 @@
 package com.diplom.diplom.Entity.DTO;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.diplom.diplom.Entity.Book;
 
@@ -20,7 +21,7 @@ public class BookReadDTO {
     private Boolean isAdded;
     private String coverUrl;
     private LocalDateTime addedAt;
-
+    private List<String> genres;
     // Новые поля для идентификации источника
     private String source; // "MY_LIBRARY" или "GOOGLE_API"
     private String googleBookId; // ID книги в Google Books (если source = GOOGLE_API)
@@ -35,6 +36,7 @@ public class BookReadDTO {
                 .isbn(book.getIsbn())
                 .publishedDate(book.getPublishedDate())
                 .isAdded(book.getIsAdded())
+                .genres(book.getGenres())
                 .googleBookId(book.getGoogleBookId())
                 .coverUrl(book.getCoverUrl())
                 .addedAt(book.getAddedAt())

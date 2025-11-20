@@ -27,11 +27,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.diplom.diplom.Entity.Book;
+import com.diplom.diplom.Entity.User;
+import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookDetailDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
-import com.diplom.diplom.Entity.User;
-import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Exception.ApiIntegrationException;
 import com.diplom.diplom.Exception.DuplicateResourceException;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
@@ -43,6 +43,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+// ПЕРЕДЕЛАТЬ ВЕКТОРЫ
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -230,6 +231,7 @@ public class BookService {
                 .annotation(bookDTO.getAnnotation())
                 .pageCount(bookDTO.getPageCount())
                 .isbn(bookDTO.getIsbn())
+                .genres(bookDTO.getGenres())
                 .publishedDate(bookDTO.getPublishedDate())
                 .coverUrl(bookDTO.getCoverUrl())
                 .googleBookId(bookDTO.getGoogleBookId())
@@ -355,7 +357,10 @@ public class BookService {
             if (authors != null && !authors.isEmpty()) {
                 builder.author(String.join(", ", authors));
             }
-
+            List<String> categories = (List<String>) volumeInfo.get("categories");
+            if (categories != null && !categories.isEmpty()) {
+                builder.genres(categories);
+            }
             builder.annotation((String) volumeInfo.get("description"));
 
             Object pageCountObj = volumeInfo.get("pageCount");
@@ -427,6 +432,61 @@ public class BookService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
+    }
+
+    public Page<BookReadDTO> searchGoogleBooksByTitle(String title, int page, int size) {
+        return searchGoogleBooksAdvanced("intitle", title, page, size);
+    }
+
+    public Page<BookReadDTO> searchGoogleBooksByAuthor(String author, int page, int size) {
+        return searchGoogleBooksAdvanced("inauthor", author, page, size);
+    }
+
+    private Page<BookReadDTO> searchGoogleBooksAdvanced(String field, String query, int page, int size) {
+        if (query == null || query.trim().isEmpty()) {
+            return Page.empty(PageRequest.of(page, size));
+        }
+        try {
+            String encodedQuery = URLEncoder.encode(field + ":" + query, StandardCharsets.UTF_8);
+
+            int maxResults = size * 3;
+            int startIndex = page * size;
+
+            URI uri = URI.create(googleBooksApiUrl
+                    + "?q=" + encodedQuery
+                    + "&langRestrict=ru"
+                    + "&maxResults=" + maxResults
+                    + "&startIndex=" + startIndex
+                    + "&key=" + googleBooksApiKey);
+
+            log.info("Запрос к Google Books API: {}", uri);
+            Map<String, Object> response = restTemplate.getForObject(uri, Map.class);
+
+            if (response == null || !response.containsKey("items")) {
+                return Page.empty(PageRequest.of(page, size));
+            }
+
+            List<Map<String, Object>> items = (List<Map<String, Object>>) response.get("items");
+
+            List<BookReadDTO> allResults = items.stream()
+                    .map(this::convertGoogleBookToDTO)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            Pageable pageable = PageRequest.of(page, size);
+            int start = (int) pageable.getOffset();
+            int end = Math.min(start + pageable.getPageSize(), allResults.size());
+            if (start >= allResults.size()) {
+                return new PageImpl<>(Collections.emptyList(), pageable, allResults.size());
+            }
+
+            List<BookReadDTO> pageContent = allResults.subList(start, end);
+            return new PageImpl<>(pageContent, pageable, allResults.size());
+
+        } catch (Exception e) {
+            log.error("Ошибка при поиске в Google Books API: {}", e.getMessage(), e);
+            return Page.empty(PageRequest.of(page, size));
+        }
     }
 
 }

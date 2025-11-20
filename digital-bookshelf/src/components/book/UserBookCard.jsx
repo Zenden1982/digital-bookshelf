@@ -24,17 +24,17 @@ const statusMap = {
     icon: <MenuBookIcon />,
     color: "#27AE60",
   },
-  PLANNED: {
+  PLAN_TO_READ: {
     label: "В планах",
     icon: <PlaylistAddIcon />,
     color: "#3498DB",
   },
-  COMPLETED: {
+  FINISHED: {
     label: "Прочитано",
     icon: <CheckCircleIcon />,
     color: "#95A5A6",
   },
-  PAUSED: {
+  ABANDONED: {
     label: "Отложено",
     icon: <PauseCircleIcon />,
     color: "#F39C12",
@@ -89,7 +89,8 @@ const UserBookCard = ({ userBook, onUpdate }) => {
     // Не переходим, если клик был по меню или тегам
     if (
       e.target.closest(".card-menu-container") ||
-      e.target.closest(".tag-manager")
+      e.target.closest(".tag-manager") ||
+      e.target.closest(".tags-container")
     ) {
       return;
     }

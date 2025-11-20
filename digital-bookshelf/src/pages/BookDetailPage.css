@@ -588,3 +588,102 @@
 .similar-books-grid .book-card-cover {
   height: 220px; /* Чуть меньше стандартной обложки */
 }
+.genres-section {
+  grid-column: 1 / -1; /* Занимает всю ширину */
+  margin-top: 0.5rem;
+}
+
+.genres-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.genre-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #e8dcc8 0%, #d4c4a8 100%);
+  color: #2c3e50;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.genre-tag::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 69, 19, 0.1) 0%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.genre-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #d4c4a8 0%, #c4b498 100%);
+}
+
+.genre-tag:hover::before {
+  opacity: 1;
+}
+
+.genres-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #546e7a;
+  margin: 0 0 0.75rem 0;
+}
+
+.genres-label .MuiSvgIcon-root {
+  color: #8b4513;
+}
+@keyframes genreAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.genre-tag {
+  animation: genreAppear 0.3s ease-out backwards;
+}
+
+.genre-tag:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.genre-tag:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.genre-tag:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.genre-tag:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.genre-tag:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.genre-tag:nth-child(n + 6) {
+  animation-delay: 0.3s;
+}

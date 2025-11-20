@@ -1,7 +1,7 @@
 // src/pages/MyCatalog.jsx
 
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import UserBookCard from "../components/book/UserBookCard"; // Используем новую карточку
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
@@ -141,17 +141,11 @@ const MyCatalog = () => {
         <>
           <div className="books-grid">
             {userBooks.map((userBook) => (
-              <Link
+              <UserBookCard
                 key={userBook.id}
-                to={`/book/${userBook.book.id}`}
-                className="book-card-link"
-              >
-                <UserBookCard
-                  key={userBook.id}
-                  userBook={userBook}
-                  onUpdate={fetchCatalogData}
-                />
-              </Link>
+                userBook={userBook}
+                onUpdate={fetchCatalogData}
+              />
             ))}
           </div>
           <Pagination
