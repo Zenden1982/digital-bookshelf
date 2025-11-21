@@ -8,6 +8,12 @@ import { importService } from "../services/importService";
 import { shelfService } from "../services/shelfService";
 import "./ImportPage.css";
 
+const SEARCH_TYPES = [
+  { value: "GENERAL", label: "Общий поиск" },
+  { value: "TITLE", label: "По названию" },
+  { value: "AUTHOR", label: "По автору" },
+];
+
 const ImportPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 

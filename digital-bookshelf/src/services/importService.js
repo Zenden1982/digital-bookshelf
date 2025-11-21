@@ -32,6 +32,48 @@ export const importService = {
   },
 
   /**
+   * Поиск в Google Books ТОЛЬКО по названию.
+   * Вызывает: GET /api/admin/import/search-by-title
+   */
+  searchGoogleByTitle: async (query, page = 0, size = 10) => {
+    try {
+      if (!query || query.trim() === "") {
+        return { content: [], totalElements: 0, totalPages: 0, number: 0 };
+      }
+
+      const response = await api.get("/admin/import/search-by-title", {
+        params: { query, page, size },
+      });
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Ошибка при поиске книги по названию в Google Books:",
+        error
+      );
+      throw error;
+    }
+  },
+
+  /**
+   * Поиск в Google Books ТОЛЬКО по автору.
+   * Вызывает: GET /api/admin/import/search-by-author
+   */
+  searchGoogleByAuthor: async (query, page = 0, size = 10) => {
+    try {
+      if (!query || query.trim() === "") {
+        return { content: [], totalElements: 0, totalPages: 0, number: 0 };
+      }
+
+      const response = await api.get("/admin/import/search-by-author", {
+        params: { query, page, size },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при поиске книги по автору в Google Books:", error);
+      throw error;
+    }
+  },
+  /**
    * Импортирует книгу из Google Books в локальную базу данных по её Google ID.
    * Вызывает: POST /api/admin/importgoogle-book/{googleBookId}
    *

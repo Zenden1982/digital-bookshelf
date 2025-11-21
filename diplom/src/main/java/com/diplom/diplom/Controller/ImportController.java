@@ -75,4 +75,20 @@ public class ImportController {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build(); // Стандартный ответ для DELETE
     }
+
+    @GetMapping("/search-by-title")
+    public ResponseEntity<Page<BookReadDTO>> searchInLibraryByTitle(@RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<BookReadDTO> books = bookService.searchGoogleBooksByTitle(query, page, size);
+        return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("/search-by-author")
+    public ResponseEntity<Page<BookReadDTO>> searchInLibraryByAuthor(@RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<BookReadDTO> books = bookService.searchGoogleBooksByAuthor(query, page, size);
+        return ResponseEntity.ok(books);
+    }
 }

@@ -2,6 +2,7 @@ package com.diplom.diplom.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,24 +15,27 @@ import com.diplom.diplom.Entity.Book;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    Optional<Book> findByIsbn(String isbn);
+        Optional<Book> findByIsbn(String isbn);
 
-    Optional<Book> findByGoogleBookId(String googleBookId);
+        Optional<Book> findByGoogleBookId(String googleBookId);
 
-    Optional<Book> findByTitleAndAuthor(String title, String author);
+        Optional<Book> findByTitleAndAuthor(String title, String author);
 
-    @Query("""
-            SELECT b
-            FROM Book b
-            WHERE LOWER(b.title)  LIKE LOWER(CONCAT('%', :query, '%'))
-               OR LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%'))
-               OR LOWER(b.isbn)   LIKE LOWER(CONCAT('%', :query, '%'))
-            """)
-    Page<Book> searchByTitleOrAuthorOrIsbn(@org.springframework.data.repository.query.Param("query") String query,
-            org.springframework.data.domain.Pageable pageable);
+        @Query("""
+                        SELECT b
+                        FROM Book b
+                        WHERE LOWER(b.title)  LIKE LOWER(CONCAT('%', :query, '%'))
+                           OR LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%'))
+                           OR LOWER(b.isbn)   LIKE LOWER(CONCAT('%', :query, '%'))
+                        """)
+        Page<Book> searchByTitleOrAuthorOrIsbn(@org.springframework.data.repository.query.Param("query") String query,
+                        org.springframework.data.domain.Pageable pageable);
 
-    @Query("SELECT b FROM Book b WHERE b.isbn = :query OR " +
-            "LOWER(b.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Book> searchByTitleOrAuthorOrIsbn(@Param("query") String query);
+        @Query("SELECT b FROM Book b WHERE b.isbn = :query OR " +
+                        "LOWER(b.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+                        "LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%'))")
+        List<Book> searchByTitleOrAuthorOrIsbn(@Param("query") String query);
+
+        @Query("SELECT b.isbn FROM Book b WHERE b.isbn IN :isbns")
+        Set<String> findExistingIsbns(@Param("isbns") List<String> isbns);
 }

@@ -70,12 +70,11 @@ public class BookController {
         return ResponseEntity.ok(similarBooks);
     }
 
-
     @GetMapping("{id}/similar")
     public ResponseEntity<List<BookReadDTO>> findSimilarBooks(
             @PathVariable Long id,
             @RequestParam(defaultValue = "5") int limit) {
-        
+
         List<BookReadDTO> similarBooks = bookService.findSimilarBooksByBookId(id, limit);
         return ResponseEntity.ok(similarBooks);
     }

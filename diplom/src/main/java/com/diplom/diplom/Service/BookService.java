@@ -166,8 +166,7 @@ public class BookService {
             String searchQuery = isIsbnFormat(query) ? "isbn:" + query.replace("-", "") : query;
             String encodedQuery = URLEncoder.encode(searchQuery, StandardCharsets.UTF_8);
 
-            // пусть size = сколько книг мы хотим максимум получить от Google за один запрос
-            int maxResults = size * 3; // запас, можно 40 (лимит Google по умолчанию)
+            int maxResults = size * 3;
 
             URI uri = URI.create(googleBooksApiUrl
                     + "?q=" + encodedQuery
@@ -189,16 +188,28 @@ public class BookService {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
+            List<String> isbns = allResults.stream()
+                    .map(BookReadDTO::getIsbn)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            Set<String> existingIds = isbns.isEmpty()
+                    ? Collections.emptySet()
+                    : bookRepository.findExistingIsbns(isbns);
+
+            List<BookReadDTO> filteredResults = allResults.stream()
+                    .filter(dto -> !existingIds.contains(dto.getIsbn()))
+                    .collect(Collectors.toList());
+
             // Ручная пагинация по списку allResults
             Pageable pageable = PageRequest.of(page, size);
             int start = (int) pageable.getOffset();
-            int end = Math.min(start + pageable.getPageSize(), allResults.size());
-            if (start >= allResults.size()) {
-                return new PageImpl<>(Collections.emptyList(), pageable, allResults.size());
+            int end = Math.min(start + pageable.getPageSize(), filteredResults.size());
+            if (start >= filteredResults.size()) {
+                return new PageImpl<>(Collections.emptyList(), pageable, filteredResults.size());
             }
 
-            List<BookReadDTO> pageContent = allResults.subList(start, end);
-            return new PageImpl<>(pageContent, pageable, allResults.size());
+            List<BookReadDTO> pageContent = filteredResults.subList(start, end);
+            return new PageImpl<>(pageContent, pageable, filteredResults.size());
 
         } catch (Exception e) {
             log.error("Ошибка при поиске в Google Books API: {}", e.getMessage(), e);
@@ -283,23 +294,36 @@ public class BookService {
      * Генерирует и сохраняет вектор для книги в VectorStore
      */
     private void generateAndSetEmbedding(Book book) {
-        if (book.getTitle() == null || book.getAnnotation() == null) {
-            log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название или аннотация",
-                    book.getId());
+        if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
+            log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название.", book.getId());
             return;
         }
 
         log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
 
-        String textToEmbed = book.getTitle() + ". " + book.getAuthor() + ". " + book.getAnnotation();
+        StringBuilder textToEmbed = new StringBuilder();
+
+        textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
+
+        if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
+            textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
+        }
+
+        if (book.getGenres() != null && !book.getGenres().isEmpty()) {
+            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append("\n");
+        }
+
+        if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
+            String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
+            textToEmbed.append("Аннотация: ").append(cleanAnnotation);
+        }
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("book_id", book.getId());
         metadata.put("title", book.getTitle());
         metadata.put("author", book.getAuthor());
 
-        Document document = new Document(textToEmbed, metadata);
-
+        Document document = new Document(textToEmbed.toString(), metadata);
         vectorStore.add(List.of(document));
 
         log.info("Вектор для книги '{}' успешно сохранен в VectorStore", book.getTitle());
@@ -309,16 +333,36 @@ public class BookService {
         Book sourceBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Книга с ID " + bookId + " не найдена"));
 
-        if (sourceBook.getTitle() == null || sourceBook.getAnnotation() == null) {
-            log.warn("Невозможно найти похожие книги для bookId={}, т.к. отсутствуют данные.", bookId);
+        // 1. Формируем "УМНЫЙ" запрос, идентичный тому, что используется при генерации
+        // вектора
+        StringBuilder queryBuilder = new StringBuilder();
+
+        if (sourceBook.getTitle() != null) {
+            queryBuilder.append("Название: ").append(sourceBook.getTitle()).append("\n");
+        }
+        if (sourceBook.getAuthor() != null) {
+            queryBuilder.append("Автор: ").append(sourceBook.getAuthor()).append("\n");
+        }
+
+        if (sourceBook.getGenres() != null) {
+            queryBuilder.append("Жанры: ").append(sourceBook.getGenres()).append("\n");
+        }
+
+        if (sourceBook.getAnnotation() != null) {
+            queryBuilder.append("Аннотация: ").append(sourceBook.getAnnotation());
+        }
+
+        String queryText = queryBuilder.toString();
+
+        if (queryText.trim().isEmpty()) {
+            log.warn("Недостаточно данных для поиска похожих книг (id={})", bookId);
             return Collections.emptyList();
         }
-        String queryText = sourceBook.getTitle() + ". " + sourceBook.getAuthor() + ". " + sourceBook.getAnnotation();
 
         SearchRequest request = SearchRequest.builder()
                 .query(queryText)
                 .topK(limit + 1)
-                .similarityThreshold(0.8)
+                .similarityThreshold(0.5)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
@@ -489,4 +533,31 @@ public class BookService {
         }
     }
 
+    @Transactional // Важно, если generateAndSetEmbedding что-то пишет в БД (а он пишет)
+    public void regenerateAllEmbeddings() {
+        log.info("Начинаем перегенерацию векторов для всех книг...");
+
+        // 1. Получаем все книги (для больших баз лучше использовать пагинацию или
+        // Stream)
+        List<Book> allBooks = bookRepository.findAll();
+
+        int count = 0;
+        for (Book book : allBooks) {
+            try {
+                // 2. Вызываем твой обновленный метод генерации
+                generateAndSetEmbedding(book);
+                count++;
+
+                // Логируем прогресс каждые 50 книг
+                if (count % 50 == 0) {
+                    log.info("Обработано {} книг...", count);
+                }
+            } catch (Exception e) {
+                log.error("Ошибка при генерации вектора для книги ID {}: {}", book.getId(), e.getMessage());
+                // Не прерываем процесс из-за одной ошибки
+            }
+        }
+
+        log.info("Перегенерация завершена. Всего обновлено: {}", count);
+    }
 }
