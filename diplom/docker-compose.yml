@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  # База данных
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: digital-shelf-db
+    restart: always
+    environment:
+      POSTGRES_DB: shelf_db
+      POSTGRES_USER: shelf_user
+      POSTGRES_PASSWORD: secure_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Ваше Spring Boot приложение
+  app:
+    image: zenden1703/digital-shelf:latest
+    container_name: digital-shelf-app
+    restart: always
+    pull_policy: always
+    network_mode: "host"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/shelf_db
+      SPRING_DATASOURCE_USERNAME: shelf_user
+      SPRING_DATASOURCE_PASSWORD: secure_password
+      OLLAMA_BASE_URL: http://localhost:11434
+      SERVER_PORT: 8080
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

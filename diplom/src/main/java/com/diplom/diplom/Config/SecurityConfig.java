@@ -1,6 +1,6 @@
 package com.diplom.diplom.Config;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +11,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -30,47 +32,56 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
         private final UserService userService;
-
         private final JwtRequestFilter jwtRequestFilter;
 
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                                .csrf(csrf -> csrf.disable())
+                                // 1. Отключаем CSRF (для JWT это стандарт)
+                                .csrf(AbstractHttpConfigurer::disable)
+
+                                // 2. ВКЛЮЧАЕМ CORS (важно для фронтенда)
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                                .headers(headers -> headers.frameOptions(
-                                                frameOptionsCustomizer -> frameOptionsCustomizer.disable()))
-                                .authorizeHttpRequests(requests -> requests.requestMatchers("/**").permitAll())
+
+                                // 3. Настройки заголовков (чтобы H2 консоль работала, если нужна)
+                                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+
+                                // 4. Правила доступа
+                                .authorizeHttpRequests(auth -> auth
+                                                // Статика (фронтенд)
+                                                .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css",
+                                                                "/*.ico", "/*.png")
+                                                .permitAll()
+
+                                                // Всё остальное требует токена
+                                                .anyRequest().permitAll())
+
+                                // 5. Stateless сессия (для JWT)
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(
-                                                                org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                                // 6. Обработка ошибок (401 вместо редиректа на логин)
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(
                                                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
+                                // 7. Добавляем наш фильтр
                                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+
                 return http.build();
         }
 
+        // Бин для настройки CORS
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
-                // Указываем домены, с которых разрешены запросы
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:5173",
-                                "http://localhost:8080",
-                                "https://окно-в.рф",
-                                "https://xn----dtbwmdc.xn--p1ai"));
-
-                // Разрешаем все стандартные методы, включая OPTIONS
-                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                // Разрешаем отправку кук и заголовков авторизации
+                configuration.setAllowedOriginPatterns(List.of("*")); // Разрешаем все домены
+                configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                configuration.setAllowedHeaders(List.of("*"));
                 configuration.setAllowCredentials(true);
-                // Разрешаем все заголовки, включая 'Content-Type' и 'Authorization'
-                configuration.setAllowedHeaders(Arrays.asList("*"));
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                // Применяем эту конфигурацию ко всем путям в вашем API
-                source.registerCorsConfiguration("/**", configuration); // Применяем ко всем путям
+                source.registerCorsConfiguration("/**", configuration);
                 return source;
         }
 
@@ -87,5 +98,4 @@ public class SecurityConfig {
                 authProvider.setPasswordEncoder(passwordEncoder);
                 return authProvider;
         }
-
 }
