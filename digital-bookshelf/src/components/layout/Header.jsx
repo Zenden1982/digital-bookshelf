@@ -29,7 +29,7 @@ const Header = () => {
   };
 
   // Проверяем, является ли пользователь админом
-  const isAdmin = authService.hasRole("ADMIN");
+  const isAdmin = authService.hasRole("ROLE_ADMIN");
 
   return (
     <header className="app-header">

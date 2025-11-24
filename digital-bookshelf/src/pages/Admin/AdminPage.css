@@ -59,6 +59,7 @@
   padding: 16px;
   text-align: left;
   border-bottom: 1px solid #eee;
+  vertical-align: middle;
 }
 
 .admin-table th {
@@ -72,11 +73,6 @@
   height: 60px;
   object-fit: cover;
   border-radius: 4px;
-}
-
-.actions-cell {
-  display: flex;
-  gap: 8px;
 }
 
 .btn-icon {

@@ -5,6 +5,7 @@ import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
 // Импорт страниц
+import AdminPage from "../pages/Admin/AdminPage";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
 import BookDetailPage from "../pages/BookDetailPage";
@@ -14,6 +15,7 @@ import ImportPage from "../pages/ImportPage";
 import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
 import SearchResults from "../pages/SearchResults";
+import AdminRoute from "./AdminRoute";
 const AppRoutes = () => {
   return (
     <Routes>
@@ -36,6 +38,15 @@ const AppRoutes = () => {
       />
 
       {/* ПРИВАТНЫЕ МАРШРУТЫ */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminPage />
+          </AdminRoute>
+        }
+      />
+
       <Route
         path="/"
         element={

@@ -4,17 +4,36 @@ import api from "./api";
 
 export const adminService = {
   /**
-   * Получает список всех книг для админки (с пагинацией и сортировкой).
-   * Вызывает: GET /api/books/search (или специальный админский эндпоинт, если есть)
+   * Получает список ВСЕХ книг (без фильтрации по названию).
+   * Вызывает: GET /api/books (или /api/admin/books в зависимости от вашего контроллера)
    */
-  getAllBooks: async (params) => {
-    // params: { page, size, sort, query }
+  getAllBooks: async (page = 0, size = 10) => {
     try {
-      // Используем существующий поиск, так как он возвращает Page<Book>
-      const response = await api.get("/books/search", { params });
+      // ВАЖНО: Укажите здесь правильный путь к эндпоинту "getAllBooks"
+      // Если он в BookController и доступен всем: /books
+      // Если он в AdminController: /admin/books
+      const response = await api.get("/books", {
+        params: { page, size, sort: "id,desc" },
+      });
       return response.data;
     } catch (error) {
       console.error("Ошибка при загрузке списка книг:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Ищет книги по названию/автору.
+   * Вызывает: GET /api/books/search
+   */
+  searchBooks: async (query, page = 0, size = 10) => {
+    try {
+      const response = await api.get("/books/search", {
+        params: { query, page, size },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при поиске книг:", error);
       throw error;
     }
   },
@@ -60,14 +79,10 @@ export const adminService = {
     }
   },
 
-  /**
-   * Получает полную информацию о книге для редактирования
-   * (можно использовать bookService.getBookDetail, но для админки лучше чистый метод)
-   */
   getBookForEdit: async (id) => {
     try {
       const response = await api.get(`/books/${id}`);
-      return response.data; // Тут вернется DTO, возможно BookDetailDTO
+      return response.data;
     } catch (error) {
       console.error(`Ошибка получения книги ${id}`, error);
       throw error;

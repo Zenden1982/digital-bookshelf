@@ -1,9 +1,10 @@
 // src/pages/Admin/AdminPage.jsx
 
 import { useCallback, useEffect, useState } from "react";
-import Pagination from "../../components/common/Pagination"; // Переиспользуем нашу пагинацию
+import Pagination from "../../components/common/Pagination";
 import { adminService } from "../../services/adminService";
 import "./AdminPage.css"; // Создадим стили позже
+import BookEditor from "./BookEditor";
 
 // Иконки
 import AddIcon from "@mui/icons-material/Add";
@@ -18,18 +19,26 @@ const AdminPage = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingBookId, setEditingBookId] = useState(null);
+
   const fetchBooks = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await adminService.getAllBooks({
-        page,
-        size: 10,
-        query,
-        sort: "id,desc", // Новые книги сверху
-      });
+      let data;
+      // ЕСЛИ есть поисковый запрос -> вызываем поиск
+      if (query.trim()) {
+        data = await adminService.searchBooks(query, page, 10);
+      }
+      // ИНАЧЕ -> вызываем получение всех книг
+      else {
+        data = await adminService.getAllBooks(page, 10);
+      }
+
       setBooks(data.content);
       setTotalPages(data.totalPages);
     } catch (error) {
+      console.error(error);
       alert("Не удалось загрузить список книг");
     } finally {
       setLoading(false);
@@ -48,7 +57,7 @@ const AdminPage = () => {
     ) {
       try {
         await adminService.deleteBook(id);
-        fetchBooks(); // Перезагружаем таблицу
+        fetchBooks();
       } catch (error) {
         alert("Ошибка при удалении книги");
       }
@@ -57,7 +66,26 @@ const AdminPage = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setPage(0); // Сброс на первую страницу при поиске
+    setPage(0);
+    fetchBooks();
+  };
+
+  const handleCreate = () => {
+    setEditingBookId(null); // null означает создание
+    setIsEditorOpen(true);
+  };
+
+  const handleEdit = (id) => {
+    setEditingBookId(id);
+    setIsEditorOpen(true);
+  };
+
+  const handleEditorClose = () => {
+    setIsEditorOpen(false);
+    setEditingBookId(null);
+  };
+
+  const handleSaveSuccess = () => {
     fetchBooks();
   };
 
@@ -65,7 +93,7 @@ const AdminPage = () => {
     <div className="admin-page">
       <header className="admin-header">
         <h1>Управление библиотекой</h1>
-        <button className="btn-primary add-book-btn">
+        <button className="btn-primary add-book-btn" onClick={handleCreate}>
           <AddIcon /> Добавить книгу
         </button>
       </header>
@@ -117,8 +145,12 @@ const AdminPage = () => {
                       ? book.publishedDate.split("-")[0]
                       : "-"}
                   </td>
-                  <td className="actions-cell">
-                    <button className="btn-icon edit" title="Редактировать">
+                  <td className="actions-wrapper">
+                    <button
+                      className="btn-icon edit"
+                      title="Редактировать"
+                      onClick={() => handleEdit(book.id)}
+                    >
                       <EditIcon />
                     </button>
                     <button
@@ -141,6 +173,14 @@ const AdminPage = () => {
         totalPages={totalPages}
         onPageChange={setPage}
       />
+
+      {isEditorOpen && (
+        <BookEditor
+          bookId={editingBookId}
+          onClose={handleEditorClose}
+          onSaveSuccess={handleSaveSuccess}
+        />
+      )}
     </div>
   );
 };
