@@ -80,11 +80,18 @@
   max-width: 450px;
 }
 
-/* Кнопка наследует стили, но мы можем добавить отступ, если нужно */
-.import-prompt .action-button.primary {
-  /* Стили для кнопки уже есть в BookCard.css, они применятся */
+.action-button.primary {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 24px;
+  background-color: #8b4513; /* Secondary */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-
 /* Добавить в конец src/pages/SearchResults.css */
 
 .import-prompt-persistent {

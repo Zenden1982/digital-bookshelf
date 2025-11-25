@@ -1,105 +1,279 @@
 // src/pages/Home.jsx
 
 import { useEffect, useState } from "react";
-import Bookshelf from "../components/shelf/Bookshelf"; // Этот компонент мы создадим дальше
+import { Link, useNavigate } from "react-router-dom";
+import Bookshelf from "../components/shelf/Bookshelf";
 import { useAuth } from "../context/AuthContext";
 import { shelfService } from "../services/shelfService";
-import "./Home.css"; // Стили тоже создадим дальше
+
+// Иконки
+import AddIcon from "@mui/icons-material/Add";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import SearchIcon from "@mui/icons-material/Search";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+
+import "./Home.css";
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
-  // Состояния компонента
-  const [userBooks, setUserBooks] = useState([]); // Массив книг пользователя
-  const [loading, setLoading] = useState(true); // Флаг загрузки данных
-  const [error, setError] = useState(""); // Сообщение об ошибке
+  const [userBooks, setUserBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [stats, setStats] = useState({
+    total: 0,
+    reading: 0,
+    completed: 0,
+    planned: 0,
+    totalPages: 0,
+    avgProgress: 0,
+  });
 
-  // useEffect для загрузки данных при монтировании компонента
   useEffect(() => {
     const fetchShelf = async () => {
       try {
-        setLoading(true); // Начинаем загрузку
-        // Вызываем наш сервис для получения книг с полки
-        const shelfData = await shelfService.getMyShelf();
-        // В shelfData у нас объект Page, книги лежат в поле "content"
-        setUserBooks(shelfData.content || []);
+        setLoading(true);
+        const shelfData = await shelfService.getMyShelf({ size: 1000 });
+        const books = shelfData.content || [];
+        setUserBooks(books);
+
+        // Рассчитываем статистику
+        const completed = books.filter((b) => b.status === "FINISHED").length;
+        const reading = books.filter((b) => b.status === "READING").length;
+        const planned = books.filter((b) => b.status === "PLAN_TO_READ").length;
+
+        const totalPages = books.reduce((sum, b) => {
+          return sum + (b.book?.pageCount || 0);
+        }, 0);
+
+        const avgProgress =
+          books.length > 0
+            ? books.reduce((sum, b) => sum + (b.progress || 0), 0) /
+              books.length
+            : 0;
+
+        setStats({
+          total: books.length,
+          reading,
+          completed,
+          planned,
+          totalPages,
+          avgProgress: Math.round(avgProgress),
+        });
       } catch (err) {
         setError(
           "Не удалось загрузить вашу библиотеку. Пожалуйста, попробуйте обновить страницу."
         );
         console.error("Ошибка на странице Home:", err);
       } finally {
-        setLoading(false); // Завершаем загрузку в любом случае
+        setLoading(false);
       }
     };
 
     fetchShelf();
-  }, []); // Пустой массив зависимостей означает, что эффект выполнится только один раз
-
-  // --- Расчет статистики на основе полученных данных ---
-  const bookCount = userBooks.length;
-  // Считаем прочитанные книги (предполагаем, что статус 'READ' или 'Прочитано')
-  const readCount = userBooks.filter((ub) => ub.status === "READ").length;
+  }, []);
 
   const getLibraryLevel = () => {
-    if (bookCount === 0) return "Время начать";
-    if (bookCount <= 10) return "Начало коллекции";
-    if (bookCount <= 30) return "Растущая полка";
-    if (bookCount <= 60) return "Домашняя библиотека";
-    if (bookCount <= 100) return "Впечатляющая коллекция";
+    const count = stats.total;
+    if (count === 0) return "Время начать";
+    if (count <= 10) return "Начало коллекции";
+    if (count <= 30) return "Растущая полка";
+    if (count <= 60) return "Домашняя библиотека";
+    if (count <= 100) return "Впечатляющая коллекция";
     return "Настоящая библиотека";
   };
 
-  // --- Условный рендеринг в зависимости от состояния ---
+  const getProgressToNext = () => {
+    const count = stats.total;
+    if (count < 10)
+      return { current: count, next: 10, percent: (count / 10) * 100 };
+    if (count < 30)
+      return { current: count, next: 30, percent: ((count - 10) / 20) * 100 };
+    if (count < 60)
+      return { current: count, next: 60, percent: ((count - 30) / 30) * 100 };
+    if (count < 100)
+      return { current: count, next: 100, percent: ((count - 60) / 40) * 100 };
+    return { current: count, next: count, percent: 100 };
+  };
 
-  // Если идет загрузка
   if (loading) {
     return (
       <div className="home-container">
-        <div className="loader">Загрузка вашей библиотеки...</div>
+        <div className="home-loading">
+          <div className="loader-spinner"></div>
+          <p>Загрузка вашей библиотеки...</p>
+        </div>
       </div>
     );
   }
 
-  // Если произошла ошибка
   if (error) {
     return (
       <div className="home-container">
-        <div className="error-message">{error}</div>
+        <div className="home-error">
+          <p className="error-message">{error}</p>
+          <button
+            className="btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            Обновить страницу
+          </button>
+        </div>
       </div>
     );
   }
 
-  // --- Основной рендер страницы ---
+  const progress = getProgressToNext();
+
   return (
     <div className="home-container">
-      <header className="home-header">
-        <h1 className="home-title">Живая цифровая библиотека</h1>
-        <p className="home-subtitle">Добро пожаловать, {user.username}!</p>
+      {/* Header с приветствием */}
+      <header className="home-hero">
+        <div className="hero-content">
+          <h1 className="hero-title">
+            Добро пожаловать,{" "}
+            <span className="hero-name">{user?.username}</span>!
+          </h1>
+          <p className="hero-subtitle">Ваша личная цифровая библиотека</p>
+        </div>
       </header>
 
-      {/* Секция со статистикой */}
-      <div className="library-stats">
-        <div className="stat-card">
-          <div className="stat-number">{bookCount}</div>
-          <div className="stat-label">книг в коллекции</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{readCount}</div>
-          <div className="stat-label">прочитано</div>
-        </div>
-        <div className="stat-card highlight">
-          <div className="stat-level">{getLibraryLevel()}</div>
-          <div className="stat-label">уровень библиотеки</div>
-        </div>
-      </div>
+      {/* Статистика */}
+      <section className="stats-section">
+        <div className="stats-grid">
+          <div className="stat-card primary">
+            <div className="stat-icon">
+              <MenuBookIcon />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.total}</div>
+              <div className="stat-label">Всего книг</div>
+            </div>
+          </div>
 
-      {/* 
-        Компонент "Живая полка".
-        Мы передаем ему массив загруженных книг.
-        Всю логику отрисовки полок и корешков он возьмет на себя.
-      */}
-      <Bookshelf books={userBooks} />
+          <div className="stat-card success">
+            <div className="stat-icon">
+              <AutoStoriesIcon />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.reading}</div>
+              <div className="stat-label">Читаю сейчас</div>
+            </div>
+          </div>
+
+          <div className="stat-card completed">
+            <div className="stat-icon">
+              <TrendingUpIcon />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.completed}</div>
+              <div className="stat-label">Прочитано</div>
+            </div>
+          </div>
+
+          <div className="stat-card info">
+            <div className="stat-icon">
+              <AssessmentIcon />
+            </div>
+            <div className="stat-content">
+              <div className="stat-number">{stats.avgProgress}%</div>
+              <div className="stat-label">Средний прогресс</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Уровень библиотеки */}
+      <section className="level-section">
+        <div className="level-card">
+          <div className="level-header">
+            <h3 className="level-title">{getLibraryLevel()}</h3>
+            <span className="level-badge">
+              Уровень {Math.min(Math.floor(stats.total / 10) + 1, 11)}
+            </span>
+          </div>
+
+          {stats.total < 100 && (
+            <>
+              <div className="level-progress-bar">
+                <div
+                  className="level-progress-fill"
+                  style={{ width: `${progress.percent}%` }}
+                />
+              </div>
+              <p className="level-text">
+                Ещё {progress.next - progress.current}{" "}
+                {progress.next - progress.current === 1 ? "книга" : "книг"} до
+                следующего уровня
+              </p>
+            </>
+          )}
+
+          {stats.total >= 100 && (
+            <p className="level-text max-level">
+              🎉 Вы достигли максимального уровня!
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Быстрые действия */}
+      <section className="quick-actions-section">
+        <div className="quick-actions">
+          <Link to="/search" className="action-card">
+            <div className="action-icon">
+              <AddIcon />
+            </div>
+            <h3>Добавить книгу</h3>
+            <p>Найти и добавить новую книгу в коллекцию</p>
+          </Link>
+
+          <Link to="/catalog" className="action-card">
+            <div className="action-icon">
+              <MenuBookIcon />
+            </div>
+            <h3>Каталог</h3>
+            <p>Просмотреть все книги в библиотеке</p>
+          </Link>
+
+          <Link to="/search?mode=semantic" className="action-card">
+            <div className="action-icon">
+              <SearchIcon />
+            </div>
+            <h3>Умный поиск</h3>
+            <p>Найти книги по смыслу и настроению</p>
+          </Link>
+        </div>
+      </section>
+
+      {/* Живая полка */}
+      {userBooks.length > 0 ? (
+        <section className="bookshelf-section">
+          <div className="section-header">
+            <h2 className="section-title">Ваша библиотека</h2>
+            <p className="section-subtitle">
+              {stats.totalPages > 0 &&
+                `${stats.totalPages.toLocaleString()} страниц в коллекции`}
+            </p>
+          </div>
+          <Bookshelf books={userBooks} />
+        </section>
+      ) : (
+        <section className="empty-library">
+          <div className="empty-content">
+            <MenuBookIcon style={{ fontSize: 80, opacity: 0.3 }} />
+            <h2>Ваша библиотека пуста</h2>
+            <p>Начните добавлять книги, чтобы они появились здесь</p>
+            <Link to="/search" className="btn-primary">
+              <AddIcon />
+              <span>Добавить первую книгу</span>
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
