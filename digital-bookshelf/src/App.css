@@ -3,11 +3,20 @@
 .App {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* Минимальная высота в размер всего экрана */
-  background-color: #f5f1e8; /* Основной фон "Бумага" */
+  min-height: 100vh;
+  background-color: #f5f1e8;
 }
 
 .main-content {
-  flex-grow: 1; /* Основной контент занимает все доступное пространство, отталкивая футер вниз */
+  flex-grow: 1;
   width: 100%;
+}
+
+/* Стили для контейнера читалки */
+.reader-layout {
+  width: 100%;
+  height: 100vh; /* Занимает весь экран */
+  overflow: hidden; /* Убираем скролл на уровне layout */
+  margin: 0;
+  padding: 0;
 }

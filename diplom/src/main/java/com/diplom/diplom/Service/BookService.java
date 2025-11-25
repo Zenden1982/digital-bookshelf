@@ -637,11 +637,28 @@ public class BookService {
 
     @Transactional
     public void uploadContentAsAdmin(Long bookId, String contentText) {
+        // 1. Загружаем книгу
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + bookId));
 
-        // Просто сохраняем текст
-        saveOrUpdateBookContent(book, contentText);
+        // 2. Ищем СУЩЕСТВУЮЩИЙ контент через репозиторий контента (или через книгу,
+        // если настроено lazy)
+        BookContent bookContent = bookContentRepository.findById(bookId)
+                .orElse(null);
+
+        if (bookContent == null) {
+            // Если контента нет - создаем новый
+            bookContent = new BookContent();
+            bookContent.setBook(book); // Важно установить связь
+            // ID установится автоматически благодаря @MapsId при сохранении,
+            // но для надежности можно явно не сетить, а просто связать с book
+        }
+
+        // 3. Обновляем текст
+        bookContent.setContent(contentText);
+
+        // 4. Сохраняем
+        bookContentRepository.save(bookContent);
 
         log.info("Администратор загрузил текст для книги ID {}", bookId);
     }

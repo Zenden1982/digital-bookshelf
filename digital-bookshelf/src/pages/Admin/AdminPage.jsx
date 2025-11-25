@@ -1,24 +1,25 @@
 // src/pages/Admin/AdminPage.jsx
 
 import { useCallback, useEffect, useState } from "react";
+import FileUploadModal from "../../components/common/FileUploadModal";
 import Pagination from "../../components/common/Pagination";
 import { adminService } from "../../services/adminService";
 import "./AdminPage.css"; // Создадим стили позже
 import BookEditor from "./BookEditor";
-
 // Иконки
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
-
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 const AdminPage = () => {
   const [books, setBooks] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadBookId, setUploadBookId] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingBookId, setEditingBookId] = useState(null);
 
@@ -89,6 +90,19 @@ const AdminPage = () => {
     fetchBooks();
   };
 
+  const handleUploadClick = (id) => {
+    setUploadBookId(id);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleUploadClose = () => {
+    setIsUploadModalOpen(false);
+    setUploadBookId(null);
+  };
+
+  const handleUploadSuccess = () => {
+    alert("Текст успешно загружен!");
+  };
   return (
     <div className="admin-page">
       <header className="admin-header">
@@ -147,6 +161,13 @@ const AdminPage = () => {
                   </td>
                   <td className="actions-wrapper">
                     <button
+                      className="btn-icon upload"
+                      title="Загрузить текст"
+                      onClick={() => handleUploadClick(book.id)}
+                    >
+                      <UploadFileIcon />
+                    </button>
+                    <button
                       className="btn-icon edit"
                       title="Редактировать"
                       onClick={() => handleEdit(book.id)}
@@ -165,6 +186,13 @@ const AdminPage = () => {
               ))}
             </tbody>
           </table>
+          {isUploadModalOpen && (
+            <FileUploadModal
+              bookId={uploadBookId}
+              onClose={handleUploadClose}
+              onSuccess={handleUploadSuccess}
+            />
+          )}
         </div>
       )}
 

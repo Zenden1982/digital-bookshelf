@@ -58,7 +58,7 @@ export const adminService = {
    */
   updateBook: async (id, bookData) => {
     try {
-      const response = await api.put(`/admin/books/${id}`, bookData);
+      const response = await api.put(`admin/import/books/${id}`, bookData);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при обновлении книги ${id}:`, error);
@@ -85,6 +85,33 @@ export const adminService = {
       return response.data;
     } catch (error) {
       console.error(`Ошибка получения книги ${id}`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Загружает текстовый контент для книги (только для админа).
+   * Вызывает: POST /api/v1/admin/books/{bookId}/content
+   * @param {number} bookId
+   * @param {File} file - Файл .txt (или .fb2, если бэкенд парсит)
+   */
+  uploadBookContent: async (bookId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await api.post(
+        `/admin/books/${bookId}/content`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка загрузки контента для книги ${bookId}:`, error);
       throw error;
     }
   },

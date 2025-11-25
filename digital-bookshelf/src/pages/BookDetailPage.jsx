@@ -55,7 +55,6 @@ const BookDetailPage = () => {
 
   // Загрузка похожих книг
   const fetchSimilarBooks = useCallback(() => {
-    // Не блокируем основной UI
     bookService
       .findSimilarBooks(bookId, 4)
       .then((data) => {
@@ -147,7 +146,6 @@ const BookDetailPage = () => {
               alt={`Обложка ${book.title}`}
               className="book-cover"
             />
-            {/* Градиентный оверлей */}
             <div className="cover-gradient"></div>
           </div>
 
@@ -204,13 +202,21 @@ const BookDetailPage = () => {
                   </div>
                 )}
 
-                {/* Кнопка чтения */}
+                {/* Кнопка чтения (ДОБАВЛЕНА) */}
                 <Link
                   to={`/reader/${book.id}`}
                   className="btn-primary btn-read"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    marginTop: "16px",
+                    textDecoration: "none",
+                  }}
                 >
                   <MenuBookIcon />
-                  <span>Продолжить чтение</span>
+                  <span>Читать книгу</span>
                 </Link>
 
                 {/* Теги */}

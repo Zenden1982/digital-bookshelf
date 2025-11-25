@@ -83,4 +83,37 @@ export const shelfService = {
       throw error;
     }
   },
+
+  /**
+   * Загружает личный файл книги для записи на полке (создает приватную копию).
+   * Вызывает: POST /api/v1/shelf/{userBookId}/content
+   * @param {number} userBookId - ID записи UserBook
+   * @param {File} file - Файл с текстом
+   */
+  uploadPersonalContent: async (userBookId, file) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // ВАЖНО: Проверьте путь в вашем контроллере.
+      // Вы прислали @RequestMapping("/api/v1/shelf") и метод @PostMapping("/{userBookId}/content")
+      // Значит полный путь: /api/v1/shelf/{userBookId}/content
+      const response = await api.post(
+        `/shelf/${userBookId}/content`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Ошибка загрузки личного контента для userBook ${userBookId}:`,
+        error
+      );
+      throw error;
+    }
+  },
 };

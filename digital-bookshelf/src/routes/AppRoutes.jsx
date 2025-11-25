@@ -90,7 +90,6 @@ const AppRoutes = () => {
         }
       />
 
-      {/* --- Заглушки --- */}
       <Route
         path="/reader/:bookId"
         element={

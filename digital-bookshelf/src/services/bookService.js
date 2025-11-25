@@ -113,4 +113,23 @@ export const bookService = {
       return [];
     }
   },
+
+  /**
+   * Получает текстовый контент книги.
+   * Вызывает: GET /api/v1/books/{id}/content
+   * Ожидает ответ: { "content": "Текст книги..." }
+   */
+  getBookContent: async (bookId) => {
+    try {
+      const response = await api.get(`/books/${bookId}/content`);
+      return response.data;
+    } catch (error) {
+      console.error(`Ошибка при получении контента книги ${bookId}:`, error);
+      // Если бэкенд возвращает 404 (текста нет), можно вернуть null
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
 };
