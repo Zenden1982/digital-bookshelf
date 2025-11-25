@@ -1,6 +1,7 @@
 package com.diplom.diplom.Controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -77,6 +78,18 @@ public class BookController {
 
         List<BookReadDTO> similarBooks = bookService.findSimilarBooksByBookId(id, limit);
         return ResponseEntity.ok(similarBooks);
+    }
+
+    @GetMapping("/{id}/content")
+    public ResponseEntity<Map<String, String>> getBookContent(@PathVariable Long id) {
+        String content = bookService.getBookContent(id);
+
+        if (content == null) {
+            // Можно вернуть 404 или пустой контент, как решишь
+            return ResponseEntity.ok(Map.of("content", ""));
+        }
+
+        return ResponseEntity.ok(Map.of("content", content));
     }
 
 }

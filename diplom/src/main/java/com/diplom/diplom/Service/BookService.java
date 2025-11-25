@@ -27,14 +27,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.diplom.diplom.Entity.Book;
+import com.diplom.diplom.Entity.BookContent;
 import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookDetailDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
+import com.diplom.diplom.Exception.AccessDeniedException;
 import com.diplom.diplom.Exception.ApiIntegrationException;
 import com.diplom.diplom.Exception.DuplicateResourceException;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
+import com.diplom.diplom.Repository.BookContentRepository;
 import com.diplom.diplom.Repository.BookRepository;
 import com.diplom.diplom.Repository.UserBookRepository;
 import com.diplom.diplom.Repository.UserRepository;
@@ -64,6 +67,7 @@ public class BookService {
 
     private final UserRepository userRepository;
 
+    private final BookContentRepository bookContentRepository;
     // ========== CRUD операции ==========
 
     @Transactional
@@ -472,7 +476,7 @@ public class BookService {
                 .build();
     }
 
-    private User getCurrentUser() {
+    public User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
@@ -559,5 +563,86 @@ public class BookService {
         }
 
         log.info("Перегенерация завершена. Всего обновлено: {}", count);
+    }
+
+    @Transactional
+    public void uploadPersonalBookContent(Long userBookId, String contentText, User currentUser) {
+        UserBook userBook = userBookRepository.findById(userBookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Запись на полке не найдена: " + userBookId));
+
+        if (!userBook.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Вы не можете изменять чужую полку");
+        }
+
+        Book currentBook = userBook.getBook();
+
+        if (currentUser.equals(currentBook.getOwner())) {
+            log.info("Книга ID {} уже является личной копией. Обновляем текст.", currentBook.getId());
+            saveOrUpdateBookContent(currentBook, contentText);
+            return;
+        }
+
+        log.info("Книга ID {} публичная. Создаем личную копию для пользователя {}", currentBook.getId(),
+                currentUser.getUsername());
+
+        Book personalCopy = new Book();
+
+        personalCopy.setTitle(currentBook.getTitle());
+        personalCopy.setAuthor(currentBook.getAuthor());
+        personalCopy.setAnnotation(currentBook.getAnnotation());
+        personalCopy.setPageCount(currentBook.getPageCount());
+        personalCopy.setIsbn(currentBook.getIsbn());
+        personalCopy.setPublishedDate(currentBook.getPublishedDate());
+        personalCopy.setCoverUrl(currentBook.getCoverUrl());
+        personalCopy.setGoogleBookId(currentBook.getGoogleBookId());
+        personalCopy.setGenres(currentBook.getGenres());
+        personalCopy.setAddedAt(LocalDateTime.now());
+
+        personalCopy.setOwner(currentUser);
+
+        Book savedPersonalCopy = bookRepository.save(personalCopy);
+
+        generateAndSetEmbedding(savedPersonalCopy);
+
+        saveOrUpdateBookContent(savedPersonalCopy, contentText);
+
+        userBook.setBook(savedPersonalCopy);
+
+        // Опционально: Сбрасываем прогресс, т.к. текст новый
+        // userBook.setProgress(0);
+        // userBook.setCurrentPage(0);
+
+        userBookRepository.save(userBook);
+
+        log.info("Подмена завершена. UserBook ID {} теперь ссылается на Book ID {}", userBook.getId(),
+                savedPersonalCopy.getId());
+    }
+
+    /**
+     * Вспомогательный метод для сохранения текста в таблицу book_contents
+     */
+    private void saveOrUpdateBookContent(Book book, String content) {
+        BookContent bookContent = bookContentRepository.findById(book.getId())
+                .orElse(new BookContent(book.getId(), book, content));
+
+        bookContent.setContent(content);
+        bookContentRepository.save(bookContent);
+    }
+
+    public String getBookContent(Long bookId) {
+        return bookContentRepository.findById(bookId)
+                .map(BookContent::getContent)
+                .orElse(null); // Или вернуть заглушку, если текста нет
+    }
+
+    @Transactional
+    public void uploadContentAsAdmin(Long bookId, String contentText) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + bookId));
+
+        // Просто сохраняем текст
+        saveOrUpdateBookContent(book, contentText);
+
+        log.info("Администратор загрузил текст для книги ID {}", bookId);
     }
 }
