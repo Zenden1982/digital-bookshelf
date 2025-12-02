@@ -37,8 +37,6 @@ export const authService = {
 
   logout: () => {
     storage.clearAuth();
-
-    window.location.href = "/login";
   },
 
   getCurrentUser: () => {

@@ -33,7 +33,7 @@ export const storage = {
   },
 
   hasToken: () => {
-    return !!localStorage.getItem(TOKEN_KEY); // !! преобразует в boolean
+    return !!localStorage.getItem(TOKEN_KEY);
   },
 };
 export default storage;

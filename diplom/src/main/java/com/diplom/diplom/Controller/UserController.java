@@ -81,7 +81,6 @@ public class UserController {
 
     @PostMapping("/avatar")
     public ResponseEntity<String> uploadAvatar(@RequestParam("file") MultipartFile file) {
-        // Получаем текущего юзера из SecurityContext
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         String fileName = imageService.uploadUserAvatar(username, file);
         return ResponseEntity.ok("Аватарка обновлена: " + fileName);

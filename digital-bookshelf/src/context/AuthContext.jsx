@@ -11,30 +11,34 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Проверка аутентификации пользователя
   const checkAuth = async () => {
     try {
       if (authService.isAuthenticated()) {
         const currentUser = authService.getCurrentUser();
         if (currentUser) {
           setUser(currentUser);
+        } else {
+          handleLogoutCleanup();
         }
       } else {
-        const currentUser = authService.getCurrentUser();
-        setUser(currentUser);
+        handleLogoutCleanup();
       }
     } catch (error) {
       console.error("Ошибка проверки аутентификации:", error);
-      authService.logout();
+      handleLogoutCleanup();
     } finally {
       setLoading(false);
     }
   };
 
+  const handleLogoutCleanup = () => {
+    authService.logout();
+    setUser(null);
+  };
+
   const login = async (credentials) => {
     try {
       const userData = await authService.login(credentials);
-
       setUser(userData);
       return userData;
     } catch (error) {
@@ -45,7 +49,6 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const newUser = await authService.register(userData);
-
       return newUser;
     } catch (error) {
       throw error;
@@ -53,14 +56,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
+    handleLogoutCleanup();
   };
 
   const refreshUser = async () => {
     try {
       const userData = await authService.refreshUserData();
-
       setUser(userData);
       return userData;
     } catch (error) {
@@ -75,14 +76,20 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     refreshUser,
+    checkAuth,
     isAuthenticated: !!user,
   };
 
   if (loading) {
-    return <div>Загрузка...</div>;
+    return (
+      <div
+        style={{ display: "flex", justifyContent: "center", marginTop: "50px" }}
+      >
+        Загрузка...
+      </div>
+    );
   }
 
-  // Предоставление контекста аутентификации дочерним компонентам
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

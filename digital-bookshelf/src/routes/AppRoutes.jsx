@@ -15,6 +15,7 @@ import ImportPage from "../pages/ImportPage";
 import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
 import SearchResults from "../pages/SearchResults";
+import Settings from "../pages/Settings";
 import AdminRoute from "./AdminRoute";
 const AppRoutes = () => {
   return (
@@ -44,6 +45,14 @@ const AppRoutes = () => {
           <AdminRoute>
             <AdminPage />
           </AdminRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <Settings />
+          </PrivateRoute>
         }
       />
 
