@@ -20,6 +20,7 @@ public class UserReadDTO {
     private String email;
     private List<Role> roles;
     private LocalDateTime createdAt;
+    private String avatarUrl;
 
     static public UserReadDTO toDTO(com.diplom.diplom.Entity.User user) {
         return UserReadDTO.builder()
@@ -28,6 +29,7 @@ public class UserReadDTO {
                 .email(user.getEmail())
                 .roles(user.getRoles())
                 .createdAt(user.getCreatedAt())
+                .avatarUrl(user.getImage().getName())
                 .build();
     }
 }

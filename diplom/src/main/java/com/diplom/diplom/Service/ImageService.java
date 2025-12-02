@@ -125,4 +125,10 @@ public class ImageService {
             log.warn("Не удалось удалить старый файл: {}", imageName);
         }
     }
+
+    public byte[] getUserAvatar(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
+        return getImageBytes(user.getImage().getName());
+    }
 }

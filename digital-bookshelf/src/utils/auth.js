@@ -12,15 +12,13 @@ export const auth = {
   },
 
   isTokenExpired: (token) => {
-    if (!token) return true; // Нет токена = истёк
-
+    if (!token) return true;
     try {
       const decoded = jwtDecode(token);
-      // JWT содержит поле exp (expiration) в секундах Unix-времени
-      const currentTime = Date.now() / 1000; // Текущее время в секундах
-      return decoded.exp < currentTime; // Если exp меньше текущего времени = истёк
+      const currentTime = Date.now() / 1000;
+      return decoded.exp < currentTime;
     } catch (error) {
-      return true; // Ошибка расшифровки = считаем истёкшим
+      return true;
     }
   },
   getUserFromToken: () => {
@@ -30,9 +28,9 @@ export const auth = {
     try {
       const decoded = jwtDecode(token);
       return {
-        username: decoded.sub, // "sub" — стандартное поле JWT для username
-        roles: decoded.roles || decoded.authorities || [], // roles из вашего Spring
-        id: decoded.userId || decoded.id, // если id есть в токене
+        username: decoded.sub,
+        roles: decoded.roles || decoded.authorities || [],
+        id: decoded.userId || decoded.id,
       };
     } catch (error) {
       console.error("Ошибка извлечения пользователя из токена:", error);

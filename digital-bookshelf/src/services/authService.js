@@ -49,7 +49,13 @@ export const authService = {
 
   refreshUserData: async () => {
     try {
-      // Обновление данных пользователя
+      const userResponse = await api.get("/users/me");
+      const userData = userResponse.data;
+
+      // ВАЖНО: Обновляем данные в localStorage
+      storage.setUser(userData);
+
+      return userData;
     } catch (error) {
       throw error;
     }

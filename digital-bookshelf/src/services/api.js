@@ -14,7 +14,6 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = storage.getToken();
-
     if (token && !auth.isTokenExpired(token)) {
       config.headers.Authorization = `Bearer ${token}`;
     }

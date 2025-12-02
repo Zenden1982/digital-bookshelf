@@ -1,5 +1,7 @@
 package com.diplom.diplom.Controller;
 
+import java.util.Map;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -63,8 +65,10 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserReadDTO updateUser(Long id, UserCreateDTO userCreateDTO) {
-        return userService.updateUser(id, userCreateDTO);
+    public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id,
+            @RequestBody UserCreateDTO userCreateDTO) {
+        Map<String, Object> response = userService.updateUser(id, userCreateDTO);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -94,5 +98,12 @@ public class UserController {
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .body(image);
+    }
+
+    @GetMapping("/avatar")
+    public ResponseEntity<byte[]> getAvatar() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        byte[] avatar = imageService.getUserAvatar(username);
+        return ResponseEntity.ok(avatar);
     }
 }

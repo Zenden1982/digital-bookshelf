@@ -4,6 +4,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../services/authService";
+import { userService } from "../../services/userService";
 
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -34,6 +35,24 @@ const Header = () => {
 
   const toggleSearchMode = () => {
     setSearchMode((prev) => (prev === "regular" ? "semantic" : "regular"));
+  };
+
+  const getAvatarSrc = () => {
+    if (user?.avatarUrl) {
+      // Если avatarUrl уже полный (http) или base64 (data:)
+      if (
+        user.avatarUrl.startsWith("http") ||
+        user.avatarUrl.startsWith("data:")
+      ) {
+        return user.avatarUrl;
+      }
+      // Иначе формируем URL через сервис (для сохраненных файлов)
+      return userService.getAvatarUrl(user.avatarUrl);
+    }
+    // Фолбэк на DiceBear
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${
+      user?.username || "U"
+    }`;
   };
 
   const placeholder =
@@ -100,13 +119,7 @@ const Header = () => {
           </form>
 
           <div className="user-profile-menu">
-            <img
-              src={`https://api.dicebear.com/7.x/initials/svg?seed=${
-                user?.username || "U"
-              }`}
-              alt="Аватар"
-              className="user-avatar"
-            />
+            <img src={getAvatarSrc()} alt="Аватар" className="user-avatar" />
             <div className="dropdown-menu">
               <div className="dropdown-user-info">
                 <strong>{user?.username}</strong>

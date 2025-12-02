@@ -11,23 +11,11 @@ export const userService = {
     }
   },
 
-  updatePassword: async (passwordData) => {
-    try {
-      const response = await api.put("/users/password", passwordData);
-      return response.data;
-    } catch (error) {
-      console.error("Ошибка изменения пароля:", error);
-      throw error;
-    }
-  },
-
   uploadAvatar: async (file) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-
       const response = await api.post("/users/avatar", formData);
-
       return response.data;
     } catch (error) {
       console.error("Ошибка загрузки аватара:", error);
@@ -36,6 +24,8 @@ export const userService = {
   },
 
   getAvatarUrl: (filename) => {
-    return `${api.defaults.baseURL}/users/avatar/${filename}`;
+    if (!filename) return "";
+    const cleanFilename = filename.split(/[/\\]/).pop();
+    return `${api.defaults.baseURL}/users/avatar/${cleanFilename}`;
   },
 };

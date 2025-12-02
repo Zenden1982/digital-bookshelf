@@ -1,6 +1,8 @@
 package com.diplom.diplom.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -13,10 +15,10 @@ import org.springframework.stereotype.Service;
 
 import com.diplom.diplom.Config.JwtTokenUtils;
 import com.diplom.diplom.Entity.AuthRequest;
-import com.diplom.diplom.Entity.Role;
-import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.DTO.UserCreateDTO;
 import com.diplom.diplom.Entity.DTO.UserReadDTO;
+import com.diplom.diplom.Entity.Role;
+import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.RoleRepository;
 import com.diplom.diplom.Repository.UserRepository;
@@ -70,6 +72,7 @@ public class UserService implements UserDetailsService {
                 .email(user.getEmail())
                 .createdAt(user.getCreatedAt())
                 .roles(user.getRoles())
+                .avatarUrl(user.getImage().getName())
                 .build();
         return userReadDTO;
     }
@@ -93,23 +96,46 @@ public class UserService implements UserDetailsService {
     }
 
     @Transactional
-    public UserReadDTO updateUser(Long id, UserCreateDTO userCreateDTO) {
-        User user = userRepository.findById(id).orElse(null);
-        if (userCreateDTO.getUsername() != null)
-            user.setUsername(userCreateDTO.getUsername());
-        if (userCreateDTO.getPassword() != null)
-            user.setPassword(passwordEncoder.encode(userCreateDTO.getPassword()));
-        if (userCreateDTO.getEmail() != null)
-            user.setEmail(userCreateDTO.getEmail());
-        User updatedUser = userRepository.save(user);
-        UserReadDTO userReadDTO = UserReadDTO.builder()
-                .id(updatedUser.getId())
-                .username(updatedUser.getUsername())
-                .email(updatedUser.getEmail())
-                .createdAt(updatedUser.getCreatedAt())
-                .roles(updatedUser.getRoles())
-                .build();
-        return userReadDTO;
+    public Map<String, Object> updateUser(Long id, UserCreateDTO updateDTO) {
+        return userRepository.findById(id)
+                .map(existingUser -> {
+                    boolean usernameChanged = false;
+
+                    if (updateDTO.getUsername() != null && !updateDTO.getUsername().isBlank()) {
+                        if (!existingUser.getUsername().equals(updateDTO.getUsername())) {
+                            if (userRepository.existsByUsername(updateDTO.getUsername())) {
+                                throw new IllegalArgumentException("Имя пользователя уже занято");
+                            }
+                            existingUser.setUsername(updateDTO.getUsername());
+                            usernameChanged = true;
+                        }
+                    }
+
+                    if (updateDTO.getEmail() != null && !updateDTO.getEmail().isBlank()) {
+                        existingUser.setEmail(updateDTO.getEmail());
+                    }
+
+                    if (updateDTO.getPassword() != null && !updateDTO.getPassword().isBlank()) {
+                        existingUser.setPassword(passwordEncoder.encode(updateDTO.getPassword()));
+                    }
+
+                    User savedUser = userRepository.save(existingUser);
+                    UserReadDTO userDTO = UserReadDTO.toDTO(savedUser);
+
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("user", userDTO);
+
+                    if (usernameChanged) {
+                        String newToken = jwtTokenUtils.generateToken(savedUser);
+                        response.put("token", newToken);
+                        response.put("tokenUpdated", true);
+                    } else {
+                        response.put("tokenUpdated", false);
+                    }
+
+                    return response;
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь с id: " + id + " не найден"));
     }
 
     @Override
@@ -134,13 +160,7 @@ public class UserService implements UserDetailsService {
     public UserReadDTO getMe(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
-        UserReadDTO userReadDTO = UserReadDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .createdAt(user.getCreatedAt())
-                .roles(user.getRoles())
-                .build();
+
         return getUserByUsername(username);
     }
 

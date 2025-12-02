@@ -1,14 +1,14 @@
 // src/pages/Settings.jsx
 
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { userService } from "../services/userService";
-
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
+import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { userService } from "../services/userService";
+import { storage } from "../utils/storage";
 
 import "./Settings.css";
 
@@ -38,7 +38,7 @@ const Settings = () => {
         email: user.email || "",
       });
       if (user.avatarUrl) {
-        setAvatarPreview(user.avatarUrl);
+        setAvatarPreview(userService.getAvatarUrl(user.avatarUrl));
       }
     }
   }, [user]);
@@ -82,20 +82,31 @@ const Settings = () => {
     setMessage({ text: "", type: "" });
 
     try {
-      const response = await userService.updateProfile(user.id, {
+      const dataToUpdate = {
         username: profileData.username,
         email: profileData.email,
-        password: user.password,
-      });
+      };
 
-      const updatedUser = { ...user, ...response };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      const response = await userService.updateProfile(user.id, dataToUpdate);
 
-      if (refreshUser) {
-        await refreshUser();
+      if (response.tokenUpdated && response.token) {
+        storage.setToken(response.token);
+        storage.setUser(response.user);
+
+        if (refreshUser) {
+          await refreshUser();
+        }
+
+        setMessage({
+          text: "Имя пользователя изменено. Токен обновлен.",
+          type: "success",
+        });
+      } else {
+        if (refreshUser) {
+          await refreshUser();
+        }
+        setMessage({ text: "Профиль успешно обновлен", type: "success" });
       }
-
-      setMessage({ text: "Профиль успешно обновлен", type: "success" });
     } catch (error) {
       console.error("Полная ошибка:", error);
       setMessage({
@@ -128,7 +139,11 @@ const Settings = () => {
     }
 
     try {
-      await userService.updatePassword(passwordData);
+      const dataToUpdate = {
+        password: passwordData.newPassword,
+      };
+      await userService.updateProfile(user.id, dataToUpdate);
+
       setPasswordData({
         currentPassword: "",
         newPassword: "",
