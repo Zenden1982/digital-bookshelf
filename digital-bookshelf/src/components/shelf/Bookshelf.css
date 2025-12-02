@@ -1,206 +1,161 @@
 /* src/components/shelf/Bookshelf.css */
 
-.bookshelf-container {
-  position: relative;
+/* === Общий контейнер для всей библиотеки === */
+.library-container {
+  width: 100%;
+  max-width: 1200px; /* Ограничиваем максимальную ширину */
+  margin: 0 auto;
 }
 
+/* === Обертка для всех полок === */
 .bookshelf-wrapper {
-  background: linear-gradient(
-    180deg,
-    rgba(44, 62, 80, 0.03) 0%,
-    transparent 100%
-  );
-  border-radius: 16px;
-  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  /* Расстояние между полками */
+  gap: 60px;
+  /* Анимация появления всей библиотеки */
+  animation: fadeIn 1s ease-out;
 }
 
+/* === Одна книжная полка === */
 .bookshelf {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: shelfAppear 0.5s ease backwards;
+  position: relative;
+  width: 100%;
+  /* Отступ снизу, равный толщине доски */
+  padding-bottom: 16px;
 }
 
-.bookshelf:nth-child(1) {
-  animation-delay: 0.1s;
-}
-.bookshelf:nth-child(2) {
-  animation-delay: 0.2s;
-}
-.bookshelf:nth-child(3) {
-  animation-delay: 0.3s;
-}
-.bookshelf:nth-child(4) {
-  animation-delay: 0.4s;
-}
-.bookshelf:nth-child(5) {
-  animation-delay: 0.5s;
-}
-
-@keyframes shelfAppear {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Ряд книг на полке */
 .books-row {
   display: flex;
-  gap: 3px;
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
-  position: relative;
+  align-items: flex-end; /* Книги стоят на полке */
   justify-content: center;
+  gap: 4px;
+  min-height: 220px; /* Чтобы пустая полка не схлопывалась */
 }
 
+/* Деревянная доска полки */
+.shelf-board {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  background-color: #6b4423; /* Тёмное дерево */
+  border-radius: 2px;
+  /* Тень под полкой для объема */
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* === Корешок одной книги === */
 .book-spine {
   position: relative;
   border-radius: 2px 2px 0 0;
+  /* Тень справа от книги для глубины */
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2), inset -2px 0 3px rgba(0, 0, 0, 0.1),
-    inset 2px 0 3px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-}
-.book-spine::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(0, 0, 0, 0.1) 100%
+  /* Легкий градиент для объема */
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.1),
+    transparent 20%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.1)
   );
-  pointer-events: none;
 }
+
+/* Анимация при наведении */
 .book-spine:hover {
-  transform: translateY(-12px) scale(1.02);
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3), 0 12px 20px rgba(0, 0, 0, 0.2);
-  filter: brightness(1.15);
-  z-index: 10;
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
-/* Индикатор прогресса */
+
+/* Обертка для вертикального текста */
+.book-title-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.library-container .book-title {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  /* Магия вертикального текста */
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  padding: 8px 0;
+  transition: color 0.3s ease;
+}
+
+.book-spine:hover .book-title {
+  color: #d4af37; /* Золотой акцент при наведении */
+}
+
+/* === Индикатор прогресса чтения === */
 .book-progress-indicator {
   position: absolute;
   bottom: 0;
   left: 0;
-  right: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(212, 175, 55, 0.7) 0%,
-    rgba(212, 175, 55, 0.9) 100%
-  );
-  transition: all 0.3s ease;
-  pointer-events: none;
-}
-.book-spine:hover .book-progress-indicator {
-  background: rgba(212, 175, 55, 1);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-}
-/* Индикатор статуса */
-.book-status-dot {
-  position: absolute;
-  top: 8px;
-  right: 6px;
-  font-size: 12px;
-  line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-}
-.status-reading {
-  color: #27ae60;
-}
-.status-completed {
-  color: #d4af37;
-}
-/* Доска полки */
-.shelf-board {
   width: 100%;
-  max-width: 900px;
-  height: 14px;
-  background: linear-gradient(to bottom, #6b4423 0%, #5a3819 50%, #4a2f15 100%);
-  border-radius: 2px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 3px rgba(0, 0, 0, 0.3);
-  position: relative;
+  /* Цвет "Читаю" */
+  background-color: #27ae60;
+  opacity: 0.8;
+  transition: height 0.5s ease;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
-.shelf-board::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0px,
-    transparent 80px,
-    rgba(0, 0, 0, 0.1) 80px,
-    rgba(0, 0, 0, 0.1) 81px
-  );
-  pointer-events: none;
+
+/* === Сообщение о пустой полке === */
+.empty-shelf-container {
+  padding: 40px 0;
 }
-/* Подсказка */
-.book-tooltip {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #2c3e50;
-  color: #ffffff;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  max-width: 400px;
+.empty-shelf-message {
   text-align: center;
-  animation: tooltipFade 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  padding: 60px 40px;
+  border: 2px dashed #95a5a6; /* Удовлетворение серый */
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.5);
 }
-@keyframes tooltipFade {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+
+.empty-shelf-message h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 16px;
 }
-.book-tooltip strong {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #d4af37;
+
+.empty-shelf-message p {
+  font-family: "Lora", serif;
+  color: #546e7a;
+  margin-bottom: 24px;
 }
-.book-tooltip span {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-.tooltip-progress {
-  color: #27ae60 !important;
+
+/* Кнопка */
+.action-button.primary {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
   font-weight: 600;
+  padding: 14px 24px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
-/* Адаптивность */
-@media (max-width: 768px) {
-  .bookshelf-wrapper {
-    padding: 1.5rem 1rem;
-    gap: 2rem;
-  }
-  .books-row {
-    gap: 2px;
-  }
-  .book-spine {
-    min-width: 15px !important;
-  }
+
+.action-button.primary:hover {
+  background-color: #6b3410;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
 }

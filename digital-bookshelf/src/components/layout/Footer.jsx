@@ -12,7 +12,6 @@ const Footer = () => {
         <p>&copy; {currentYear} Цифровая полка. Все права защищены.</p>
 
         <div className="footer-links">
-          {/* Замените на реальные маршруты, когда они появятся */}
           <Link to="/about">О проекте</Link>
           <Link to="/privacy">Политика конфиденциальности</Link>
           <Link to="/support">Поддержка</Link>

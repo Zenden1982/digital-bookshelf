@@ -3,25 +3,23 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { authService } from "../../services/authService"; // Импортируем для проверки роли
+import { authService } from "../../services/authService";
 
-// Импортируем иконки Material Icons
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 
-import "./Header.css"; // Стили создадим на следующем шаге
+import "./Header.css";
 
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Обработчик для поисковой формы
   const handleSearch = (e) => {
-    e.preventDefault(); // Предотвращаем перезагрузку страницы
+    e.preventDefault();
     if (searchQuery.trim()) {
       // Перенаправляем на страницу результатов поиска с запросом в URL
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -34,19 +32,16 @@ const Header = () => {
   return (
     <header className="app-header">
       <div className="header-container">
-        {/* Логотип */}
         <NavLink to="/" className="header-logo">
-          {/* Здесь можно вставить ваш SVG логотип */}
           <span className="logo-text">Цифровая полка</span>
         </NavLink>
 
-        {/* Навигация */}
         <nav className="header-nav">
           <NavLink to="/">Главная</NavLink>
           <NavLink to="/my-catalog">Мой Каталог</NavLink>
           <NavLink to="/map">Карта чтения</NavLink>
           <NavLink to="/analytics">Аналитика</NavLink>
-          {/* Условный рендеринг для админ-панели */}
+
           {isAdmin && (
             <NavLink to="/admin" className="admin-link">
               <AdminPanelSettingsIcon
@@ -57,7 +52,6 @@ const Header = () => {
           )}
         </nav>
 
-        {/* Поиск и меню пользователя */}
         <div className="header-actions">
           <form onSubmit={handleSearch} className="search-bar">
             <input
