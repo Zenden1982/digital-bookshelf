@@ -1,14 +1,25 @@
 // src/pages/Settings.jsx
 
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { userService } from "../services/userService";
+import getCroppedImg from "../utils/cropImage";
+import { storage } from "../utils/storage";
+
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import SaveIcon from "@mui/icons-material/Save";
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { userService } from "../services/userService";
-import { storage } from "../utils/storage";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Slider,
+} from "@mui/material";
+import Cropper from "react-easy-crop";
 
 import "./Settings.css";
 
@@ -30,6 +41,11 @@ const Settings = () => {
 
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [imageSrc, setImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -58,21 +74,37 @@ const Settings = () => {
   };
 
   const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setMessage({
-          text: "Файл слишком большой (макс. 5 МБ)",
-          type: "error",
-        });
-        return;
-      }
-      setAvatarFile(file);
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result);
-      };
+      reader.addEventListener("load", () => {
+        setImageSrc(reader.result);
+        setIsCropDialogOpen(true);
+      });
       reader.readAsDataURL(file);
+      e.target.value = null;
+    }
+  };
+
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleSaveCroppedImage = async () => {
+    try {
+      const croppedImageBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+
+      const objectUrl = URL.createObjectURL(croppedImageBlob);
+      setAvatarPreview(objectUrl);
+
+      const fileToSend = new File([croppedImageBlob], "avatar.jpg", {
+        type: "image/jpeg",
+      });
+      setAvatarFile(fileToSend);
+
+      setIsCropDialogOpen(false);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -89,9 +121,10 @@ const Settings = () => {
 
       const response = await userService.updateProfile(user.id, dataToUpdate);
 
-      if (response.tokenUpdated && response.token) {
+      if (response.token) {
         storage.setToken(response.token);
-        storage.setUser(response.user);
+        const updatedUser = response.user || response;
+        storage.setUser(updatedUser);
 
         if (refreshUser) {
           await refreshUser();
@@ -338,6 +371,65 @@ const Settings = () => {
           </section>
         </div>
       </div>
+
+      <Dialog
+        open={isCropDialogOpen}
+        onClose={() => setIsCropDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Редактирование фото</DialogTitle>
+        <DialogContent style={{ height: "400px", position: "relative" }}>
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: "60px",
+            }}
+          >
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+              cropShape="round"
+              showGrid={false}
+            />
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: "20px",
+              right: "20px",
+            }}
+          >
+            <label>Масштаб</label>
+            <Slider
+              value={zoom}
+              min={1}
+              max={3}
+              step={0.1}
+              onChange={(e, zoom) => setZoom(zoom)}
+            />
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsCropDialogOpen(false)}>Отмена</Button>
+          <Button
+            onClick={handleSaveCroppedImage}
+            variant="contained"
+            color="primary"
+          >
+            Готово
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
