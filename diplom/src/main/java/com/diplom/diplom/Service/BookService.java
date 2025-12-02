@@ -28,11 +28,11 @@ import org.springframework.web.client.RestTemplate;
 
 import com.diplom.diplom.Entity.Book;
 import com.diplom.diplom.Entity.BookContent;
-import com.diplom.diplom.Entity.User;
-import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookDetailDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
+import com.diplom.diplom.Entity.User;
+import com.diplom.diplom.Entity.UserBook;
 import com.diplom.diplom.Exception.AccessDeniedException;
 import com.diplom.diplom.Exception.ApiIntegrationException;
 import com.diplom.diplom.Exception.DuplicateResourceException;
@@ -263,8 +263,6 @@ public class BookService {
         return query.matches("^[0-9\\-]+$");
     }
 
-    // ========== Вспомогательные методы ==========
-
     public Page<BookReadDTO> findSimilarBooks(String query, int topK, int page, int size) {
         if (query == null || query.trim().isEmpty()) {
             return Page.empty(PageRequest.of(page, size));
@@ -273,7 +271,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(query)
                 .topK(topK)
-                .similarityThreshold(0.5)
+                .similarityThreshold(0.7)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);

@@ -1,5 +1,6 @@
 // src/pages/SearchResults.jsx
 
+import PsychologyIcon from "@mui/icons-material/Psychology";
 import SearchIcon from "@mui/icons-material/Search";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -11,6 +12,7 @@ import "./SearchResults.css";
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
+  const mode = searchParams.get("mode") || "regular";
   const page = parseInt(searchParams.get("page") || "0", 10);
 
   const [books, setBooks] = useState([]);
@@ -29,7 +31,19 @@ const SearchResults = () => {
       setLoading(true);
       setError("");
       try {
-        const results = await bookService.searchLocal(query, page, 20);
+        let results;
+
+        if (mode === "semantic") {
+          results = await bookService.findSimilarBooksByQuery(
+            query,
+            20,
+            page,
+            20
+          );
+        } else {
+          results = await bookService.searchLocal(query, page, 20);
+        }
+
         setBooks(results?.content || []);
         setTotalPages(results?.totalPages || 0);
       } catch (err) {
@@ -43,35 +57,54 @@ const SearchResults = () => {
     };
 
     fetchResults();
-  }, [query, page]);
+  }, [query, mode, page]);
 
   const handlePageChange = (newPage) => {
-    setSearchParams({ q: query, page: newPage });
+    setSearchParams({ q: query, mode: mode, page: newPage });
   };
 
   const hasResults = !loading && books.length > 0;
 
   return (
     <div className="search-results-page">
-      <h1 className="search-title">
-        Результаты поиска по запросу: <span>"{query}"</span>
-      </h1>
+      <header className="search-header">
+        <div className="search-info">
+          {mode === "semantic" ? (
+            <PsychologyIcon sx={{ fontSize: 28, color: "#8b4513" }} />
+          ) : (
+            <SearchIcon sx={{ fontSize: 28 }} />
+          )}
+          <div>
+            <h1>
+              {mode === "semantic"
+                ? "Семантический поиск"
+                : "Результаты поиска"}
+            </h1>
+            <p className="search-query">
+              {mode === "semantic" ? "По смыслу: " : "Запрос: "}
+              <strong>"{query}"</strong>
+            </p>
+          </div>
+        </div>
+      </header>
 
-      {loading && (
-        <div className="loader">Идет поиск по нашей библиотеке...</div>
-      )}
+      {loading && <div className="loading-spinner">Поиск книг...</div>}
+
       {error && <div className="error-message">{error}</div>}
 
       {hasResults && (
         <>
+          <div className="results-count">
+            Найдено книг: <strong>{books.length}</strong>
+          </div>
           <div className="books-grid">
             {books.map((book) => (
               <Link
                 to={`/book/${book.id}`}
                 key={book.id}
-                className="book-card-linl"
+                className="book-card-link"
               >
-                <BookCard key={book.id} book={book} />
+                <BookCard book={book} />
               </Link>
             ))}
           </div>
@@ -83,18 +116,20 @@ const SearchResults = () => {
         </>
       )}
 
-      {!loading && query && (
-        <div className="import-prompt-persistent">
-          <SearchIcon sx={{ fontSize: 40, color: "#546E7A" }} />
-          <h3>Не нашли то, что искали?</h3>
+      {!loading && !error && books.length === 0 && query && (
+        <div className="no-results">
+          <SearchIcon sx={{ fontSize: 64, color: "#95a5a6" }} />
+          <h2>Ничего не найдено</h2>
           <p>
+            {mode === "semantic"
+              ? "Попробуйте изменить запрос или переключиться на обычный поиск"
+              : "Попробуйте изменить запрос или использовать семантический поиск"}
+          </p>
+          <Link to="/import" className="import-link">
             Попробуйте найти книгу в глобальном каталоге и добавить её на наш
             сайт.
-          </p>
-          <Link
-            to={`/import?q=${encodeURIComponent(query)}`}
-            className="action-button primary"
-          >
+          </Link>
+          <Link to="/import" className="btn-primary">
             Перейти к импорту
           </Link>
         </div>

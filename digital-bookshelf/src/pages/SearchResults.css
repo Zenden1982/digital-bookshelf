@@ -2,23 +2,154 @@
 
 .search-results-page {
   padding: 48px;
-  background-color: #f5f1e8; /* Фон "Бумага" */
+  background-color: #f5f1e8;
   flex-grow: 1;
+  min-height: calc(100vh - 72px);
 }
 
-.search-title {
+.search-header {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #d4af37;
+}
+
+.search-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-info h1 {
   font-family: "Playfair Display", serif;
   font-size: 32px;
-  color: #2c3e50; /* Primary */
-  margin-bottom: 48px;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.search-query {
+  font-family: "Lora", serif;
+  font-size: 16px;
+  color: #546e7a;
+  margin: 8px 0 0 0;
+}
+
+.search-query strong {
+  color: #8b4513;
+}
+
+.loading-spinner {
   text-align: center;
+  padding: 80px 20px;
+  font-family: "Lora", serif;
+  font-size: 20px;
+  color: #546e7a;
 }
 
-.search-title span {
-  color: #8b4513; /* Secondary */
+.error-message {
+  text-align: center;
+  padding: 40px 20px;
+  background-color: #fff5f5;
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  font-family: "Lora", serif;
+  font-size: 18px;
+  color: #e74c3c;
+  margin-bottom: 32px;
 }
 
-/* Секция для одного типа результатов (наши или гугл) */
+.results-count {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  color: #546e7a;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.results-count strong {
+  color: #8b4513;
+  font-weight: 600;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.book-card-link {
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.3s ease;
+  display: block;
+}
+
+.book-card-link:hover {
+  transform: translateY(-4px);
+}
+
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 80px 40px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  margin-top: 40px;
+}
+
+.no-results h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  color: #2c3e50;
+  margin: 24px 0 16px 0;
+}
+
+.no-results p {
+  font-family: "Lora", serif;
+  font-size: 16px;
+  color: #546e7a;
+  margin-bottom: 32px;
+  max-width: 500px;
+}
+
+.import-link {
+  font-family: "Lora", serif;
+  color: #546e7a;
+  text-decoration: none;
+  margin-bottom: 24px;
+  transition: color 0.3s ease;
+}
+
+.import-link:hover {
+  color: #8b4513;
+}
+
+.btn-primary {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 32px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.btn-primary:hover {
+  background-color: #6d3610;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
 .results-section {
   margin-bottom: 64px;
 }
@@ -29,19 +160,10 @@
   color: #2c3e50;
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #d4af37; /* Accent */
+  border-bottom: 2px solid #d4af37;
   display: inline-block;
 }
 
-/* Сетка для карточек книг */
-.books-grid {
-  display: grid;
-  /* Адаптивная сетка */
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 32px;
-}
-
-/* Сообщения */
 .not-found-message {
   text-align: center;
   padding: 80px 20px;
@@ -54,10 +176,9 @@
 
 .import-prompt {
   display: flex;
-  flex-direction: column; /* Выстраиваем элементы в колонку */
-  align-items: center; /* Центрируем по горизонтали */
-  text-align: center; /* Центрируем текст внутри элементов */
-
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   padding: 60px 40px;
   margin-top: 40px;
   border: 2px dashed #95a5a6;
@@ -69,14 +190,14 @@
   font-family: "Playfair Display", serif;
   font-size: 24px;
   color: #2c3e50;
-  margin-top: 16px; /* Отступ от иконки */
+  margin-top: 16px;
   margin-bottom: 16px;
 }
 
 .import-prompt p {
   font-family: "Lora", serif;
   color: #546e7a;
-  margin-bottom: 32px; /* Увеличиваем отступ до кнопки */
+  margin-bottom: 32px;
   max-width: 450px;
 }
 
@@ -85,25 +206,23 @@
   font-size: 16px;
   font-weight: 600;
   padding: 12px 24px;
-  background-color: #8b4513; /* Secondary */
+  background-color: #8b4513;
   color: #ffffff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-/* Добавить в конец src/pages/SearchResults.css */
 
 .import-prompt-persistent {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-
-  margin-top: 64px; /* Большой отступ сверху */
+  margin-top: 64px;
   padding: 32px 40px;
-  border-top: 2px solid #d4af37; /* Акцентная линия сверху */
-  background-color: #fdfbf5; /* Чуть темнее основного фона */
+  border-top: 2px solid #d4af37;
+  background-color: #fdfbf5;
 }
 
 .import-prompt-persistent h3 {

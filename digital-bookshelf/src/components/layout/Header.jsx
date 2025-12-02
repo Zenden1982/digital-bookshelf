@@ -7,7 +7,9 @@ import { authService } from "../../services/authService";
 
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PersonIcon from "@mui/icons-material/Person";
+import PsychologyIcon from "@mui/icons-material/Psychology";
 import SearchIcon from "@mui/icons-material/Search";
 import SettingsIcon from "@mui/icons-material/Settings";
 
@@ -18,15 +20,27 @@ const Header = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [searchMode, setSearchMode] = useState("regular");
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Перенаправляем на страницу результатов поиска с запросом в URL
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      const mode = searchMode === "semantic" ? "semantic" : "regular";
+      navigate(
+        `/search?q=${encodeURIComponent(searchQuery.trim())}&mode=${mode}`
+      );
     }
   };
 
-  // Проверяем, является ли пользователь админом
+  const toggleSearchMode = () => {
+    setSearchMode((prev) => (prev === "regular" ? "semantic" : "regular"));
+  };
+
+  const placeholder =
+    searchMode === "semantic"
+      ? "Поиск по смыслу: 'книги о любви', 'детективы в Париже'..."
+      : "Поиск по названию, автору...";
+
   const isAdmin = authService.hasRole("ROLE_ADMIN");
 
   return (
@@ -54,13 +68,33 @@ const Header = () => {
 
         <div className="header-actions">
           <form onSubmit={handleSearch} className="search-bar">
+            <button
+              type="button"
+              className={`search-mode-toggle ${searchMode}`}
+              onClick={toggleSearchMode}
+              aria-label="Переключить режим поиска"
+              title={
+                searchMode === "regular"
+                  ? "Переключить на семантический поиск"
+                  : "Переключить на обычный поиск"
+              }
+            >
+              {searchMode === "regular" ? (
+                <MenuBookIcon sx={{ fontSize: 20 }} />
+              ) : (
+                <PsychologyIcon sx={{ fontSize: 20 }} />
+              )}
+            </button>
+
             <input
               type="text"
-              placeholder="Поиск по названию, автору..."
+              placeholder={placeholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
             />
-            <button type="submit" aria-label="Искать">
+
+            <button type="submit" aria-label="Искать" className="search-submit">
               <SearchIcon />
             </button>
           </form>

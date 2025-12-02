@@ -1,14 +1,13 @@
 /* src/components/layout/Header.css */
 
-/* === Основной контейнер хедера === */
 .app-header {
-  background-color: #ffffff; /* Фон карточек */
-  border-bottom: 1px solid #f5f1e8; /* Цвет фона */
-  padding: 0 48px; /* Боковые отступы */
+  background-color: #ffffff;
+  border-bottom: 1px solid #f5f1e8;
+  padding: 0 48px;
   height: 72px;
   display: flex;
   align-items: center;
-  position: sticky; /* "Прилипает" к верху экрана при скролле */
+  position: sticky;
   top: 0;
   z-index: 1000;
   transition: box-shadow 0.3s ease;
@@ -25,7 +24,6 @@
   justify-content: space-between;
 }
 
-/* === Логотип === */
 .header-logo {
   display: flex;
   align-items: center;
@@ -36,11 +34,10 @@
   font-family: "Playfair Display", serif;
   font-size: 22px;
   font-weight: 700;
-  color: #2c3e50; /* Primary */
+  color: #2c3e50;
   margin-left: 12px;
 }
 
-/* === Навигация === */
 .header-nav {
   display: flex;
   gap: 32px;
@@ -50,7 +47,7 @@
   font-family: "Inter", sans-serif;
   font-size: 16px;
   font-weight: 500;
-  color: #546e7a; /* Text Secondary */
+  color: #546e7a;
   text-decoration: none;
   position: relative;
   padding: 8px 0;
@@ -60,16 +57,14 @@
 }
 
 .header-nav a:hover {
-  color: #2c3e50; /* Primary */
+  color: #2c3e50;
 }
 
-/* Активная ссылка */
 .header-nav a.active {
-  color: #8b4513; /* Secondary (книжный коричневый) */
+  color: #8b4513;
   font-weight: 600;
 }
 
-/* Подчеркивание для активной ссылки */
 .header-nav a.active::after {
   content: "";
   position: absolute;
@@ -77,13 +72,12 @@
   left: 0;
   width: 100%;
   height: 3px;
-  background-color: #d4af37; /* Accent (золотой) */
+  background-color: #d4af37;
   border-radius: 2px;
 }
 
-/* Ссылка для админ-панели */
 .admin-link {
-  color: #3498db !important; /* Info color */
+  color: #3498db !important;
 }
 
 .admin-link:hover {
@@ -91,56 +85,110 @@
 }
 
 .admin-link.active {
-  color: #e74c3c !important; /* Error color для акцента */
+  color: #e74c3c !important;
 }
 
-/* === Правая часть: поиск и профиль === */
 .header-actions {
   display: flex;
   align-items: center;
   gap: 24px;
 }
 
-/* Поиск */
 .search-bar {
   position: relative;
-}
-
-.search-bar input {
-  font-family: "Lora", serif;
-  font-size: 14px;
-  background-color: #f5f1e8; /* Цвет фона */
-  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  background-color: #f5f1e8;
   border-radius: 6px;
-  padding: 8px 40px 8px 16px; /* Место для иконки */
-  width: 300px;
+  border: 2px solid transparent;
   transition: all 0.3s ease;
 }
 
-.search-bar input:focus {
-  outline: none;
-  border-color: #d4af37; /* Accent */
-  width: 350px;
+.search-bar:focus-within {
+  border-color: #d4af37;
   background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
 }
 
-.search-bar button {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #546e7a;
+.search-mode-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #546e7a;
+  transition: all 0.3s ease;
+  border-right: 1px solid #e0d8c8;
 }
 
-/* === Меню профиля === */
+.search-mode-toggle:hover {
+  color: #2c3e50;
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.search-mode-toggle.semantic {
+  color: #8b4513;
+}
+
+.search-mode-toggle.semantic:hover {
+  color: #d4af37;
+  background-color: rgba(139, 69, 19, 0.1);
+}
+
+.search-bar .search-input {
+  font-family: "Lora", serif;
+  font-size: 14px;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  width: 280px;
+  transition: width 0.3s ease;
+}
+
+.search-bar:focus-within .search-input {
+  width: 340px;
+}
+
+.search-bar .search-input:focus {
+  outline: none;
+}
+
+.search-bar .search-input::placeholder {
+  color: #95a5a6;
+  font-style: italic;
+  transition: color 0.3s ease;
+}
+
+.search-bar:focus-within .search-input::placeholder {
+  color: #b8a67f;
+}
+
+.search-bar .search-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #546e7a;
+  transition: all 0.3s ease;
+  border-left: 1px solid #e0d8c8;
+}
+
+.search-bar .search-submit:hover {
+  color: #d4af37;
+  background-color: rgba(212, 175, 55, 0.15);
+}
+
+.search-bar .search-submit:active {
+  transform: scale(0.95);
+}
+
 .user-profile-menu {
   position: relative;
-
   padding: 15px;
 }
 
@@ -154,21 +202,20 @@
 }
 
 .user-profile-menu:hover .user-avatar {
-  border-color: #d4af37; /* Accent */
+  border-color: #d4af37;
 }
 
-/* Выпадающее меню */
 .dropdown-menu {
-  display: none; /* Скрыто по умолчанию */
+  display: none;
   position: absolute;
-  top: 55px; /* Отступ от аватара */
+  top: 55px;
   right: 0;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   width: 240px;
   padding: 8px 0;
-  animation: fadeIn 0.2s ease-out; /* Плавное появление */
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
@@ -182,12 +229,10 @@
   }
 }
 
-/* Показываем меню при наведении на родительский блок */
 .user-profile-menu:hover .dropdown-menu {
   display: block;
 }
 
-/* Блок с информацией о пользователе в меню */
 .dropdown-user-info {
   padding: 12px 16px;
   border-bottom: 1px solid #f5f1e8;
@@ -210,7 +255,6 @@
   color: #546e7a;
 }
 
-/* Ссылки и кнопки в меню */
 .dropdown-menu a,
 .dropdown-menu button {
   font-family: "Inter", sans-serif;
@@ -232,10 +276,9 @@
 .dropdown-menu a:hover,
 .dropdown-menu button:hover {
   background-color: #f5f1e8;
-  color: #8b4513; /* Secondary */
+  color: #8b4513;
 }
 
 .dropdown-menu .MuiSvgIcon-root {
-  /* Стили для иконок */
   font-size: 20px;
 }
