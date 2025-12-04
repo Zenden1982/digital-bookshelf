@@ -8,9 +8,6 @@ import { shelfService } from "../services/shelfService";
 
 import AddIcon from "@mui/icons-material/Add";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import "./Home.css";
 
@@ -40,9 +37,13 @@ const Home = () => {
     fetchShelf();
   }, []);
 
-  const readingBooks = userBooks.filter((b) => b.status === "READING");
-  const plannedBooks = userBooks.filter((b) => b.status === "PLAN_TO_READ");
-  const finishedBooks = userBooks.filter((b) => b.status === "FINISHED");
+  // Группируем книги по статусам
+  const groupedBooks = {
+    READING: userBooks.filter((b) => b.status === "READING"),
+    PLAN_TO_READ: userBooks.filter((b) => b.status === "PLAN_TO_READ"),
+    FINISHED: userBooks.filter((b) => b.status === "FINISHED"),
+    ABANDONED: userBooks.filter((b) => b.status === "ABANDONED"),
+  };
 
   const totalPages = userBooks.reduce(
     (sum, b) => sum + (b.book?.pageCount || 0),
@@ -59,7 +60,10 @@ const Home = () => {
   if (loading) {
     return (
       <div className="home-container">
-        <div className="loader">Загрузка библиотеки...</div>
+        <div className="home-loading">
+          <div className="loader-spinner"></div>
+          <p>Загрузка библиотеки...</p>
+        </div>
       </div>
     );
   }
@@ -67,84 +71,62 @@ const Home = () => {
   if (error) {
     return (
       <div className="home-container">
-        <div className="error-message">{error}</div>
+        <div className="home-error">
+          <p className="error-message">{error}</p>
+          <button
+            className="btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            Обновить страницу
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="home-container">
+      {/* Header */}
       <header className="home-header">
         <div className="header-content">
           <h1 className="home-title">Моя библиотека</h1>
           <div className="compact-stats">
             <span className="stat-item">
-              {userBooks.length} {userBooks.length === 1 ? "книга" : "книг"}
+              <strong>{userBooks.length}</strong>{" "}
+              {userBooks.length === 1 ? "книга" : "книг"}
             </span>
             <span className="stat-divider">•</span>
             <span className="stat-item">
-              {totalPages.toLocaleString()} страниц
+              <strong>{totalPages.toLocaleString()}</strong> страниц
             </span>
             <span className="stat-divider">•</span>
-            <span className="stat-item">{avgProgress}% средний прогресс</span>
+            <span className="stat-item">
+              <strong>{avgProgress}%</strong> средний прогресс
+            </span>
           </div>
         </div>
         <Link to="/import" className="add-book-btn">
-          <AddIcon /> Добавить книгу
+          <AddIcon />
+          <span>Добавить книгу</span>
         </Link>
       </header>
 
-      <div className="shelves-container">
-        {readingBooks.length > 0 && (
-          <section className="shelf-section reading">
-            <div className="section-header">
-              <div className="section-title">
-                <MenuBookIcon className="section-icon" />
-                <h2>Читаю сейчас</h2>
-                <span className="book-count">{readingBooks.length}</span>
-              </div>
-            </div>
-            <Bookshelf books={readingBooks} status="READING" />
-          </section>
-        )}
-
-        {plannedBooks.length > 0 && (
-          <section className="shelf-section planned">
-            <div className="section-header">
-              <div className="section-title">
-                <PlaylistAddIcon className="section-icon" />
-                <h2>В планах</h2>
-                <span className="book-count">{plannedBooks.length}</span>
-              </div>
-            </div>
-            <Bookshelf books={plannedBooks} status="PLAN_TO_READ" />
-          </section>
-        )}
-
-        {finishedBooks.length > 0 && (
-          <section className="shelf-section finished">
-            <div className="section-header">
-              <div className="section-title">
-                <CheckCircleIcon className="section-icon" />
-                <h2>Прочитано</h2>
-                <span className="book-count">{finishedBooks.length}</span>
-              </div>
-            </div>
-            <Bookshelf books={finishedBooks} status="FINISHED" />
-          </section>
-        )}
-
-        {userBooks.length === 0 && (
-          <div className="empty-library">
-            <AutoStoriesIcon sx={{ fontSize: 64, color: "#BDBDBD" }} />
-            <h3>Ваша библиотека пуста</h3>
-            <p>Начните добавлять книги, чтобы отслеживать прогресс чтения</p>
-            <Link to="/import" className="action-button">
-              <AddIcon /> Найти книги
-            </Link>
-          </div>
-        )}
-      </div>
+      {/* Единая полка со всеми книгами */}
+      {userBooks.length > 0 ? (
+        <div className="unified-bookshelf">
+          <Bookshelf books={userBooks} grouped={groupedBooks} />
+        </div>
+      ) : (
+        <div className="empty-library">
+          <AutoStoriesIcon style={{ fontSize: 64, color: "#BDBDBD" }} />
+          <h3>Ваша библиотека пуста</h3>
+          <p>Начните добавлять книги, чтобы отслеживать прогресс чтения</p>
+          <Link to="/import" className="action-button">
+            <AddIcon />
+            <span>Найти книги</span>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

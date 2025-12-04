@@ -65,7 +65,7 @@ const Bookshelf = ({ books, status }) => {
               const globalIndex = shelfIndex * 12 + bookIndex;
               const width = getBookWidth(userBook.book?.pageCount);
               const color = getBookColor(globalIndex);
-              
+
               // const color = userBook.book?.semanticColor || getBookColor(globalIndex);
 
               return (
