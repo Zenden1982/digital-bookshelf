@@ -17,17 +17,18 @@ import com.diplom.diplom.Repository.UserRepository;
 public class Initialization {
 
     @Bean
-    public CommandLineRunner initRoles(RoleRepository roleRepository, UserRepository userRepository,
+    public CommandLineRunner initRoles(RoleRepository roleRepository,
+            UserRepository userRepository,
             PasswordEncoder passwordEncoder) {
         return args -> {
-            if (roleRepository.findByName("ROLE_USER") == null) {
+            if (roleRepository.findByName("ROLE_USER").isEmpty()) {
                 Role userRole = new Role();
-                userRole.setName("USER");
+                userRole.setName("ROLE_USER");
                 roleRepository.save(userRole);
             }
-            if (roleRepository.findByName("ROLE_ADMIN") == null) {
+            if (roleRepository.findByName("ROLE_ADMIN").isEmpty()) {
                 Role adminRole = new Role();
-                adminRole.setName("ADMIN");
+                adminRole.setName("ROLE_ADMIN");
                 roleRepository.save(adminRole);
             }
 
@@ -36,18 +37,17 @@ public class Initialization {
             }
 
             Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                    .orElseThrow(() -> new ResourceNotFoundException("Роль ADMIN не найдена"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Роль ROLE_ADMIN не найдена"));
             Role userRole = roleRepository.findByName("ROLE_USER")
-                    .orElseThrow(() -> new ResourceNotFoundException("Роль USER не найдена"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Роль ROLE_USER не найдена"));
 
             User admin = new User();
             admin.setUsername("admin");
-            admin.setEmail("admin@example.com"); // если есть поле
-            admin.setPassword(passwordEncoder.encode("admin123")); // задай свой пароль
-            admin.setRoles(List.of(adminRole, userRole)); // или Collections.singleton(adminRole)
+            admin.setEmail("admin@example.com");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRoles(List.of(adminRole, userRole));
 
             userRepository.save(admin);
         };
     }
-
 }

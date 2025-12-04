@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException; // Добавлено
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,10 +16,10 @@ import org.springframework.stereotype.Service;
 
 import com.diplom.diplom.Config.JwtTokenUtils;
 import com.diplom.diplom.Entity.AuthRequest;
-import com.diplom.diplom.Entity.DTO.UserCreateDTO;
-import com.diplom.diplom.Entity.DTO.UserReadDTO;
 import com.diplom.diplom.Entity.Role;
 import com.diplom.diplom.Entity.User;
+import com.diplom.diplom.Entity.DTO.UserCreateDTO;
+import com.diplom.diplom.Entity.DTO.UserReadDTO;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.RoleRepository;
 import com.diplom.diplom.Repository.UserRepository;
@@ -33,9 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
     private final RoleRepository roleRepository;
     private final JwtTokenUtils jwtTokenUtils;
 
@@ -51,28 +50,26 @@ public class UserService implements UserDetailsService {
                 .build();
         User savedUser = userRepository.save(user);
 
-        UserReadDTO userReadDTO = UserReadDTO.builder()
-                .id(savedUser.getId())
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .createdAt(savedUser.getCreatedAt())
-                .roles(savedUser.getRoles())
-                .build();
-        return userReadDTO;
+        return UserReadDTO.toDTO(savedUser);
     }
 
     @Transactional
-
     public UserReadDTO getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
+
+        String avatarUrl = null;
+        if (user.getImage() != null) {
+            avatarUrl = user.getImage().getName();
+        }
+
         UserReadDTO userReadDTO = UserReadDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .createdAt(user.getCreatedAt())
                 .roles(user.getRoles())
-                .avatarUrl(user.getImage().getName())
+                .avatarUrl(avatarUrl)
                 .build();
         return userReadDTO;
     }
@@ -80,14 +77,9 @@ public class UserService implements UserDetailsService {
     @Transactional
     public UserReadDTO getUserById(Long id) {
         User user = userRepository.findById(id).orElse(null);
-        UserReadDTO userReadDTO = UserReadDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .createdAt(user.getCreatedAt())
-                .roles(user.getRoles())
-                .build();
-        return userReadDTO;
+        if (user == null)
+            return null;
+        return UserReadDTO.toDTO(user);
     }
 
     @Transactional
@@ -141,7 +133,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
         return user;
     }
 
@@ -150,7 +142,8 @@ public class UserService implements UserDetailsService {
             authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
         } catch (AuthenticationException e) {
-            return e.getMessage();
+
+            throw new BadCredentialsException("Неверный логин или пароль");
         }
 
         UserDetails userDetails = loadUserByUsername(user.getUsername());
@@ -158,21 +151,12 @@ public class UserService implements UserDetailsService {
     }
 
     public UserReadDTO getMe(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден"));
-
         return getUserByUsername(username);
     }
 
     @Transactional
     public List<UserReadDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
-        return users.stream().map(user -> UserReadDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .createdAt(user.getCreatedAt())
-                .roles(user.getRoles())
-                .build()).toList();
+        return users.stream().map(UserReadDTO::toDTO).toList();
     }
 }

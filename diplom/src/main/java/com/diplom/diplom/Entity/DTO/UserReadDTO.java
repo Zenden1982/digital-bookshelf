@@ -23,13 +23,18 @@ public class UserReadDTO {
     private String avatarUrl;
 
     static public UserReadDTO toDTO(com.diplom.diplom.Entity.User user) {
+        String avatarFileName = null;
+        if (user.getImage() != null) {
+            avatarFileName = user.getImage().getName();
+        }
+
         return UserReadDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .roles(user.getRoles())
                 .createdAt(user.getCreatedAt())
-                .avatarUrl(user.getImage().getName())
+                .avatarUrl(avatarFileName)
                 .build();
     }
 }
