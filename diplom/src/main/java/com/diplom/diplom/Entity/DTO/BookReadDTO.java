@@ -22,9 +22,9 @@ public class BookReadDTO {
     private String coverUrl;
     private LocalDateTime addedAt;
     private List<String> genres;
-    // Новые поля для идентификации источника
-    private String source; // "MY_LIBRARY" или "GOOGLE_API"
-    private String googleBookId; // ID книги в Google Books (если source = GOOGLE_API)
+    private String source;
+    private String googleBookId;
+    private String semanticColor;
 
     static public BookReadDTO toDTO(Book book) {
         return BookReadDTO.builder()
@@ -37,6 +37,7 @@ public class BookReadDTO {
                 .publishedDate(book.getPublishedDate())
                 .isAdded(book.getIsAdded())
                 .genres(book.getGenres())
+                .semanticColor(book.getSemanticColor())
                 .googleBookId(book.getGoogleBookId())
                 .coverUrl(book.getCoverUrl())
                 .addedAt(book.getAddedAt())

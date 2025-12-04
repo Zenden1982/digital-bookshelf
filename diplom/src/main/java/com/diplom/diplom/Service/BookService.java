@@ -11,7 +11,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -46,7 +48,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-// ПЕРЕДЕЛАТЬ ВЕКТОРЫ
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -55,9 +56,9 @@ public class BookService {
     private final BookRepository bookRepository;
     private final RestTemplate restTemplate;
 
-    private final EmbeddingModel embeddingClient;
     private final VectorStore vectorStore;
 
+    private final EmbeddingModel embeddingModel;
     private final UserBookRepository userBookRepository;
     @Value("${google.books.api.url}")
     private String googleBooksApiUrl;
@@ -68,7 +69,6 @@ public class BookService {
     private final UserRepository userRepository;
 
     private final BookContentRepository bookContentRepository;
-    // ========== CRUD операции ==========
 
     @Transactional
     public Page<BookReadDTO> getAllBooks(int page, int size) {
@@ -271,7 +271,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(query)
                 .topK(topK)
-                .similarityThreshold(0.7)
+                .similarityThreshold(0.8)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);
@@ -295,66 +295,52 @@ public class BookService {
     /**
      * Генерирует и сохраняет вектор для книги в VectorStore
      */
-    private void generateAndSetEmbedding(Book book) {
-        if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
-            log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название.", book.getId());
-            return;
-        }
+    // private void generateAndSetEmbedding(Book book) {
+    // if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
+    // log.warn("Невозможно сгенерировать вектор для книги с id={}, так как
+    // отсутствует название.", book.getId());
+    // return;
+    // }
 
-        log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
+    // log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
 
-        StringBuilder textToEmbed = new StringBuilder();
+    // StringBuilder textToEmbed = new StringBuilder();
 
-        textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
+    // textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
 
-        if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
-            textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
-        }
+    // if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
+    // textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
+    // }
 
-        if (book.getGenres() != null && !book.getGenres().isEmpty()) {
-            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append("\n");
-        }
+    // if (book.getGenres() != null && !book.getGenres().isEmpty()) {
+    // textToEmbed.append("Жанры: ").append(String.join(", ",
+    // book.getGenres())).append("\n");
+    // }
 
-        if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
-            String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
-            textToEmbed.append("Аннотация: ").append(cleanAnnotation);
-        }
+    // if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
+    // String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
+    // textToEmbed.append("Аннотация: ").append(cleanAnnotation);
+    // }
 
-        Map<String, Object> metadata = new HashMap<>();
-        metadata.put("book_id", book.getId());
-        metadata.put("title", book.getTitle());
-        metadata.put("author", book.getAuthor());
+    // Map<String, Object> metadata = new HashMap<>();
+    // metadata.put("book_id", book.getId());
+    // metadata.put("title", book.getTitle());
+    // metadata.put("author", book.getAuthor());
 
-        Document document = new Document(textToEmbed.toString(), metadata);
-        vectorStore.add(List.of(document));
+    // Document document = new Document(textToEmbed.toString(), metadata);
+    // vectorStore.add(List.of(document));
 
-        log.info("Вектор для книги '{}' успешно сохранен в VectorStore", book.getTitle());
-    }
+    // log.info("Вектор для книги '{}' успешно сохранен в VectorStore",
+    // book.getTitle());
+    // }
 
     public List<BookReadDTO> findSimilarBooksByBookId(Long bookId, int limit) {
         Book sourceBook = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException("Книга с ID " + bookId + " не найдена"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Книга с ID " + bookId + " не найдена"
+                ));
 
-        // 1. Формируем "УМНЫЙ" запрос, идентичный тому, что используется при генерации
-        // вектора
-        StringBuilder queryBuilder = new StringBuilder();
-
-        if (sourceBook.getTitle() != null) {
-            queryBuilder.append("Название: ").append(sourceBook.getTitle()).append("\n");
-        }
-        if (sourceBook.getAuthor() != null) {
-            queryBuilder.append("Автор: ").append(sourceBook.getAuthor()).append("\n");
-        }
-
-        if (sourceBook.getGenres() != null) {
-            queryBuilder.append("Жанры: ").append(sourceBook.getGenres()).append("\n");
-        }
-
-        if (sourceBook.getAnnotation() != null) {
-            queryBuilder.append("Аннотация: ").append(sourceBook.getAnnotation());
-        }
-
-        String queryText = queryBuilder.toString();
+        String queryText = buildSearchQuery(sourceBook);
 
         if (queryText.trim().isEmpty()) {
             log.warn("Недостаточно данных для поиска похожих книг (id={})", bookId);
@@ -363,15 +349,29 @@ public class BookService {
 
         SearchRequest request = SearchRequest.builder()
                 .query(queryText)
-                .topK(limit + 1)
-                .similarityThreshold(0.5)
+                .topK((int)(limit * 1.2) + 1)
+                .similarityThreshold(0.6)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
 
+        if (similarDocuments.isEmpty()) {
+            log.warn("Для книги {} похожих книг не найдено", bookId);
+            return Collections.emptyList();
+        }
+
         List<Long> similarBookIds = similarDocuments.stream()
-                .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
+                .map(doc -> {
+                    Object bookIdObj = doc.getMetadata().get("book_id");
+                    if (bookIdObj == null) {
+                        log.warn("Document не содержит book_id в метаданных");
+                        return null;
+                    }
+                    return Long.parseLong(bookIdObj.toString());
+                })
+                .filter(Objects::nonNull)
                 .filter(id -> !id.equals(bookId))
+                .distinct()
                 .limit(limit)
                 .collect(Collectors.toList());
 
@@ -379,9 +379,26 @@ public class BookService {
             return Collections.emptyList();
         }
 
-        return bookRepository.findAllById(similarBookIds).stream()
+        Map<Long, Book> bookMap = bookRepository.findAllById(similarBookIds)
+                .stream()
+                .collect(Collectors.toMap(Book::getId, Function.identity()));
+
+        return similarBookIds.stream()
+                .map(bookMap::get)
+                .filter(Objects::nonNull)
                 .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
+    }
+
+    private String buildSearchQuery(Book book) {
+        return Stream.of(
+                        book.getTitle() != null ? "Название: " + book.getTitle() : null,
+                        book.getAuthor() != null ? "Автор: " + book.getAuthor() : null,
+                        book.getGenres() != null ? "Жанры: " + book.getGenres() : null,
+                        book.getAnnotation() != null ? "Аннотация: " + book.getAnnotation() : null
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining("\n"));
     }
 
     private BookReadDTO convertGoogleBookToDTO(Map<String, Object> googleBook) {
@@ -535,32 +552,33 @@ public class BookService {
         }
     }
 
-    @Transactional // Важно, если generateAndSetEmbedding что-то пишет в БД (а он пишет)
+    @Transactional
     public void regenerateAllEmbeddings() {
-        log.info("Начинаем перегенерацию векторов для всех книг...");
-
-        // 1. Получаем все книги (для больших баз лучше использовать пагинацию или
-        // Stream)
+        log.info("Начинаем перегенерацию векторов...");
         List<Book> allBooks = bookRepository.findAll();
 
         int count = 0;
         for (Book book : allBooks) {
             try {
-                // 2. Вызываем твой обновленный метод генерации
+
+                try {
+                    vectorStore.delete(List.of(book.getId().toString()));
+                } catch (Exception e) {
+                    // Игнорируем, если удалять нечего или ошибка удаления
+                    log.warn("Не удалось удалить старый вектор для книги {}: {}", book.getId(), e.getMessage());
+                }
+
+                // 2. Генерируем новый
                 generateAndSetEmbedding(book);
                 count++;
 
-                // Логируем прогресс каждые 50 книг
-                if (count % 50 == 0) {
+                if (count % 50 == 0)
                     log.info("Обработано {} книг...", count);
-                }
             } catch (Exception e) {
-                log.error("Ошибка при генерации вектора для книги ID {}: {}", book.getId(), e.getMessage());
-                // Не прерываем процесс из-за одной ошибки
+                log.error("Ошибка с книгой {}: {}", book.getId(), e.getMessage());
             }
         }
-
-        log.info("Перегенерация завершена. Всего обновлено: {}", count);
+        log.info("Готово. Обновлено: {}", count);
     }
 
     @Transactional
@@ -659,5 +677,110 @@ public class BookService {
         bookContentRepository.save(bookContent);
 
         log.info("Администратор загрузил текст для книги ID {}", bookId);
+    }
+
+    private void generateAndSetEmbedding(Book book) {
+        if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
+            log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название.", book.getId());
+            return;
+        }
+
+        log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
+
+        StringBuilder textToEmbed = new StringBuilder();
+
+        textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
+
+        if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
+            textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
+        }
+
+        if (book.getGenres() != null && !book.getGenres().isEmpty()) {
+            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append("\n");
+        }
+
+        if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
+            String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
+            textToEmbed.append("Аннотация: ").append(cleanAnnotation);
+        }
+
+        float[] embeddingForColor = embeddingModel.embed(textToEmbed.toString());
+
+        String color = generateColorFromVector(embeddingForColor);
+        book.setSemanticColor(color);
+
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("book_id", book.getId());
+        metadata.put("title", book.getTitle());
+        metadata.put("author", book.getAuthor());
+
+        Document document = new Document(textToEmbed.toString(), metadata);
+
+        vectorStore.add(List.of(document));
+
+        log.info("Вектор для книги '{}' успешно сохранен в VectorStore. Цвет: {}", book.getTitle(), color);
+    }
+
+    /**
+     * Генерирует HEX-цвет из вектора float[].
+     */
+    private String generateColorFromVector(float[] vector) {
+        if (vector == null || vector.length == 0) {
+            return "#CCCCCC";
+        }
+
+        double sum = 0;
+        for (int i = 0; i < vector.length; i++) {
+            sum += vector[i] * (i + 1);
+        }
+
+        float hue = (float) (Math.abs(sum * 100) % 360);
+        float saturation = 0.65f;
+        float lightness = 0.55f;
+
+        return hslToHex(hue, saturation, lightness);
+    }
+
+    /**
+     * Конвертирует HSL в HEX строку (#RRGGBB)
+     */
+    private String hslToHex(float h, float s, float l) {
+        float c = (1 - Math.abs(2 * l - 1)) * s;
+        float x = c * (1 - Math.abs((h / 60) % 2 - 1));
+        float m = l - c / 2;
+
+        float r = 0, g = 0, b = 0;
+
+        if (h < 60) {
+            r = c;
+            g = x;
+            b = 0;
+        } else if (h < 120) {
+            r = x;
+            g = c;
+            b = 0;
+        } else if (h < 180) {
+            r = 0;
+            g = c;
+            b = x;
+        } else if (h < 240) {
+            r = 0;
+            g = x;
+            b = c;
+        } else if (h < 300) {
+            r = x;
+            g = 0;
+            b = c;
+        } else {
+            r = c;
+            g = 0;
+            b = x;
+        }
+
+        int red = Math.round((r + m) * 255);
+        int green = Math.round((g + m) * 255);
+        int blue = Math.round((b + m) * 255);
+
+        return String.format("#%02x%02x%02x", red, green, blue);
     }
 }

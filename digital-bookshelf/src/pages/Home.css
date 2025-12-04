@@ -1,101 +1,217 @@
 /* src/pages/Home.css */
 
 .home-container {
-  /* Отступы внутри страницы */
-  padding: 48px;
-  /* Основной фон "Бумага" */
+  padding: 60px 80px;
   background-color: #f5f1e8;
-  /* Растягиваем, чтобы занять все доступное место */
-  flex-grow: 1;
+  min-height: calc(100vh - 72px);
 }
 
-/* === Заголовок страницы === */
 .home-header {
-  text-align: center;
-  margin-bottom: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 60px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0d8c8;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .home-title {
   font-family: "Playfair Display", serif;
-  font-size: 36px;
-  color: #2c3e50; /* Primary */
-  margin-bottom: 8px;
+  font-size: 42px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
-.home-subtitle {
-  font-family: "Lora", serif;
-  font-size: 18px;
-  color: #546e7a; /* Text Secondary */
-}
-
-/* === Карточки статистики === */
-.library-stats {
+.compact-stats {
   display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 64px;
-  flex-wrap: wrap; /* Перенос карточек на новой строке на маленьких экранах */
-}
-
-.stat-card {
-  background: #ffffff; /* Фон карточек */
-  border-radius: 8px;
-  padding: 24px;
-  text-align: center;
-  min-width: 180px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.stat-number,
-.stat-level {
-  font-family: "Playfair Display", serif;
-  font-size: 32px;
-  font-weight: 700;
-  color: #8b4513; /* Secondary (книжный коричневый) */
-}
-
-.stat-level {
-  font-size: 22px; /* Уровень библиотеки чуть меньше */
-}
-
-/* Выделенная карточка с уровнем */
-.stat-card.highlight {
-  background-color: #2c3e50; /* Primary */
-  color: #ffffff;
-}
-
-.stat-card.highlight .stat-level {
-  color: #d4af37; /* Accent (золотой) */
-}
-
-.stat-card.highlight .stat-label {
-  color: #b0b0b0; /* Text Secondary Dark */
-}
-
-.stat-label {
+  align-items: center;
+  gap: 12px;
   font-family: "Inter", sans-serif;
   font-size: 14px;
-  color: #546e7a; /* Text Secondary */
-  margin-top: 4px;
-  text-transform: lowercase;
+  color: #546e7a;
 }
 
-/* === Состояния загрузки и ошибки === */
-.loader,
-.error-message {
-  text-align: center;
-  padding: 100px 20px;
-  font-family: "Lora", serif;
+.stat-item {
+  font-weight: 500;
+}
+
+.stat-divider {
+  color: #b8a67f;
+}
+
+.add-book-btn {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.add-book-btn:hover {
+  background-color: #6d3610;
+  transform: translateY(-1px);
+}
+
+.shelves-container {
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
+}
+
+.shelf-section {
+  position: relative;
+}
+
+.section-header {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Inter", sans-serif;
+}
+
+.section-title h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.section-icon {
   font-size: 22px;
   color: #546e7a;
 }
 
+.shelf-section.reading .section-icon {
+  color: #8b4513;
+}
+
+.shelf-section.planned .section-icon {
+  color: #546e7a;
+}
+
+.shelf-section.finished .section-icon {
+  color: #95a5a6;
+}
+
+.book-count {
+  font-size: 13px;
+  font-weight: 500;
+  color: #8b4513;
+  background-color: #fdfbf5;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid #e0d8c8;
+}
+
+.empty-library {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 40px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 2px dashed #e0d8c8;
+}
+
+.empty-library h3 {
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  color: #2c3e50;
+  margin: 24px 0 12px 0;
+}
+
+.empty-library p {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  color: #546e7a;
+  margin-bottom: 32px;
+  max-width: 400px;
+}
+
+.action-button {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 24px;
+  background-color: #8b4513;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  background-color: #6d3610;
+  transform: translateY(-1px);
+}
+
+.loader,
 .error-message {
-  color: #e74c3c; /* Error color */
+  text-align: center;
+  padding: 100px 20px;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  color: #546e7a;
+}
+
+.error-message {
+  color: #e74c3c;
+}
+
+@media (max-width: 1024px) {
+  .home-container {
+    padding: 40px 40px;
+  }
+
+  .home-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 24px 20px;
+  }
+
+  .home-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .add-book-btn {
+    align-self: flex-start;
+  }
+
+  .shelves-container {
+    gap: 60px;
+  }
 }

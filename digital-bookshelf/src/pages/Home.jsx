@@ -1,27 +1,31 @@
 // src/pages/Home.jsx
 
 import { useEffect, useState } from "react";
-import Bookshelf from "../components/shelf/Bookshelf"; // Этот компонент мы создадим дальше
+import { Link } from "react-router-dom";
+import Bookshelf from "../components/shelf/Bookshelf";
 import { useAuth } from "../context/AuthContext";
 import { shelfService } from "../services/shelfService";
-import "./Home.css"; // Стили тоже создадим дальше
+
+import AddIcon from "@mui/icons-material/Add";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+
+import "./Home.css";
 
 const Home = () => {
   const { user } = useAuth();
 
-  // Состояния компонента
-  const [userBooks, setUserBooks] = useState([]); // Массив книг пользователя
-  const [loading, setLoading] = useState(true); // Флаг загрузки данных
-  const [error, setError] = useState(""); // Сообщение об ошибке
+  const [userBooks, setUserBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // useEffect для загрузки данных при монтировании компонента
   useEffect(() => {
     const fetchShelf = async () => {
       try {
-        setLoading(true); // Начинаем загрузку
-        // Вызываем наш сервис для получения книг с полки
-        const shelfData = await shelfService.getMyShelf();
-        // В shelfData у нас объект Page, книги лежат в поле "content"
+        setLoading(true);
+        const shelfData = await shelfService.getMyShelf({ size: 1000 });
         setUserBooks(shelfData.content || []);
       } catch (err) {
         setError(
@@ -29,39 +33,37 @@ const Home = () => {
         );
         console.error("Ошибка на странице Home:", err);
       } finally {
-        setLoading(false); // Завершаем загрузку в любом случае
+        setLoading(false);
       }
     };
 
     fetchShelf();
-  }, []); // Пустой массив зависимостей означает, что эффект выполнится только один раз
+  }, []);
 
-  // --- Расчет статистики на основе полученных данных ---
-  const bookCount = userBooks.length;
-  // Считаем прочитанные книги (предполагаем, что статус 'READ' или 'Прочитано')
-  const readCount = userBooks.filter((ub) => ub.status === "READ").length;
+  const readingBooks = userBooks.filter((b) => b.status === "READING");
+  const plannedBooks = userBooks.filter((b) => b.status === "PLAN_TO_READ");
+  const finishedBooks = userBooks.filter((b) => b.status === "FINISHED");
 
-  const getLibraryLevel = () => {
-    if (bookCount === 0) return "Время начать";
-    if (bookCount <= 10) return "Начало коллекции";
-    if (bookCount <= 30) return "Растущая полка";
-    if (bookCount <= 60) return "Домашняя библиотека";
-    if (bookCount <= 100) return "Впечатляющая коллекция";
-    return "Настоящая библиотека";
-  };
+  const totalPages = userBooks.reduce(
+    (sum, b) => sum + (b.book?.pageCount || 0),
+    0
+  );
+  const avgProgress =
+    userBooks.length > 0
+      ? Math.round(
+          userBooks.reduce((sum, b) => sum + (b.progress || 0), 0) /
+            userBooks.length
+        )
+      : 0;
 
-  // --- Условный рендеринг в зависимости от состояния ---
-
-  // Если идет загрузка
   if (loading) {
     return (
       <div className="home-container">
-        <div className="loader">Загрузка вашей библиотеки...</div>
+        <div className="loader">Загрузка библиотеки...</div>
       </div>
     );
   }
 
-  // Если произошла ошибка
   if (error) {
     return (
       <div className="home-container">
@@ -70,36 +72,79 @@ const Home = () => {
     );
   }
 
-  // --- Основной рендер страницы ---
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1 className="home-title">Живая цифровая библиотека</h1>
-        <p className="home-subtitle">Добро пожаловать, {user.username}!</p>
+        <div className="header-content">
+          <h1 className="home-title">Моя библиотека</h1>
+          <div className="compact-stats">
+            <span className="stat-item">
+              {userBooks.length} {userBooks.length === 1 ? "книга" : "книг"}
+            </span>
+            <span className="stat-divider">•</span>
+            <span className="stat-item">
+              {totalPages.toLocaleString()} страниц
+            </span>
+            <span className="stat-divider">•</span>
+            <span className="stat-item">{avgProgress}% средний прогресс</span>
+          </div>
+        </div>
+        <Link to="/import" className="add-book-btn">
+          <AddIcon /> Добавить книгу
+        </Link>
       </header>
 
-      {/* Секция со статистикой */}
-      <div className="library-stats">
-        <div className="stat-card">
-          <div className="stat-number">{bookCount}</div>
-          <div className="stat-label">книг в коллекции</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{readCount}</div>
-          <div className="stat-label">прочитано</div>
-        </div>
-        <div className="stat-card highlight">
-          <div className="stat-level">{getLibraryLevel()}</div>
-          <div className="stat-label">уровень библиотеки</div>
-        </div>
-      </div>
+      <div className="shelves-container">
+        {readingBooks.length > 0 && (
+          <section className="shelf-section reading">
+            <div className="section-header">
+              <div className="section-title">
+                <MenuBookIcon className="section-icon" />
+                <h2>Читаю сейчас</h2>
+                <span className="book-count">{readingBooks.length}</span>
+              </div>
+            </div>
+            <Bookshelf books={readingBooks} status="READING" />
+          </section>
+        )}
 
-      {/* 
-        Компонент "Живая полка".
-        Мы передаем ему массив загруженных книг.
-        Всю логику отрисовки полок и корешков он возьмет на себя.
-      */}
-      <Bookshelf books={userBooks} />
+        {plannedBooks.length > 0 && (
+          <section className="shelf-section planned">
+            <div className="section-header">
+              <div className="section-title">
+                <PlaylistAddIcon className="section-icon" />
+                <h2>В планах</h2>
+                <span className="book-count">{plannedBooks.length}</span>
+              </div>
+            </div>
+            <Bookshelf books={plannedBooks} status="PLAN_TO_READ" />
+          </section>
+        )}
+
+        {finishedBooks.length > 0 && (
+          <section className="shelf-section finished">
+            <div className="section-header">
+              <div className="section-title">
+                <CheckCircleIcon className="section-icon" />
+                <h2>Прочитано</h2>
+                <span className="book-count">{finishedBooks.length}</span>
+              </div>
+            </div>
+            <Bookshelf books={finishedBooks} status="FINISHED" />
+          </section>
+        )}
+
+        {userBooks.length === 0 && (
+          <div className="empty-library">
+            <AutoStoriesIcon sx={{ fontSize: 64, color: "#BDBDBD" }} />
+            <h3>Ваша библиотека пуста</h3>
+            <p>Начните добавлять книги, чтобы отслеживать прогресс чтения</p>
+            <Link to="/import" className="action-button">
+              <AddIcon /> Найти книги
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

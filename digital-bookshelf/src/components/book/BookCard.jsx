@@ -75,13 +75,12 @@ const BookCard = ({ book, onImport, isActionDisabled = false }) => {
               <button
                 className="add-button primary"
                 onClick={() => setShowAddOptions(!showAddOptions)}
-                // >>> ИЗМЕНЕНИЕ: Кнопка отключается, если isAdding или isActionDisabled
                 disabled={isAdding || isActionDisabled}
               >
                 {isAdding ? (
                   "Добавление..."
                 ) : isActionDisabled ? (
-                  "Нет ISBN" // >>> ИЗМЕНЕНИЕ: Новый текст для отключенной кнопки
+                  "Нет ISBN"
                 ) : (
                   <>
                     <AddIcon /> Добавить
