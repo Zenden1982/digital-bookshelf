@@ -22,7 +22,6 @@
   margin-bottom: 32px;
 }
 
-/* Поисковая строка на странице импорта */
 .import-search-bar {
   display: flex;
   gap: 16px;
@@ -43,7 +42,7 @@
 
 .import-search-bar input:focus {
   outline: none;
-  border-color: #8b4513; /* Secondary */
+  border-color: #8b4513;
 }
 
 .import-search-bar button {
@@ -68,8 +67,6 @@
   cursor: not-allowed;
 }
 
-/* Стили для сетки и пагинации будут общими,
-   но можно добавить специфичные отступы, если нужно. */
 .import-page .books-grid {
   width: 100%;
   max-width: 1200px;

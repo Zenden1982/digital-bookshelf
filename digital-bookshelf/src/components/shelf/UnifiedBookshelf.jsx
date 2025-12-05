@@ -1,14 +1,13 @@
-// src/components/shelf/Bookshelf.jsx
+// src/components/shelf/UnifiedBookshelf.jsx
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import BookSpine from "./BookSpine";
 import "./Bookshelf.css";
 
-const BOOKS_PER_ROW = 2;
+const BOOKS_PER_ROW = 14;
 
 const chunkBooks = (books, size) => {
-  if (!books) return [];
   const chunks = [];
   for (let i = 0; i < books.length; i += size) {
     chunks.push(books.slice(i, i + size));
@@ -24,7 +23,6 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
       {isFirstRow && title && (
         <div className="shelf-label">
           <span className="label-text">{title}</span>
-          <span className="label-count">{books.length}</span>
         </div>
       )}
 
@@ -46,26 +44,18 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
   );
 };
 
-const Bookshelf = ({ books = [] }) => {
+const UnifiedBookshelf = ({ allBooks = [] }) => {
   const [hoveredBook, setHoveredBook] = useState(null);
 
-  const reading = books.filter((b) => b.status === "READING");
-  const planned = books.filter((b) => b.status === "PLAN_TO_READ");
-  const finished = books.filter((b) => b.status === "FINISHED");
+  const reading = allBooks.filter((b) => b.status === "READING");
+  const planned = allBooks.filter((b) => b.status === "PLAN_TO_READ");
+  const finished = allBooks.filter((b) => b.status === "FINISHED");
 
   const readingRows = chunkBooks(reading, BOOKS_PER_ROW);
   const plannedRows = chunkBooks(planned, BOOKS_PER_ROW);
   const finishedRows = chunkBooks(finished, BOOKS_PER_ROW);
 
   const handleHover = (book) => setHoveredBook(book);
-
-  if (!books || books.length === 0) {
-    return (
-      <div className="bookshelf-wrapper">
-        <div className="empty-shelf-message">Полка пуста...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="bookshelf-wrapper arch-library">
@@ -79,38 +69,44 @@ const Bookshelf = ({ books = [] }) => {
           <div className="cabinet-side right" />
 
           <div className="cabinet-content">
-            {readingRows.map((chunk, i) => (
+            {readingRows.map((chunk, index) => (
               <ShelfRow
-                key={`reading-${i}`}
+                key={`reading-${index}`}
                 title="Читаю сейчас"
-                isFirstRow={i === 0}
+                isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
                 onLeaveBook={() => setHoveredBook(null)}
               />
             ))}
 
-            {plannedRows.map((chunk, i) => (
+            {plannedRows.map((chunk, index) => (
               <ShelfRow
-                key={`planned-${i}`}
+                key={`planned-${index}`}
                 title="В планах"
-                isFirstRow={i === 0}
+                isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
                 onLeaveBook={() => setHoveredBook(null)}
               />
             ))}
 
-            {finishedRows.map((chunk, i) => (
+            {finishedRows.map((chunk, index) => (
               <ShelfRow
-                key={`finished-${i}`}
+                key={`finished-${index}`}
                 title="Прочитано"
-                isFirstRow={i === 0}
+                isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
                 onLeaveBook={() => setHoveredBook(null)}
               />
             ))}
+
+            {allBooks.length === 0 && (
+              <div className="empty-shelf-message">
+                Ваш шкаф пуст. Добавьте первую книгу!
+              </div>
+            )}
           </div>
         </div>
 
@@ -126,7 +122,7 @@ const Bookshelf = ({ books = [] }) => {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             <div className="panel-content">
               <div className="panel-info">
@@ -162,4 +158,4 @@ const Bookshelf = ({ books = [] }) => {
   );
 };
 
-export default Bookshelf;
+export default UnifiedBookshelf;

@@ -1,68 +1,94 @@
 // src/components/shelf/BookSpine.jsx
 
+import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Bookshelf.css"; // Используем тот же файл стилей, что и для полки
+import "./Bookshelf.css";
 
-const BookSpine = ({ userBook }) => {
+// Палитра обложек
+const SPINE_COLORS = [
+  "#8B4513",
+  "#2E4053",
+  "#145A32",
+  "#641E16",
+  "#5B2C6F",
+  "#7D6608",
+  "#78281F",
+  "#1A5276",
+  "#B03A2E",
+  "#117864",
+];
+
+function getColorIndex(bookId) {
+  if (!bookId) return 0;
+  const strId = String(bookId);
+  let hash = 0;
+  for (let i = 0; i < strId.length; i++) {
+    hash = strId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash % SPINE_COLORS.length);
+}
+
+function calculateWidth(pageCount) {
+  if (!pageCount) return 32;
+  const width = 24 + (Math.min(pageCount, 1000) / 1000) * 36;
+  return Math.round(width);
+}
+
+const BookSpine = ({ book, onHover, onLeave }) => {
   const navigate = useNavigate();
 
-  // useMemo используется для оптимизации: стиль корешка вычисляется только один раз
-  // для каждой книги и не пересчитывается при каждом рендере.
-  const spineStyle = useMemo(() => {
-    // Цвета корешков из вашей дизайн-системы
-    const colors = [
-      "#8B1A1A",
-      "#2C5530",
-      "#1A3A5C",
-      "#5C3A1A",
-      "#4A2C5C",
-      "#5C5C1A",
-    ];
+  const coreBook = book.book || book;
+  const bookId = coreBook.id || book.id;
+  const pageCount = coreBook.pageCount || 200;
+  const progress = book.progress || 0;
+  const status = book.status;
 
-    // Генерируем "случайные", но предсказуемые размеры
-    const randomWidth = (userBook.book.id % 15) + 25; // Ширина от 25px до 40px
-    const randomHeight = (userBook.book.id % 30) + 190; // Высота от 190px до 220px
-
-    // Выбираем цвет на основе ID книги. Это гарантирует, что у книги всегда будет один и тот же цвет.
-    const color = colors[userBook.book.id % colors.length];
-
+  const style = useMemo(() => {
+    const width = calculateWidth(pageCount);
+    const colorIndex = getColorIndex(bookId);
     return {
-      backgroundColor: color,
-      width: `${randomWidth}px`,
-      height: `${randomHeight}px`,
+      width: `${width}px`,
+      height: "160px",
+      backgroundColor: SPINE_COLORS[colorIndex],
     };
-  }, [userBook.book.id]); // Зависимость от ID книги
+  }, [bookId, pageCount]);
 
-  // Обработчик клика по книге
-  const handleBookClick = () => {
-    // Перенаправляем на детальную страницу книги (этот маршрут мы создадим позже)
-    navigate(`/books/${userBook.book.id}`);
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (bookId) {
+      navigate(`/books/${bookId}`);
+    }
   };
 
-  // Получаем прогресс чтения
-  const progress = userBook.progress || 0;
-
   return (
-    <div
+    <motion.div
       className="book-spine"
-      style={spineStyle}
-      onClick={handleBookClick}
-      // Всплывающая подсказка при наведении
-      title={`${userBook.book.title} - ${userBook.book.author}`}
+      style={style}
+      onClick={handleClick}
+      onMouseEnter={() => onHover && onHover(book)}
+      onMouseLeave={onLeave}
+      whileHover={{
+        y: -12,
+        zIndex: 100,
+        transition: { type: "spring", stiffness: 400, damping: 15 },
+      }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
     >
-      <div className="book-title-wrapper">
-        <span className="book-title">{userBook.book.title}</span>
-      </div>
+      <div className="spine-highlight" />
 
-      {/* Условный рендеринг индикатора прогресса */}
-      {userBook.status === "READING" && progress > 0 && (
-        <div
-          className="book-progress-indicator"
-          style={{ height: `${progress}%` }}
-        ></div>
+      {status === "READING" && progress > 0 && (
+        <div className="spine-progress-track">
+          <div
+            className="spine-progress-fill"
+            style={{ height: `${Math.min(progress, 100)}%` }}
+          />
+        </div>
       )}
-    </div>
+
+      {status === "FINISHED" && <div className="spine-finished-mark">✓</div>}
+    </motion.div>
   );
 };
 

@@ -1,7 +1,7 @@
 // src/components/layout/Footer.jsx
 
-import { Link } from "react-router-dom"; // Используем Link для внутренних ссылок
-import "./Footer.css"; // Стили создадим на следующем шаге
+import { Link } from "react-router-dom";
+import "./Footer.css";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

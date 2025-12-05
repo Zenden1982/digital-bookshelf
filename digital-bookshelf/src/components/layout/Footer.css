@@ -1,17 +1,13 @@
 /* src/components/layout/Footer.css */
 
 .app-footer {
-  /* Используем основной "библиотечный синий" как фон */
   background-color: #2c3e50;
-  /* Вторичный цвет текста для тёмной темы */
   color: #b0b0b0;
   padding: 32px 48px;
-  /* margin-top: auto; прижмет футер к низу, если контента мало.
-       Это лучше задавать в App.css для .main-content */
 }
 
 .footer-container {
-  max-width: 1400px; /* Ограничиваем ширину для больших экранов */
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -26,17 +22,15 @@
 }
 
 .footer-links a {
-  color: #b0b0b0; /* Вторичный цвет текста для тёмной темы */
+  color: #b0b0b0;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
-/* При наведении ссылка становится золотой, как акцент */
 .footer-links a:hover {
   color: #d4af37;
 }
 
-/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
   .footer-container {
     flex-direction: column;

@@ -7,12 +7,6 @@ import { adminService } from "../../services/adminService";
 import { shelfService } from "../../services/shelfService";
 import "./FileUploadModal.css"; // Стили ниже
 
-/**
- * Модалка для загрузки файла.
- * Может работать в двух режимах:
- * 1. Admin Mode: передаем bookId -> грузит в общую книгу.
- * 2. User Mode: передаем userBookId -> грузит в личную копию.
- */
 const FileUploadModal = ({ bookId, userBookId, onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);

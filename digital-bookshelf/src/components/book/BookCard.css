@@ -7,7 +7,7 @@
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Чтобы скругление работало для изображения */
+  overflow: hidden;
 }
 
 .book-card:hover {
@@ -15,21 +15,18 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-/* Обложка */
 .book-card-cover {
   width: 100%;
-  /* Соотношение сторон 2:3 */
   aspect-ratio: 2 / 3;
   object-fit: cover;
   background-color: #e8e8e8;
 }
 
-/* Тело карточки */
 .book-card-body {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Растягивает тело, чтобы занять все место */
+  flex-grow: 1;
 }
 
 .book-card-title {
@@ -38,13 +35,12 @@
   font-weight: 600;
   color: #2c3e50;
   margin-bottom: 4px;
-  /* Ограничение в 2 строки с многоточием */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: 48px; /* 2 строки * 24px line-height */
+  min-height: 48px;
 }
 
 .book-card-author {
@@ -52,17 +48,15 @@
   font-size: 14px;
   color: #546e7a;
   margin-bottom: 16px;
-  flex-grow: 1; /* Отталкивает кнопки вниз */
+  flex-grow: 1;
 }
 
-/* === Кнопки и действия === */
 .book-card-actions {
   position: relative;
 }
 
-/* Значок "Добавлено" */
 .added-badge {
-  background-color: #27ae60; /* Success */
+  background-color: #27ae60;
   color: #fff;
   font-family: "Inter", sans-serif;
   font-size: 14px;
@@ -75,7 +69,6 @@
   gap: 8px;
 }
 
-/* Контейнер для кнопки добавления и меню */
 .add-to-shelf-container {
   position: relative;
 }
@@ -86,7 +79,7 @@
   font-size: 14px;
   font-weight: 600;
   padding: 10px;
-  background-color: #8b4513; /* Secondary */
+  background-color: #8b4513;
   color: #ffffff;
   border: none;
   border-radius: 6px;
@@ -107,10 +100,9 @@
   cursor: wait;
 }
 
-/* Выпадающее меню со статусами */
 .add-options-menu {
   position: absolute;
-  bottom: 110%; /* Появляется над кнопкой */
+  bottom: 110%;
   left: 0;
   width: 100%;
   background-color: #fff;
@@ -146,7 +138,6 @@
   color: #8b4513;
 }
 
-/* Сообщение об ошибке на карточке */
 .card-error-message {
   font-family: "Inter", sans-serif;
   font-size: 12px;

@@ -37,7 +37,6 @@ const BookDetailPage = () => {
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Загрузка основной информации о книге
   const fetchBookData = useCallback(() => {
     setLoading(true);
     bookService
@@ -53,7 +52,6 @@ const BookDetailPage = () => {
       .finally(() => setLoading(false));
   }, [bookId]);
 
-  // Загрузка похожих книг
   const fetchSimilarBooks = useCallback(() => {
     bookService
       .findSimilarBooks(bookId, 4)
@@ -68,7 +66,6 @@ const BookDetailPage = () => {
     fetchSimilarBooks();
   }, [fetchBookData, fetchSimilarBooks]);
 
-  // Обновление рейтинга
   const handleRatingChange = async (newRating) => {
     if (!bookData.userBook) return;
 
@@ -85,7 +82,6 @@ const BookDetailPage = () => {
     }
   };
 
-  // Добавление книги на полку
   const handleAddToShelf = async (status = "PLAN_TO_READ") => {
     setIsUpdating(true);
     try {
@@ -131,14 +127,12 @@ const BookDetailPage = () => {
 
   return (
     <div className="book-detail-page">
-      {/* Кнопка "Назад" */}
       <button onClick={() => navigate(-1)} className="back-button">
         <ArrowBackIcon />
         <span>Назад</span>
       </button>
 
       <div className="book-detail-container">
-        {/* Левая колонка - обложка и действия */}
         <aside className="book-sidebar">
           <div className="cover-wrapper">
             <img
@@ -149,11 +143,9 @@ const BookDetailPage = () => {
             <div className="cover-gradient"></div>
           </div>
 
-          {/* Статус и действия */}
           <div className="book-actions">
             {userBook ? (
               <>
-                {/* Рейтинг */}
                 <div className="rating-section">
                   <p className="rating-label">Ваша оценка</p>
                   <div className="rating-stars">
@@ -179,7 +171,6 @@ const BookDetailPage = () => {
                   )}
                 </div>
 
-                {/* Прогресс чтения */}
                 {userBook.progress > 0 && (
                   <div className="progress-section">
                     <div className="progress-header">
@@ -202,7 +193,6 @@ const BookDetailPage = () => {
                   </div>
                 )}
 
-                {/* Кнопка чтения (ДОБАВЛЕНА) */}
                 <Link
                   to={`/reader/${book.id}`}
                   className="btn-primary btn-read"
@@ -219,7 +209,6 @@ const BookDetailPage = () => {
                   <span>Читать книгу</span>
                 </Link>
 
-                {/* Теги */}
                 {userBook.tags && userBook.tags.length > 0 && (
                   <div className="tags-section">
                     <p className="tags-label">
@@ -265,15 +254,12 @@ const BookDetailPage = () => {
           </div>
         </aside>
 
-        {/* Правая колонка - информация */}
         <main className="book-content">
-          {/* Заголовок */}
           <header className="book-header">
             <h1 className="book-title">{book.title}</h1>
             <h2 className="book-author">Автор: {book.author}</h2>
           </header>
 
-          {/* Метаинформация */}
           <div className="book-meta">
             {book.publishedDate && (
               <div className="meta-item">
@@ -310,7 +296,6 @@ const BookDetailPage = () => {
             )}
           </div>
 
-          {/* Аннотация */}
           <section className="annotation-section">
             <h3 className="section-title">Описание</h3>
             <div className="annotation-content">
@@ -322,7 +307,6 @@ const BookDetailPage = () => {
             </div>
           </section>
 
-          {/* Дополнительная информация */}
           {userBook && (
             <section className="additional-info">
               <h3 className="section-title">Дополнительно</h3>
@@ -370,13 +354,11 @@ const BookDetailPage = () => {
             </section>
           )}
 
-          {/* Кнопка редактирования */}
           <button className="btn-secondary btn-edit">
             <EditIcon />
             <span>Редактировать информацию</span>
           </button>
 
-          {/* Похожие книги */}
           {similarBooks.length > 0 && (
             <section className="similar-books-section">
               <h3 className="section-title">Похожие книги</h3>
@@ -396,7 +378,6 @@ const BookDetailPage = () => {
         </main>
       </div>
 
-      {/* Оверлей загрузки */}
       {isUpdating && (
         <div className="updating-overlay">
           <div className="loader-spinner"></div>

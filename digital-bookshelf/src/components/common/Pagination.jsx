@@ -1,14 +1,12 @@
 // src/components/common/Pagination.jsx
 
-import "./Pagination.css"; // Стили создадим последним шагом
+import "./Pagination.css";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  // Не показываем пагинацию, если страница всего одна
   if (totalPages <= 1) {
     return null;
   }
 
-  // Создаем массив номеров страниц для отображения
   const pageNumbers = [];
   for (let i = 0; i < totalPages; i++) {
     pageNumbers.push(i);
@@ -17,7 +15,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   return (
     <nav className="pagination-container">
       <ul className="pagination-list">
-        {/* Кнопка "Назад" */}
         <li
           className={`pagination-item ${currentPage === 0 ? "disabled" : ""}`}
         >
@@ -29,7 +26,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           </button>
         </li>
 
-        {/* Номера страниц */}
         {pageNumbers.map((number) => (
           <li
             key={number}
@@ -41,7 +37,6 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           </li>
         ))}
 
-        {/* Кнопка "Вперед" */}
         <li
           className={`pagination-item ${
             currentPage === totalPages - 1 ? "disabled" : ""

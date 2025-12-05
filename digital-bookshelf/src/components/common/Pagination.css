@@ -34,14 +34,12 @@
   border-color: #8b4513;
 }
 
-/* Активная страница */
 .pagination-item.active button {
-  background-color: #8b4513; /* Secondary */
+  background-color: #8b4513;
   color: #ffffff;
   border-color: #8b4513;
 }
 
-/* Отключенные кнопки */
 .pagination-item.disabled button {
   background-color: #efefef;
   color: #bdbdbd;

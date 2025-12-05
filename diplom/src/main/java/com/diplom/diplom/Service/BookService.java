@@ -350,7 +350,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(queryText)
                 .topK((int)(limit * 1.2) + 1)
-                .similarityThreshold(0.6)
+                .similarityThreshold(0.7)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
@@ -394,7 +394,9 @@ public class BookService {
         return Stream.of(
                         book.getTitle() != null ? "Название: " + book.getTitle() : null,
                         book.getAuthor() != null ? "Автор: " + book.getAuthor() : null,
-                        book.getGenres() != null ? "Жанры: " + book.getGenres() : null,
+                        book.getGenres() != null && !book.getGenres().isEmpty()
+                                ? "Жанры: " + String.join(", ", book.getGenres())
+                                : null,
                         book.getAnnotation() != null ? "Аннотация: " + book.getAnnotation() : null
                 )
                 .filter(Objects::nonNull)

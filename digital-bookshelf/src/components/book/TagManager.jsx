@@ -8,11 +8,10 @@ import "./TagManager.css";
 
 const TagManager = ({ userBookId, initialTags, onTagsUpdate }) => {
   const [tags, setTags] = useState(initialTags || []);
-  const [allUserTags, setAllUserTags] = useState([]); // Для автодополнения
+  const [allUserTags, setAllUserTags] = useState([]);
   const [showInput, setShowInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
 
-  // Загружаем все теги пользователя один раз для автодополнения
   useEffect(() => {
     tagService.getAllUserTags().then(setAllUserTags).catch(console.error);
   }, []);
@@ -26,8 +25,8 @@ const TagManager = ({ userBookId, initialTags, onTagsUpdate }) => {
         userBookId,
         newTagName.trim()
       );
-      setTags(updatedUserBook.tags); // Обновляем теги из ответа сервера
-      onTagsUpdate(updatedUserBook.tags); // Уведомляем родителя
+      setTags(updatedUserBook.tags);
+      onTagsUpdate(updatedUserBook.tags);
       setNewTagName("");
       setShowInput(false);
     } catch (error) {

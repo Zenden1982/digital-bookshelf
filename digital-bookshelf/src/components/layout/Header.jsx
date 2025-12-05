@@ -39,17 +39,14 @@ const Header = () => {
 
   const getAvatarSrc = () => {
     if (user?.avatarUrl) {
-      // Если avatarUrl уже полный (http) или base64 (data:)
       if (
         user.avatarUrl.startsWith("http") ||
         user.avatarUrl.startsWith("data:")
       ) {
         return user.avatarUrl;
       }
-      // Иначе формируем URL через сервис (для сохраненных файлов)
       return userService.getAvatarUrl(user.avatarUrl);
     }
-    // Фолбэк на DiceBear
     return `https://api.dicebear.com/7.x/initials/svg?seed=${
       user?.username || "U"
     }`;

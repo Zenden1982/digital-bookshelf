@@ -55,7 +55,6 @@ const ImportPage = () => {
     setSearchParams({ q: inputQuery, page: "0" });
   };
 
-  // >>> ИЗМЕНЕНИЕ: Функция теперь работает с ISBN
   const handleImportAndAdd = async (isbn, status) => {
     const localBook = await importService.importByIsbn(isbn);
     await shelfService.addBookToMyShelf({
@@ -96,11 +95,9 @@ const ImportPage = () => {
           <div className="books-grid">
             {books.map((book) => (
               <BookCard
-                key={book.googleBookId} // Ключ лучше оставить по googleBookId, он всегда уникален
+                key={book.googleBookId}
                 book={book}
-                // >>> ИЗМЕНЕНИЕ: Отключаем кнопку, если нет ISBN
                 isActionDisabled={!book.isbn}
-                // >>> ИЗМЕНЕНИЕ: Передаем isbn в обработчик
                 onImport={(status) => handleImportAndAdd(book.isbn, status)}
               />
             ))}

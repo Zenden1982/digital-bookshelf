@@ -2,19 +2,18 @@
 
 .catalog-page {
   padding: 48px;
-  background-color: #f5f1e8; /* Фон "Бумага" */
+  background-color: #f5f1e8;
   flex-grow: 1;
 }
 
 .catalog-title {
   font-family: "Playfair Display", serif;
   font-size: 32px;
-  color: #2c3e50; /* Primary */
+  color: #2c3e50;
   margin-bottom: 32px;
   text-align: center;
 }
 
-/* Панель фильтров */
 .filter-panel {
   display: flex;
   justify-content: space-between;
@@ -50,12 +49,11 @@
 }
 
 .filter-button.active {
-  background-color: #8b4513; /* Secondary */
+  background-color: #8b4513;
   color: #ffffff;
-  border-color: #d4af37; /* Accent */
+  border-color: #d4af37;
 }
 
-/* Выпадающий список сортировки */
 .sort-select {
   font-family: "Lora", serif;
   font-size: 14px;
@@ -65,7 +63,6 @@
   background-color: #ffffff;
 }
 
-/* Сообщение о пустом каталоге */
 .empty-catalog {
   text-align: center;
   padding: 80px 20px;

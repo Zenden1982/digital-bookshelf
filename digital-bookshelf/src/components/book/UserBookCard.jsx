@@ -17,7 +17,6 @@ import StarIcon from "@mui/icons-material/Star";
 
 import "./UserBookCard.css";
 
-// Карта статусов с улучшенными иконками
 const statusMap = {
   READING: {
     label: "Читаю",
@@ -86,7 +85,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
   };
 
   const handleCardClick = (e) => {
-    // Не переходим, если клик был по меню или тегам
     if (
       e.target.closest(".card-menu-container") ||
       e.target.closest(".tag-manager") ||
@@ -97,7 +95,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
     navigate(`/book/${book.id}`);
   };
 
-  // Закрытие меню при клике вне его
   const handleMenuToggle = (e) => {
     e.stopPropagation();
     setIsMenuOpen(!isMenuOpen);
@@ -105,7 +102,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
 
   return (
     <div className="user-book-card" onClick={handleCardClick}>
-      {/* Контейнер обложки с оверлеем */}
       <div className="book-card-cover-container">
         <img
           src={coverUrl}
@@ -113,10 +109,8 @@ const UserBookCard = ({ userBook, onUpdate }) => {
           className="book-card-cover"
         />
 
-        {/* Градиентный оверлей для читаемости бейджей */}
         <div className="cover-overlay"></div>
 
-        {/* Плашка со статусом */}
         <div
           className="status-badge"
           style={{ backgroundColor: statusMap[currentStatus]?.color }}
@@ -125,7 +119,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
           <span>{statusMap[currentStatus]?.label}</span>
         </div>
 
-        {/* Рейтинг, если есть */}
         {userBook.rating && (
           <div className="rating-badge">
             <StarIcon />
@@ -133,25 +126,21 @@ const UserBookCard = ({ userBook, onUpdate }) => {
           </div>
         )}
 
-        {/* Прогресс чтения */}
         {userBook.progress > 0 && (
           <div className="progress-badge">{userBook.progress}%</div>
         )}
       </div>
 
-      {/* Тело карточки */}
       <div className="book-card-body">
         <h3 className="book-card-title" title={book.title}>
           {book.title}
         </h3>
         <p className="book-card-author">{book.author}</p>
 
-        {/* Метаинформация */}
         {book.pageCount && (
           <p className="book-card-meta">{book.pageCount} стр.</p>
         )}
 
-        {/* Прогресс бар (если читается) */}
         {currentStatus === "READING" && userBook.progress > 0 && (
           <div className="progress-bar-container">
             <div className="progress-bar">
@@ -163,7 +152,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
           </div>
         )}
 
-        {/* Теги */}
         <TagManager
           userBookId={userBook.id}
           initialTags={currentTags}
@@ -171,7 +159,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
         />
       </div>
 
-      {/* Меню действий */}
       <div className="card-menu-container">
         <button
           className="menu-toggle"
@@ -240,7 +227,6 @@ const UserBookCard = ({ userBook, onUpdate }) => {
         )}
       </div>
 
-      {/* Оверлей загрузки */}
       {isLoading && (
         <div className="card-loader">
           <div className="loader-spinner"></div>

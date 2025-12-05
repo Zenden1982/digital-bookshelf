@@ -1,5 +1,3 @@
-/* src/pages/Home.css */
-
 .home-container {
   padding: 60px 80px;
   background-color: #f5f1e8;
@@ -67,6 +65,11 @@
 .add-book-btn:hover {
   background-color: #6d3610;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
+}
+
+.add-book-btn:active {
+  transform: translateY(0);
 }
 
 .shelves-container {
@@ -101,6 +104,7 @@
 .section-icon {
   font-size: 22px;
   color: #546e7a;
+  transition: color 0.3s ease;
 }
 
 .shelf-section.reading .section-icon {
@@ -112,7 +116,7 @@
 }
 
 .shelf-section.finished .section-icon {
-  color: #95a5a6;
+  color: #66bb6a;
 }
 
 .book-count {
@@ -123,6 +127,12 @@
   padding: 4px 10px;
   border-radius: 12px;
   border: 1px solid #e0d8c8;
+  transition: all 0.2s ease;
+}
+
+.shelf-section:hover .book-count {
+  background-color: #f5f1e8;
+  border-color: #d4c4a8;
 }
 
 .empty-library {
@@ -133,8 +143,14 @@
   text-align: center;
   padding: 120px 40px;
   background-color: #ffffff;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 2px dashed #e0d8c8;
+  transition: all 0.3s ease;
+}
+
+.empty-library:hover {
+  border-color: #d4c4a8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .empty-library h3 {
@@ -148,8 +164,9 @@
   font-family: "Inter", sans-serif;
   font-size: 15px;
   color: #546e7a;
+  line-height: 1.6;
   margin-bottom: 32px;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .action-button {
@@ -163,7 +180,7 @@
   border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
@@ -172,19 +189,47 @@
 .action-button:hover {
   background-color: #6d3610;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
 }
 
-.loader,
-.error-message {
+.action-button:active {
+  transform: translateY(0);
+}
+
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 100px 20px;
+  gap: 20px;
+}
+
+.loader p {
   font-family: "Inter", sans-serif;
   font-size: 16px;
   color: #546e7a;
+  margin: 0;
 }
 
 .error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 100px 40px;
+  gap: 24px;
+}
+
+.error-message p {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
   color: #e74c3c;
+  margin: 0;
+  max-width: 500px;
+  line-height: 1.6;
 }
 
 @media (max-width: 1024px) {
@@ -195,6 +240,10 @@
   .home-title {
     font-size: 32px;
   }
+
+  .shelves-container {
+    gap: 60px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -204,14 +253,79 @@
 
   .home-header {
     flex-direction: column;
+    align-items: stretch;
     gap: 20px;
   }
 
+  .header-content {
+    gap: 12px;
+  }
+
+  .home-title {
+    font-size: 28px;
+  }
+
+  .compact-stats {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 13px;
+  }
+
   .add-book-btn {
-    align-self: flex-start;
+    width: 100%;
+    justify-content: center;
   }
 
   .shelves-container {
-    gap: 60px;
+    gap: 48px;
+  }
+
+  .section-title h2 {
+    font-size: 16px;
+  }
+
+  .section-icon {
+    font-size: 20px;
+  }
+
+  .book-count {
+    font-size: 12px;
+    padding: 3px 8px;
+  }
+
+  .empty-library {
+    padding: 80px 24px;
+  }
+
+  .empty-library h3 {
+    font-size: 20px;
+  }
+
+  .empty-library p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-container {
+    padding: 20px 16px;
+  }
+
+  .home-title {
+    font-size: 24px;
+  }
+
+  .compact-stats {
+    font-size: 12px;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .compact-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 }
