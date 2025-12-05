@@ -10,17 +10,29 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import "./BookCard.css";
 
-const BookCard = ({ book, onImport, isActionDisabled = false }) => {
+const BookCard = ({
+  book,
+  onImport,
+  isActionDisabled = false,
+  isAdded: initialIsAdded = false,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState("");
-  const [isAdded, setIsAdded] = useState(book.isAdded || false);
+  const [isAdded, setIsAdded] = useState(
+    initialIsAdded || book.isAdded || false
+  );
   const [showAddOptions, setShowAddOptions] = useState(false);
 
   const coverUrl =
     book.coverUrl ||
     "https://cm.author.today/content/2024/08/18/f9d8588e383046978f33294b139901cd.jpg";
 
-  const handleAdd = async (status) => {
+  const handleAdd = async (e, status) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     setIsAdding(true);
     setError("");
     setShowAddOptions(false);
@@ -52,6 +64,12 @@ const BookCard = ({ book, onImport, isActionDisabled = false }) => {
     }
   };
 
+  const toggleOptions = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowAddOptions(!showAddOptions);
+  };
+
   return (
     <div className={`book-card ${isAdded ? "added" : ""}`}>
       <img
@@ -74,7 +92,7 @@ const BookCard = ({ book, onImport, isActionDisabled = false }) => {
             <div className="add-to-shelf-container">
               <button
                 className="add-button primary"
-                onClick={() => setShowAddOptions(!showAddOptions)}
+                onClick={toggleOptions}
                 disabled={isAdding || isActionDisabled}
               >
                 {isAdding ? (
@@ -89,13 +107,13 @@ const BookCard = ({ book, onImport, isActionDisabled = false }) => {
               </button>
               {showAddOptions && (
                 <div className="add-options-menu">
-                  <button onClick={() => handleAdd("PLAN_TO_READ")}>
+                  <button onClick={(e) => handleAdd(e, "PLAN_TO_READ")}>
                     <PlaylistAddIcon /> В планы
                   </button>
-                  <button onClick={() => handleAdd("READING")}>
+                  <button onClick={(e) => handleAdd(e, "READING")}>
                     <MenuBookIcon /> Читаю
                   </button>
-                  <button onClick={() => handleAdd("FINISHED")}>
+                  <button onClick={(e) => handleAdd(e, "FINISHED")}>
                     <CheckCircleIcon /> Прочитано
                   </button>
                 </div>

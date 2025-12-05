@@ -271,7 +271,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(query)
                 .topK(topK)
-                .similarityThreshold(0.8)
+                .similarityThreshold(0.7)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);

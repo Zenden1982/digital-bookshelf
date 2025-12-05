@@ -57,7 +57,7 @@ const BookSpine = ({ book, onHover, onLeave }) => {
   const handleClick = (e) => {
     e.stopPropagation();
     if (bookId) {
-      navigate(`/books/${bookId}`);
+      navigate(`/book/${bookId}`);
     }
   };
 

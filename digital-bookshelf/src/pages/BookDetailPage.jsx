@@ -3,14 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-// Сервисы
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
-// Компоненты
 import BookCard from "../components/book/BookCard";
 
-// MUI Icons
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -33,6 +30,8 @@ const BookDetailPage = () => {
   const [bookData, setBookData] = useState(null);
   const [similarBooks, setSimilarBooks] = useState([]);
 
+  const [userBookIds, setUserBookIds] = useState(new Set());
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
@@ -52,6 +51,18 @@ const BookDetailPage = () => {
       .finally(() => setLoading(false));
   }, [bookId]);
 
+  const fetchUserShelf = useCallback(() => {
+    shelfService
+      .getMyShelf({ size: 1000 })
+      .then((data) => {
+        if (data && data.content) {
+          const ids = new Set(data.content.map((ub) => ub.book.id));
+          setUserBookIds(ids);
+        }
+      })
+      .catch((err) => console.error("Ошибка проверки библиотеки:", err));
+  }, []);
+
   const fetchSimilarBooks = useCallback(() => {
     bookService
       .findSimilarBooks(bookId, 4)
@@ -64,7 +75,8 @@ const BookDetailPage = () => {
   useEffect(() => {
     fetchBookData();
     fetchSimilarBooks();
-  }, [fetchBookData, fetchSimilarBooks]);
+    fetchUserShelf();
+  }, [fetchBookData, fetchSimilarBooks, fetchUserShelf]);
 
   const handleRatingChange = async (newRating) => {
     if (!bookData.userBook) return;
@@ -90,6 +102,7 @@ const BookDetailPage = () => {
         status,
       });
       fetchBookData();
+      fetchUserShelf();
     } catch (err) {
       console.error("Ошибка добавления книги:", err);
     } finally {
@@ -369,7 +382,10 @@ const BookDetailPage = () => {
                     key={similarBook.id}
                     className="similar-book-link"
                   >
-                    <BookCard book={similarBook} />
+                    <BookCard
+                      book={similarBook}
+                      isAdded={userBookIds.has(similarBook.id)}
+                    />
                   </Link>
                 ))}
               </div>
