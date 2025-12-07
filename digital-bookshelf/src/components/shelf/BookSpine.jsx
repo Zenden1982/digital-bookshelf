@@ -43,15 +43,46 @@ const BookSpine = ({ book, onHover, onLeave }) => {
   const progress = book.progress || 0;
   const status = book.status;
 
+  const semanticColor = coreBook.semanticColor;
+  const coverUrl = coreBook.coverUrl;
+
   const style = useMemo(() => {
     const width = calculateWidth(pageCount);
-    const colorIndex = getColorIndex(bookId);
+
+    let backgroundColor;
+    if (semanticColor) {
+      backgroundColor = semanticColor;
+    } else {
+      const colorIndex = getColorIndex(bookId);
+      backgroundColor = SPINE_COLORS[colorIndex];
+    }
+
+    const backgroundStyle = coverUrl
+      ? {
+          backgroundImage: `
+            linear-gradient(
+              to right, 
+              rgba(0,0,0,0.4) 0%, 
+              rgba(0,0,0,0.1) 8%, 
+              rgba(0,0,0,0) 15%,
+              rgba(0,0,0,0) 85%,
+              rgba(0,0,0,0.1) 92%,
+              rgba(0,0,0,0.4) 100%
+            ),
+            url(${coverUrl})
+          `,
+          backgroundPosition: "center center",
+          backgroundSize: "cover",
+        }
+      : {};
+
     return {
       width: `${width}px`,
       height: "160px",
-      backgroundColor: SPINE_COLORS[colorIndex],
+      backgroundColor: backgroundColor,
+      ...backgroundStyle,
     };
-  }, [bookId, pageCount]);
+  }, [bookId, pageCount, semanticColor, coverUrl]);
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -85,8 +116,6 @@ const BookSpine = ({ book, onHover, onLeave }) => {
           />
         </div>
       )}
-
-      {status === "FINISHED" && <div className="spine-finished-mark">✓</div>}
     </motion.div>
   );
 };
