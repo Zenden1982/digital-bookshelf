@@ -32,7 +32,7 @@ public class Initialization {
                 roleRepository.save(adminRole);
             }
 
-            if (userRepository.findByUsername("admin").isPresent()) {
+            if (userRepository.findByUsername("admin2").isPresent()) {
                 return;
             }
 
@@ -42,7 +42,7 @@ public class Initialization {
                     .orElseThrow(() -> new ResourceNotFoundException("Роль ROLE_USER не найдена"));
 
             User admin = new User();
-            admin.setUsername("admin");
+            admin.setUsername("admin2");
             admin.setEmail("admin@example.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRoles(List.of(adminRole, userRole));

@@ -1,11 +1,9 @@
 // src/components/shelf/Bookshelf.jsx
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
 import BookSpine from "./BookSpine";
 import "./Bookshelf.css";
 
-const BOOKS_PER_ROW = 2;
+const BOOKS_PER_ROW = 14;
 
 const chunkBooks = (books, size) => {
   if (!books) return [];
@@ -46,9 +44,7 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
   );
 };
 
-const Bookshelf = ({ books = [] }) => {
-  const [hoveredBook, setHoveredBook] = useState(null);
-
+const Bookshelf = ({ books = [], onHoverChange }) => {
   const reading = books.filter((b) => b.status === "READING");
   const planned = books.filter((b) => b.status === "PLAN_TO_READ");
   const finished = books.filter((b) => b.status === "FINISHED");
@@ -57,7 +53,14 @@ const Bookshelf = ({ books = [] }) => {
   const plannedRows = chunkBooks(planned, BOOKS_PER_ROW);
   const finishedRows = chunkBooks(finished, BOOKS_PER_ROW);
 
-  const handleHover = (book) => setHoveredBook(book);
+  // Когда наводим, сообщаем наверх
+  const handleHover = (book) => {
+    if (onHoverChange) onHoverChange(book);
+  };
+
+  const handleLeave = () => {
+    if (onHoverChange) onHoverChange(null);
+  };
 
   if (!books || books.length === 0) {
     return (
@@ -86,7 +89,7 @@ const Bookshelf = ({ books = [] }) => {
                 isFirstRow={i === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
 
@@ -97,7 +100,7 @@ const Bookshelf = ({ books = [] }) => {
                 isFirstRow={i === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
 
@@ -108,7 +111,7 @@ const Bookshelf = ({ books = [] }) => {
                 isFirstRow={i === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
           </div>
@@ -118,46 +121,6 @@ const Bookshelf = ({ books = [] }) => {
           <div className="base-detail" />
         </div>
       </div>
-
-      <AnimatePresence>
-        {hoveredBook && (
-          <motion.div
-            className="fixed-book-panel"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          >
-            <div className="panel-content">
-              <div className="panel-info">
-                <strong>{hoveredBook.book?.title || hoveredBook.title}</strong>
-                <span>{hoveredBook.book?.author || hoveredBook.author}</span>
-              </div>
-
-              {hoveredBook.status === "READING" && (
-                <div className="panel-progress">
-                  <span className="progress-label">
-                    Прогресс: {hoveredBook.progress}%
-                  </span>
-                  <div className="progress-bar-track">
-                    <div
-                      className="progress-bar-fill"
-                      style={{ width: `${hoveredBook.progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {hoveredBook.status === "FINISHED" && (
-                <div className="panel-badge finished">Прочитано</div>
-              )}
-              {hoveredBook.status === "PLAN_TO_READ" && (
-                <div className="panel-badge planned">В планах</div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

@@ -2,11 +2,12 @@
 
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import SearchIcon from "@mui/icons-material/Search";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import BookCard from "../components/book/BookCard";
 import Pagination from "../components/common/Pagination";
 import { bookService } from "../services/bookService";
+import { shelfService } from "../services/shelfService";
 import "./SearchResults.css";
 
 const SearchResults = () => {
@@ -20,6 +21,20 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [userBookIds, setUserBookIds] = useState(new Set());
+
+  const fetchUserShelfIds = useCallback(async () => {
+    try {
+      const shelfData = await shelfService.getMyShelf({ size: 2000 });
+      if (shelfData && shelfData.content) {
+        const ids = new Set(shelfData.content.map((ub) => ub.book.id));
+        setUserBookIds(ids);
+      }
+    } catch (err) {
+      console.error("Ошибка при проверке библиотеки:", err);
+    }
+  }, []);
+
   useEffect(() => {
     if (!query) {
       setBooks([]);
@@ -31,33 +46,36 @@ const SearchResults = () => {
       setLoading(true);
       setError("");
       try {
-        let results;
-
-        if (mode === "semantic") {
-          results = await bookService.findSimilarBooksByQuery(
-            query,
-            20,
-            page,
-            20
-          );
-        } else {
-          results = await bookService.searchLocal(query, page, 20);
-        }
-
-        setBooks(results?.content || []);
-        setTotalPages(results?.totalPages || 0);
+        await Promise.all([
+          (async () => {
+            let results;
+            if (mode === "semantic") {
+              results = await bookService.findSimilarBooksByQuery(
+                query,
+                20,
+                page,
+                20
+              );
+            } else {
+              results = await bookService.searchLocal(query, page, 20);
+            }
+            setBooks(results?.content || []);
+            setTotalPages(results?.totalPages || 0);
+          })(),
+          fetchUserShelfIds(),
+        ]);
       } catch (err) {
         setError("Произошла ошибка во время поиска. Попробуйте снова.");
         setBooks([]);
         setTotalPages(0);
-        console.error("Ошибка поиска:", err);
+        console.error("Ошибка поиска", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchResults();
-  }, [query, mode, page]);
+  }, [query, mode, page, fetchUserShelfIds]);
 
   const handlePageChange = (newPage) => {
     setSearchParams({ q: query, mode: mode, page: newPage });
@@ -89,7 +107,6 @@ const SearchResults = () => {
       </header>
 
       {loading && <div className="loading-spinner">Поиск книг...</div>}
-
       {error && <div className="error-message">{error}</div>}
 
       {hasResults && (
@@ -104,7 +121,8 @@ const SearchResults = () => {
                 key={book.id}
                 className="book-card-link"
               >
-                <BookCard book={book} />
+                {" "}
+                <BookCard book={book} isAdded={userBookIds.has(book.id)} />
               </Link>
             ))}
           </div>
@@ -126,11 +144,11 @@ const SearchResults = () => {
               : "Попробуйте изменить запрос или использовать семантический поиск"}
           </p>
           <Link to="/import" className="import-link">
-            Попробуйте найти книгу в глобальном каталоге и добавить её на наш
-            сайт.
+            [translate:Попробуйте найти книгу в глобальном каталоге и добавить
+            её на наш сайт.]
           </Link>
           <Link to="/import" className="btn-primary">
-            Перейти к импорту
+            [translate:Перейти к импорту]
           </Link>
         </div>
       )}

@@ -37,41 +37,31 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                 http
-                                // 1. Отключаем CSRF (для JWT это стандарт)
                                 .csrf(AbstractHttpConfigurer::disable)
 
-                                // 2. ВКЛЮЧАЕМ CORS (важно для фронтенда)
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                                // 3. Настройки заголовков (чтобы H2 консоль работала, если нужна)
                                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
 
-                                // 4. Правила доступа
                                 .authorizeHttpRequests(auth -> auth
-                                                // Статика (фронтенд)
                                                 .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css",
                                                                 "/*.ico", "/*.png")
                                                 .permitAll()
 
-                                                // Всё остальное требует токена
                                                 .anyRequest().permitAll())
 
-                                // 5. Stateless сессия (для JWT)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                // 6. Обработка ошибок (401 вместо редиректа на логин)
                                 .exceptionHandling(exception -> exception
                                                 .authenticationEntryPoint(
                                                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 
-                                // 7. Добавляем наш фильтр
                                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();
         }
 
-        // Бин для настройки CORS
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();

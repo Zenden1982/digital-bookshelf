@@ -27,7 +27,6 @@ public class ShelfController {
     private final BookService bookService;
     private final UserService userService; // Для получения текущего юзера
 
-    // ... другие методы полки ...
 
     /**
      * Загрузка текста для книги на полке.

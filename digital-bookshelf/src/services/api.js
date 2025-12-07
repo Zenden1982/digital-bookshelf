@@ -7,7 +7,6 @@ const API_BASE_URL =
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  // УБРАЛИ Content-Type: application/json, чтобы не мешать FormData
   timeout: 60000,
 });
 

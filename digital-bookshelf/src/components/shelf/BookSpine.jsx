@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Bookshelf.css";
 
-// Палитра обложек
 const SPINE_COLORS = [
   "#8B4513",
   "#2E4053",
