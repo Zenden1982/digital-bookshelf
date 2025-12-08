@@ -123,6 +123,9 @@ public class BookService {
                     if (bookCreateUpdateDTO.getCoverUrl() != null) {
                         existingBook.setCoverUrl(bookCreateUpdateDTO.getCoverUrl());
                     }
+                    if (bookCreateUpdateDTO.getGenres() != null) {
+                        existingBook.setGenres(bookCreateUpdateDTO.getGenres());
+                    }
                     generateAndSetEmbedding(existingBook);
                     return BookReadDTO.toDTO(bookRepository.save(existingBook));
                 })
@@ -655,28 +658,22 @@ public class BookService {
 
     @Transactional
     public void uploadContentAsAdmin(Long bookId, String contentText) {
-        // 1. Загружаем книгу
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException("Книга не найдена: " + bookId));
 
-        // 2. Ищем СУЩЕСТВУЮЩИЙ контент через репозиторий контента (или через книгу,
-        // если настроено lazy)
         BookContent bookContent = bookContentRepository.findById(bookId)
-                .orElse(null);
+                .orElse(new BookContent());
 
-        if (bookContent == null) {
-            // Если контента нет - создаем новый
-            bookContent = new BookContent();
-            bookContent.setBook(book); // Важно установить связь
-            // ID установится автоматически благодаря @MapsId при сохранении,
-            // но для надежности можно явно не сетить, а просто связать с book
+        if (bookContent.getBook() == null) {
+            bookContent.setBook(book);
         }
 
-        // 3. Обновляем текст
         bookContent.setContent(contentText);
 
-        // 4. Сохраняем
+        book.setHasBookContent(true);
+
         bookContentRepository.save(bookContent);
+        bookRepository.save(book);
 
         log.info("Администратор загрузил текст для книги ID {}", bookId);
     }

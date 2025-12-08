@@ -25,6 +25,7 @@ public class BookReadDTO {
     private String source;
     private String googleBookId;
     private String semanticColor;
+    private Boolean hasContent;
 
     static public BookReadDTO toDTO(Book book) {
         return BookReadDTO.builder()
@@ -41,6 +42,7 @@ public class BookReadDTO {
                 .googleBookId(book.getGoogleBookId())
                 .coverUrl(book.getCoverUrl())
                 .addedAt(book.getAddedAt())
+                .hasContent(Boolean.TRUE.equals(book.getHasBookContent()))
                 .source("MY_LIBRARY")
                 .build();
     }

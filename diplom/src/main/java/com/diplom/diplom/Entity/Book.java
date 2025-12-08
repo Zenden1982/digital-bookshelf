@@ -84,4 +84,7 @@ public class Book {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    @Builder.Default
+    private Boolean hasBookContent = false;
 }

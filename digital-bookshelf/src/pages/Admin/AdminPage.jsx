@@ -27,12 +27,9 @@ const AdminPage = () => {
     setLoading(true);
     try {
       let data;
-      // ЕСЛИ есть поисковый запрос -> вызываем поиск
       if (query.trim()) {
         data = await adminService.searchBooks(query, page, 10);
-      }
-      // ИНАЧЕ -> вызываем получение всех книг
-      else {
+      } else {
         data = await adminService.getAllBooks(page, 10);
       }
 
@@ -72,7 +69,7 @@ const AdminPage = () => {
   };
 
   const handleCreate = () => {
-    setEditingBookId(null); // null означает создание
+    setEditingBookId(null);
     setIsEditorOpen(true);
   };
 

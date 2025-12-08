@@ -18,6 +18,16 @@ const SPINE_COLORS = [
   "#117864",
 ];
 
+const bookVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: "spring", stiffness: 300, damping: 20 },
+  },
+};
+
 function getColorIndex(bookId) {
   if (!bookId) return 0;
   const strId = String(bookId);
@@ -98,13 +108,12 @@ const BookSpine = ({ book, onHover, onLeave }) => {
       onClick={handleClick}
       onMouseEnter={() => onHover && onHover(book)}
       onMouseLeave={onLeave}
+      variants={bookVariants}
       whileHover={{
         y: -12,
         zIndex: 100,
         transition: { type: "spring", stiffness: 400, damping: 15 },
       }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
     >
       <div className="spine-highlight" />
 

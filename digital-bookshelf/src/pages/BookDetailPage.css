@@ -667,3 +667,16 @@
 .genre-tag:nth-child(n + 6) {
   animation-delay: 0.3s;
 }
+
+.status-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.status-btn.active {
+  border-color: #27ae60;
+  color: #27ae60;
+  font-weight: 600;
+}

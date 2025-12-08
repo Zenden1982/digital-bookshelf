@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { adminService } from "../../services/adminService";
 import "./BookEditor.css";
 
-// Иконки
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 
@@ -17,6 +16,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
     pageCount: "",
     annotation: "",
     coverUrl: "",
+    genres: "", // Только жанры
   });
 
   const [loading, setLoading] = useState(false);
@@ -32,6 +32,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
         pageCount: "",
         annotation: "",
         coverUrl: "",
+        genres: "",
       });
       return;
     }
@@ -42,11 +43,13 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
       .then((response) => {
         const data = response.book ? response.book : response;
 
-        // Форматирование даты YYYY-MM-DD
         let formattedDate = "";
         if (data.publishedDate) {
           formattedDate = data.publishedDate.split("T")[0];
         }
+
+        // Преобразуем массив жанров в строку
+        const genresStr = data.genres ? data.genres.join(", ") : "";
 
         setFormData({
           title: data.title || "",
@@ -56,6 +59,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
           pageCount: data.pageCount || "",
           annotation: data.annotation || "",
           coverUrl: data.coverUrl || "",
+          genres: genresStr,
         });
       })
       .catch((err) => {
@@ -76,12 +80,21 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
     setError("");
 
     try {
+      // Преобразуем строку жанров обратно в массив
+      const genresArray = formData.genres
+        ? formData.genres
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+        : [];
+
       const payload = {
         ...formData,
         pageCount: formData.pageCount ? parseInt(formData.pageCount, 10) : null,
         publishedDate: formData.publishedDate
           ? `${formData.publishedDate}T00:00:00`
           : null,
+        genres: genresArray, // Отправляем List<String>
       };
 
       if (bookId) {
@@ -168,6 +181,18 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
                 name="publishedDate"
                 value={formData.publishedDate}
                 onChange={handleChange}
+              />
+            </div>
+
+            {/* Поле для Жанров */}
+            <div className="form-group">
+              <label>Жанры (через запятую)</label>
+              <input
+                type="text"
+                name="genres"
+                value={formData.genres}
+                onChange={handleChange}
+                placeholder="Фантастика, Роман, Драма"
               />
             </div>
 

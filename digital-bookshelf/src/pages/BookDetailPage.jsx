@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
+import BookCard from "../components/book/BookCard";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
-
-import BookCard from "../components/book/BookCard";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
@@ -26,6 +27,7 @@ import "./BookDetailPage.css";
 const BookDetailPage = () => {
   const { bookId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [bookData, setBookData] = useState(null);
   const [similarBooks, setSimilarBooks] = useState([]);
@@ -35,6 +37,8 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const isAdmin = authService.hasRole("ROLE_ADMIN");
 
   const fetchBookData = useCallback(() => {
     setLoading(true);
@@ -94,6 +98,22 @@ const BookDetailPage = () => {
     }
   };
 
+  const handleStatusChange = async (newStatus) => {
+    if (!bookData.userBook) return;
+
+    setIsUpdating(true);
+    try {
+      await shelfService.updateMyUserBook(bookData.userBook.id, {
+        status: newStatus,
+      });
+      fetchBookData();
+    } catch (err) {
+      console.error("Ошибка обновления статуса:", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleAddToShelf = async (status = "PLAN_TO_READ") => {
     setIsUpdating(true);
     try {
@@ -108,6 +128,10 @@ const BookDetailPage = () => {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleEditBook = () => {
+    navigate(`/admin/books/edit/${bookData.book.id}`);
   };
 
   if (loading) {
@@ -137,6 +161,8 @@ const BookDetailPage = () => {
   const { book, userBook } = bookData;
   const coverUrl =
     book.coverUrl || "https://via.placeholder.com/400x600.png?text=Нет+обложки";
+
+  const canRead = book.hasContent === true || bookData.hasContent === true;
 
   return (
     <div className="book-detail-page">
@@ -184,6 +210,96 @@ const BookDetailPage = () => {
                   )}
                 </div>
 
+                <div
+                  className="status-change-section"
+                  style={{ marginTop: "16px", marginBottom: "16px" }}
+                >
+                  <p className="rating-label" style={{ marginBottom: "8px" }}>
+                    Изменить статус
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                    }}
+                  >
+                    <button
+                      onClick={() => handleStatusChange("READING")}
+                      className={`btn-secondary status-btn ${
+                        userBook.status === "READING" ? "active" : ""
+                      }`}
+                      disabled={isUpdating}
+                      style={{
+                        justifyContent: "flex-start",
+                        paddingLeft: "16px",
+                        border:
+                          userBook.status === "READING"
+                            ? "1px solid #27ae60"
+                            : "",
+                        color: userBook.status === "READING" ? "#27ae60" : "",
+                      }}
+                    >
+                      <AutoStoriesIcon fontSize="small" /> Читаю
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange("PLAN_TO_READ")}
+                      className={`btn-secondary status-btn ${
+                        userBook.status === "PLAN_TO_READ" ? "active" : ""
+                      }`}
+                      disabled={isUpdating}
+                      style={{
+                        justifyContent: "flex-start",
+                        paddingLeft: "16px",
+                        border:
+                          userBook.status === "PLAN_TO_READ"
+                            ? "1px solid #3498db"
+                            : "",
+                        color:
+                          userBook.status === "PLAN_TO_READ" ? "#3498db" : "",
+                      }}
+                    >
+                      <PlaylistAddIcon fontSize="small" /> В планах
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange("FINISHED")}
+                      className={`btn-secondary status-btn ${
+                        userBook.status === "FINISHED" ? "active" : ""
+                      }`}
+                      disabled={isUpdating}
+                      style={{
+                        justifyContent: "flex-start",
+                        paddingLeft: "16px",
+                        border:
+                          userBook.status === "FINISHED"
+                            ? "1px solid #f39c12"
+                            : "",
+                        color: userBook.status === "FINISHED" ? "#f39c12" : "",
+                      }}
+                    >
+                      <CheckCircleIcon fontSize="small" /> Прочитано
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange("ABANDONED")}
+                      className={`btn-secondary status-btn ${
+                        userBook.status === "ABANDONED" ? "active" : ""
+                      }`}
+                      disabled={isUpdating}
+                      style={{
+                        justifyContent: "flex-start",
+                        paddingLeft: "16px",
+                        border:
+                          userBook.status === "ABANDONED"
+                            ? "1px solid #7f8c8d"
+                            : "",
+                        color: userBook.status === "ABANDONED" ? "#7f8c8d" : "",
+                      }}
+                    >
+                      <PauseCircleFilledIcon fontSize="small" /> Отложено
+                    </button>
+                  </div>
+                </div>
+
                 {userBook.progress > 0 && (
                   <div className="progress-section">
                     <div className="progress-header">
@@ -206,22 +322,43 @@ const BookDetailPage = () => {
                   </div>
                 )}
 
-                <Link
-                  to={`/reader/${book.id}`}
-                  className="btn-primary btn-read"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    marginTop: "16px",
-                    textDecoration: "none",
-                  }}
-                >
-                  <MenuBookIcon />
-                  <span>Читать книгу</span>
-                </Link>
-
+                {canRead ? (
+                  <Link
+                    to={`/reader/${book.id}`}
+                    className="btn-primary btn-read"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      marginTop: "16px",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <MenuBookIcon />
+                    <span>Читать книгу</span>
+                  </Link>
+                ) : (
+                  <div
+                    className="btn-secondary disabled"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      marginTop: "16px",
+                      opacity: 0.6,
+                      cursor: "not-allowed",
+                      padding: "10px 20px",
+                      borderRadius: "4px",
+                      backgroundColor: "#f5f5f5",
+                      color: "#999",
+                    }}
+                  >
+                    <MenuBookIcon />
+                    <span>Текст недоступен</span>
+                  </div>
+                )}
                 {userBook.tags && userBook.tags.length > 0 && (
                   <div className="tags-section">
                     <p className="tags-label">
@@ -367,10 +504,16 @@ const BookDetailPage = () => {
             </section>
           )}
 
-          <button className="btn-secondary btn-edit">
-            <EditIcon />
-            <span>Редактировать информацию</span>
-          </button>
+          {isAdmin && (
+            <button
+              className="btn-secondary btn-edit"
+              onClick={handleEditBook}
+              style={{ marginTop: "20px" }}
+            >
+              <EditIcon />
+              <span>Редактировать информацию</span>
+            </button>
+          )}
 
           {similarBooks.length > 0 && (
             <section className="similar-books-section">

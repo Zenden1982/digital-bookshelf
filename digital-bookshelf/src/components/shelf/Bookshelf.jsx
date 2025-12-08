@@ -1,9 +1,37 @@
 // src/components/shelf/Bookshelf.jsx
 
+import { motion } from "framer-motion";
 import BookSpine from "./BookSpine";
 import "./Bookshelf.css";
 
 const BOOKS_PER_ROW = 14;
+
+const booksContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: "beforeChildren",
+      staggerChildren: 0.05,
+    },
+  },
+};
+
+const shelfContentVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      when: "beforeChildren",
+      staggerChildren: 0.3,
+    },
+  },
+};
+
+const shelfRowVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const chunkBooks = (books, size) => {
   if (!books) return [];
@@ -18,7 +46,7 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
   if (!books || books.length === 0) return null;
 
   return (
-    <div className="shelf-tier">
+    <motion.div className="shelf-tier" variants={shelfRowVariants}>
       {isFirstRow && title && (
         <div className="shelf-label">
           <span className="label-text">{title}</span>
@@ -26,7 +54,12 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
         </div>
       )}
 
-      <div className="books-container">
+      <motion.div
+        className="books-container"
+        variants={booksContainerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {books.map((book) => (
           <BookSpine
             key={book.id || book.book?.id}
@@ -35,12 +68,12 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
             onLeave={onLeaveBook}
           />
         ))}
-      </div>
+      </motion.div>
 
       <div className="wooden-board">
         <div className="board-shadow" />
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -53,7 +86,6 @@ const Bookshelf = ({ books = [], onHoverChange }) => {
   const plannedRows = chunkBooks(planned, BOOKS_PER_ROW);
   const finishedRows = chunkBooks(finished, BOOKS_PER_ROW);
 
-  // Когда наводим, сообщаем наверх
   const handleHover = (book) => {
     if (onHoverChange) onHoverChange(book);
   };
@@ -81,7 +113,12 @@ const Bookshelf = ({ books = [], onHoverChange }) => {
           <div className="cabinet-side left" />
           <div className="cabinet-side right" />
 
-          <div className="cabinet-content">
+          <motion.div
+            className="cabinet-content"
+            variants={shelfContentVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {readingRows.map((chunk, i) => (
               <ShelfRow
                 key={`reading-${i}`}
@@ -114,7 +151,7 @@ const Bookshelf = ({ books = [], onHoverChange }) => {
                 onLeaveBook={handleLeave}
               />
             ))}
-          </div>
+          </motion.div>
         </div>
 
         <div className="cabinet-base">

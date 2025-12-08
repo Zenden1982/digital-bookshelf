@@ -78,7 +78,6 @@ const MyCatalog = () => {
     updateUrlParams(newFilters);
   };
 
-  // Обработчик смены сортировки
   const handleSortChange = (e) => {
     const selectedLabel = e.target.value;
     const option = SORT_OPTIONS.find((opt) => opt.label === selectedLabel);
