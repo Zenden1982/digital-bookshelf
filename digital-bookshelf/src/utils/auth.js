@@ -38,11 +38,8 @@ export const auth = {
     }
   },
 
-  // === ЗАГОЛОВОК АВТОРИЗАЦИИ ===
-
-  // Получить заголовок Authorization для HTTP-запросов
   getAuthHeader: () => {
     const token = storage.getToken();
-    return token ? `Bearer ${token}` : ""; // Формат: "Bearer eyJhbGc..."
+    return token ? `Bearer ${token}` : "";
   },
 };

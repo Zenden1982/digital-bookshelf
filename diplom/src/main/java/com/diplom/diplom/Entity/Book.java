@@ -68,7 +68,8 @@ public class Book {
 
     @URL
     @Column(columnDefinition = "text")
-    private String coverUrl;
+    @Builder.Default
+    private String coverUrl = "https://avatars.mds.yandex.net/i?id=cfbed32be35d1ba45ca064099dcbf38c3d3eb018-7453279-images-thumbs&n=13";
 
     @CreatedDate
     private LocalDateTime addedAt;

@@ -52,7 +52,6 @@ export const authService = {
       const userResponse = await api.get("/users/me");
       const userData = userResponse.data;
 
-      // ВАЖНО: Обновляем данные в localStorage
       storage.setUser(userData);
 
       return userData;

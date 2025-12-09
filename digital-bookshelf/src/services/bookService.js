@@ -1,24 +1,11 @@
 // src/services/bookService.js
 
-import api from "./api"; // Наш настроенный axios-клиент
+import api from "./api";
 
-/**
- * Сервис для работы с локальным каталогом книг (API /api/books)
- */
 export const bookService = {
-  /**
-   * Выполняет поиск по локальной базе данных.
-   * Вызывает: GET /api/books/search
-   *
-   * @param {string} query - Поисковый запрос.
-   * @param {number} page - Номер страницы.
-   * @param {number} size - Количество элементов на странице.
-   * @returns {Promise<Page<BookReadDTO>>} - Объект страницы (Page) с результатами поиска.
-   */
   searchLocal: async (query, page = 0, size = 20) => {
     try {
       if (!query || query.trim() === "") {
-        // Если запрос пустой, возвращаем пустую страницу, чтобы не дергать бэкенд
         return { content: [], totalElements: 0, totalPages: 0, number: 0 };
       }
 
@@ -30,7 +17,6 @@ export const bookService = {
         },
       });
 
-      // Бэкенд возвращает стандартный объект Page<BookReadDTO>
       return response.data;
     } catch (error) {
       console.error("Ошибка при поиске по локальной базе:", error);
@@ -38,13 +24,6 @@ export const bookService = {
     }
   },
 
-  /**
-   * Получает детальную информацию о книге по её ID.
-   * Вызывает: GET /api/books/{id}
-   *
-   * @param {number} bookId - ID книги.
-   * @returns {Promise<BookReadDTO>} - DTO с детальной информацией о книге.
-   */
   getBookById: async (bookId) => {
     try {
       const response = await api.get(`/books/${bookId}`);
@@ -55,14 +34,6 @@ export const bookService = {
     }
   },
 
-  /**
-   * Получает все книги с пагинацией.
-   * Вызывает: GET /api/books
-   *
-   * @param {number} page - Номер страницы.
-   * @param {number} size - Количество элементов на странице.
-   * @returns {Promise<Page<BookReadDTO>>} - Объект страницы (Page).
-   */
   getAllBooks: async (page = 0, size = 20) => {
     try {
       const response = await api.get("/books", {
@@ -78,7 +49,7 @@ export const bookService = {
   getBookDetail: async (bookId) => {
     try {
       const response = await api.get(`/books/${bookId}`);
-      return response.data; // { book: {...}, userBook: {...} }
+      return response.data;
     } catch (error) {
       console.error(
         `Ошибка при получении детализации книги (ID=${bookId}):`,
@@ -114,18 +85,12 @@ export const bookService = {
     }
   },
 
-  /**
-   * Получает текстовый контент книги.
-   * Вызывает: GET /api/v1/books/{id}/content
-   * Ожидает ответ: { "content": "Текст книги..." }
-   */
   getBookContent: async (bookId) => {
     try {
       const response = await api.get(`/books/${bookId}/content`);
       return response.data;
     } catch (error) {
       console.error(`Ошибка при получении контента книги ${bookId}:`, error);
-      // Если бэкенд возвращает 404 (текста нет), можно вернуть null
       if (error.response && error.response.status === 404) {
         return null;
       }

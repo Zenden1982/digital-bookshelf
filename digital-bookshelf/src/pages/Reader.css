@@ -1,6 +1,5 @@
 /* src/pages/Reader.css */
 
-/* === ОСНОВНОЙ КОНТЕЙНЕР === */
 .reader-container {
   display: flex;
   flex-direction: column;
@@ -12,7 +11,6 @@
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Темы */
 .reader-container.theme-light {
   background-color: #f5f1e8;
   color: #2c3e50;
@@ -28,7 +26,6 @@
   color: #e8e8e8;
 }
 
-/* === ЗАГРУЗКА === */
 .reader-loading {
   display: flex;
   flex-direction: column;
@@ -65,7 +62,6 @@
   }
 }
 
-/* === HEADER === */
 .reader-header {
   flex: 0 0 64px;
   display: flex;
@@ -146,7 +142,6 @@
   font-size: 24px;
 }
 
-/* === ПАНЕЛЬ НАСТРОЕК === */
 .settings-panel {
   position: absolute;
   top: 64px;
@@ -219,7 +214,6 @@
   color: #d4af37;
 }
 
-/* Размер шрифта */
 .font-size-controls {
   display: flex;
   align-items: center;
@@ -296,7 +290,6 @@
   font-size: 20px;
 }
 
-/* Закладки */
 .bookmarks-list {
   display: flex;
   flex-direction: column;
@@ -330,7 +323,6 @@
   font-size: 20px;
 }
 
-/* === КОНТЕНТ === */
 .reader-content {
   flex: 1;
   overflow-y: auto;
@@ -340,7 +332,6 @@
   scroll-behavior: smooth;
 }
 
-/* Кастомный скроллбар */
 .reader-content::-webkit-scrollbar {
   width: 10px;
 }
@@ -383,7 +374,6 @@
   }
 }
 
-/* === FOOTER === */
 .reader-footer {
   flex: 0 0 80px;
   display: flex;
@@ -473,7 +463,6 @@
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* === AI TOOLTIP === */
 .ai-tooltip {
   position: fixed;
   transform: translate(-50%, -100%);
@@ -519,7 +508,6 @@
   transform: translateY(-2px);
 }
 
-/* === AI SIDEBAR === */
 .ai-sidebar {
   position: fixed;
   top: 64px;
@@ -700,7 +688,6 @@
   font-style: italic;
 }
 
-/* История */
 .ai-history {
   margin-top: 2rem;
   padding-top: 1.5rem;
@@ -765,7 +752,6 @@
   color: #b0b0b0;
 }
 
-/* === EMPTY STATE === */
 .reader-empty-state {
   flex: 1;
   display: flex;
@@ -838,7 +824,6 @@
   margin: 0;
 }
 
-/* === АДАПТИВНОСТЬ === */
 @media (max-width: 1200px) {
   .ai-sidebar {
     width: 350px;

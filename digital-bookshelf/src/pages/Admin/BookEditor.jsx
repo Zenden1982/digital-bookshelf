@@ -16,7 +16,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
     pageCount: "",
     annotation: "",
     coverUrl: "",
-    genres: "", // Только жанры
+    genres: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,6 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
           formattedDate = data.publishedDate.split("T")[0];
         }
 
-        // Преобразуем массив жанров в строку
         const genresStr = data.genres ? data.genres.join(", ") : "";
 
         setFormData({
@@ -80,7 +79,6 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
     setError("");
 
     try {
-      // Преобразуем строку жанров обратно в массив
       const genresArray = formData.genres
         ? formData.genres
             .split(",")
@@ -94,7 +92,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
         publishedDate: formData.publishedDate
           ? `${formData.publishedDate}T00:00:00`
           : null,
-        genres: genresArray, // Отправляем List<String>
+        genres: genresArray,
       };
 
       if (bookId) {
@@ -184,7 +182,6 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
               />
             </div>
 
-            {/* Поле для Жанров */}
             <div className="form-group">
               <label>Жанры (через запятую)</label>
               <input

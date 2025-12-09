@@ -6,7 +6,6 @@ import FileUploadModal from "../components/common/FileUploadModal";
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
-// Иконки
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -74,7 +73,6 @@ const Reader = () => {
   const { bookId } = useParams();
   const navigate = useNavigate();
 
-  // Состояния книги
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState([]);
@@ -82,7 +80,6 @@ const Reader = () => {
   const [loading, setLoading] = useState(true);
   const [userBookId, setUserBookId] = useState(null);
 
-  // Закладки
   const [bookmarks, setBookmarks] = useState([]);
 
   // Настройки чтения
@@ -94,14 +91,12 @@ const Reader = () => {
   );
   const [showSettings, setShowSettings] = useState(false);
 
-  // AI ассистент
   const [selection, setSelection] = useState(null);
   const [aiResponse, setAiResponse] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [showAiSidebar, setShowAiSidebar] = useState(false);
   const [aiHistory, setAiHistory] = useState([]);
 
-  // Загрузка файла
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   useEffect(() => {
@@ -140,7 +135,6 @@ const Reader = () => {
             setCurrentPage(Math.min(savedPage, chunks.length - 1));
           }
 
-          // Загружаем закладки из localStorage
           const savedBookmarks = JSON.parse(
             localStorage.getItem(`bookmarks-${bookId}`) || "[]"
           );
@@ -157,7 +151,6 @@ const Reader = () => {
     loadData();
   }, [bookId]);
 
-  // Сохранение настроек
   useEffect(() => {
     localStorage.setItem("reader-font-size", fontSize.toString());
   }, [fontSize]);
@@ -188,7 +181,6 @@ const Reader = () => {
     [pages.length, userBookId]
   );
 
-  // Навигация клавишами
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === "ArrowLeft") {
@@ -202,7 +194,6 @@ const Reader = () => {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [currentPage, handlePageChange]);
 
-  // Закладки
   const toggleBookmark = () => {
     const isBookmarked = bookmarks.includes(currentPage);
     let newBookmarks;
@@ -222,7 +213,6 @@ const Reader = () => {
     setShowSettings(false);
   };
 
-  // Выделение текста
   const handleTextSelection = () => {
     const sel = window.getSelection();
     if (sel.toString().trim().length > 0) {
@@ -239,7 +229,6 @@ const Reader = () => {
     }
   };
 
-  // AI действия
   const handleAiAction = async (actionType) => {
     if (!selection) return;
 
@@ -254,7 +243,6 @@ const Reader = () => {
     };
 
     try {
-      // Имитация API запроса
       await new Promise((r) => setTimeout(r, 1500));
 
       let fakeResponse = "";
@@ -333,7 +321,6 @@ const Reader = () => {
 
   return (
     <div className={`reader-container theme-${theme}`}>
-      {/* Header */}
       <header className="reader-header">
         <div className="header-left">
           <button
@@ -371,7 +358,6 @@ const Reader = () => {
         </div>
       </header>
 
-      {/* Настройки */}
       {showSettings && (
         <div className="settings-panel">
           <div className="settings-section">
@@ -445,7 +431,6 @@ const Reader = () => {
         </div>
       )}
 
-      {/* Контент */}
       <div
         className="reader-content"
         onMouseUp={handleTextSelection}
@@ -456,7 +441,6 @@ const Reader = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="reader-footer">
         <button
           className="nav-btn"
@@ -508,7 +492,6 @@ const Reader = () => {
         </div>
       )}
 
-      {/* AI Sidebar */}
       <div className={`ai-sidebar ${showAiSidebar ? "open" : ""}`}>
         <div className="ai-sidebar-header">
           <h3>
@@ -545,7 +528,6 @@ const Reader = () => {
             </div>
           )}
 
-          {/* История запросов */}
           {aiHistory.length > 0 && !aiLoading && (
             <div className="ai-history">
               <h4>История запросов</h4>

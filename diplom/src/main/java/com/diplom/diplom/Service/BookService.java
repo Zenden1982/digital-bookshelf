@@ -141,6 +141,11 @@ public class BookService {
     }
 
     @Transactional
+    public BookReadDTO addBook(BookCreateUpdateDTO bookCreateUpdateDTO) {
+        Book book = bookRepository.save(BookCreateUpdateDTO.toBook(bookCreateUpdateDTO));
+        return BookReadDTO.toDTO(book);
+    }
+    @Transactional
     public Page<BookReadDTO> searchInMyLibrary(String query, int page, int size) {
 
         if (query == null || query.trim().isEmpty()) {
@@ -271,13 +276,16 @@ public class BookService {
             return Page.empty(PageRequest.of(page, size));
         }
 
+        String formattedQuery = "task: search result | query: " + query;
+
         SearchRequest request = SearchRequest.builder()
-                .query(query)
+                .query(formattedQuery)
                 .topK(topK)
-                .similarityThreshold(0.7)
+                .similarityThreshold(0.65)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);
+
         List<Long> bookIds = similarDocs.stream()
                 .map(doc -> Long.parseLong(doc.getMetadata().get("book_id").toString()))
                 .collect(Collectors.toList());
@@ -286,7 +294,7 @@ public class BookService {
                 .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
 
-        // Простая "ручная" обёртка в Page
+
         PageRequest pageRequest = PageRequest.of(page, size);
         int start = (int) pageRequest.getOffset();
         int end = Math.min(start + pageRequest.getPageSize(), dtoList.size());
@@ -294,6 +302,7 @@ public class BookService {
 
         return new PageImpl<>(pageContent, pageRequest, dtoList.size());
     }
+
 
     /**
      * Генерирует и сохраняет вектор для книги в VectorStore
@@ -343,34 +352,47 @@ public class BookService {
                         "Книга с ID " + bookId + " не найдена"
                 ));
 
-        String queryText = buildSearchQuery(sourceBook);
+        String baseQueryText = buildSearchQuery(sourceBook);
 
-        if (queryText.trim().isEmpty()) {
-            log.warn("Недостаточно данных для поиска похожих книг (id={})", bookId);
+        if (baseQueryText.trim().isEmpty()) {
             return Collections.emptyList();
         }
 
+        // ИЗМЕНЕНИЕ 1: Используем префикс ДОКУМЕНТА, а не запроса.
+        // Мы сравниваем Document (исходная книга) с Documents (база), поэтому префиксы должны совпадать.
+        String formattedQuery = "title: none | text: " + baseQueryText;
+
         SearchRequest request = SearchRequest.builder()
-                .query(queryText)
-                .topK((int)(limit * 1.2) + 1)
-                .similarityThreshold(0.7)
+                .query(formattedQuery)
+                .topK((int)(limit * 1.5) + 1)
+                // ИЗМЕНЕНИЕ 2: Убираем или снижаем порог.
+                // Для начала лучше вообще убрать, чтобы посмотреть, что возвращается.
+                .similarityThreshold(0.3)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
 
+        // --- ОТЛАДКА (потом можно убрать) ---
+        // Посмотрите в логах, какие реально скоры приходят.
+        // Возможно, они все в районе 0.4-0.5, поэтому 0.65 ничего не находил.
+    /*
+    for (Document doc : similarDocuments) {
+        log.info("Found book id: {} with score: {}",
+                 doc.getMetadata().get("book_id"),
+                 doc.getMetadata().get("distance")); // В зависимости от реализации, score или distance
+    }
+    */
+        // ------------------------------------
+
         if (similarDocuments.isEmpty()) {
-            log.warn("Для книги {} похожих книг не найдено", bookId);
+            log.warn("Для книги {} похожих книг не найдено (даже с низким порогом)", bookId);
             return Collections.emptyList();
         }
 
         List<Long> similarBookIds = similarDocuments.stream()
                 .map(doc -> {
                     Object bookIdObj = doc.getMetadata().get("book_id");
-                    if (bookIdObj == null) {
-                        log.warn("Document не содержит book_id в метаданных");
-                        return null;
-                    }
-                    return Long.parseLong(bookIdObj.toString());
+                    return bookIdObj != null ? Long.parseLong(bookIdObj.toString()) : null;
                 })
                 .filter(Objects::nonNull)
                 .filter(id -> !id.equals(bookId))
@@ -386,12 +408,15 @@ public class BookService {
                 .stream()
                 .collect(Collectors.toMap(Book::getId, Function.identity()));
 
+        // Возвращаем в том порядке, в котором вернула векторная база (по релевантности)
         return similarBookIds.stream()
                 .map(bookMap::get)
                 .filter(Objects::nonNull)
                 .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
     }
+
+
 
     private String buildSearchQuery(Book book) {
         return Stream.of(
@@ -688,25 +713,22 @@ public class BookService {
 
         StringBuilder textToEmbed = new StringBuilder();
 
-        textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
+        textToEmbed.append("title: none | text: ");
+
+        textToEmbed.append("Название: ").append(book.getTitle()).append(". ");
 
         if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
-            textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
+            textToEmbed.append("Автор: ").append(book.getAuthor()).append(". ");
         }
 
         if (book.getGenres() != null && !book.getGenres().isEmpty()) {
-            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append("\n");
+            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append(". ");
         }
 
         if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
             String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
             textToEmbed.append("Аннотация: ").append(cleanAnnotation);
         }
-
-        float[] embeddingForColor = embeddingModel.embed(textToEmbed.toString());
-
-        String color = generateColorFromVector(embeddingForColor);
-        book.setSemanticColor(color);
 
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("book_id", book.getId());
@@ -715,9 +737,10 @@ public class BookService {
 
         Document document = new Document(textToEmbed.toString(), metadata);
 
+
         vectorStore.add(List.of(document));
 
-        log.info("Вектор для книги '{}' успешно сохранен в VectorStore. Цвет: {}", book.getTitle(), color);
+        log.info("Вектор для книги '{}' успешно сохранен в VectorStore", book.getTitle());
     }
 
     /**

@@ -12,11 +12,10 @@
   width: 100%;
 }
 
-/* Стили для контейнера читалки */
 .reader-layout {
   width: 100%;
-  height: 100vh; /* Занимает весь экран */
-  overflow: hidden; /* Убираем скролл на уровне layout */
+  height: 100vh;
+  overflow: hidden;
   margin: 0;
   padding: 0;
 }

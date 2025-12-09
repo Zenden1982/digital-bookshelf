@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import UserBookCard from "../components/book/UserBookCard"; // Используем новую карточку
+import UserBookCard from "../components/book/UserBookCard";
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
 import "./MyCatalog.css";

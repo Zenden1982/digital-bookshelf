@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import FileUploadModal from "../../components/common/FileUploadModal";
 import Pagination from "../../components/common/Pagination";
 import { adminService } from "../../services/adminService";
-import "./AdminPage.css"; // Создадим стили позже
+import "./AdminPage.css";
 import BookEditor from "./BookEditor";
-// Иконки
+
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";

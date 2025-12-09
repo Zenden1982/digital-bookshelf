@@ -2,13 +2,7 @@
 
 import api from "./api";
 
-/**
- * Сервис для работы с тегами (API /api/v1/tags)
- */
 export const tagService = {
-  /**
-   * Получает все теги текущего пользователя.
-   */
   getAllUserTags: async () => {
     try {
       const response = await api.get("/tags");
@@ -19,11 +13,6 @@ export const tagService = {
     }
   },
 
-  /**
-   * Добавляет тег к книге на полке пользователя.
-   * @param {number} userBookId - ID записи UserBook.
-   * @param {string} tagName - Имя тега для добавления.
-   */
   addTagToUserBook: async (userBookId, tagName) => {
     try {
       const payload = { tagName };
@@ -38,11 +27,6 @@ export const tagService = {
     }
   },
 
-  /**
-   * Удаляет тег с книги на полке пользователя.
-   * @param {number} userBookId - ID записи UserBook.
-   * @param {number} tagId - ID тега для удаления.
-   */
   removeTagFromUserBook: async (userBookId, tagId) => {
     try {
       const response = await api.delete(

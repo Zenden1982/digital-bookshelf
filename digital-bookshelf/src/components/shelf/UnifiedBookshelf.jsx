@@ -7,10 +7,63 @@ import "./Bookshelf.css";
 
 const BOOKS_PER_ROW = 14;
 
-const chunkBooks = (books, size) => {
+const processBooksWithTags = (books) => {
+  if (!books || books.length === 0) return [];
+
+  const groups = {};
+  const noTag = [];
+
+  books.forEach((book) => {
+    const tags = book.tags;
+
+    if (tags && tags.length > 0) {
+      const rawTag = tags[0];
+      const primaryTag =
+        typeof rawTag === "string" ? rawTag : rawTag.name || "";
+
+      if (!primaryTag) {
+        noTag.push(book);
+        return;
+      }
+
+      if (!groups[primaryTag]) {
+        groups[primaryTag] = [];
+      }
+      groups[primaryTag].push(book);
+    } else {
+      noTag.push(book);
+    }
+  });
+
+  const result = [];
+
+  Object.keys(groups)
+    .sort((a, b) => a.localeCompare(b))
+    .forEach((tagName) => {
+      result.push({
+        _type: "DIVIDER",
+        id: `div-${tagName}`,
+        label: tagName,
+      });
+      result.push(...groups[tagName]);
+    });
+
+  if (noTag.length > 0) {
+    result.push({
+      _type: "DIVIDER",
+      id: "div-no-tag",
+      label: "Без тега",
+    });
+    result.push(...noTag);
+  }
+
+  return result;
+};
+
+const chunkItems = (items, size) => {
   const chunks = [];
-  for (let i = 0; i < books.length; i += size) {
-    chunks.push(books.slice(i, i + size));
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
   }
   return chunks;
 };
@@ -27,14 +80,20 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
       )}
 
       <div className="books-container">
-        {books.map((book) => (
-          <BookSpine
-            key={book.id || book.book?.id}
-            book={book}
-            onHover={onHoverBook}
-            onLeave={onLeaveBook}
-          />
-        ))}
+        {books.map((item) =>
+          item._type === "DIVIDER" ? (
+            <div key={item.id} className="shelf-tag-separator">
+              <span className="shelf-tag-label">{item.label}</span>
+            </div>
+          ) : (
+            <BookSpine
+              key={item.id || item.book?.id}
+              book={item}
+              onHover={onHoverBook}
+              onLeave={onLeaveBook}
+            />
+          )
+        )}
       </div>
 
       <div className="wooden-board">
@@ -51,11 +110,16 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
   const planned = allBooks.filter((b) => b.status === "PLAN_TO_READ");
   const finished = allBooks.filter((b) => b.status === "FINISHED");
 
-  const readingRows = chunkBooks(reading, BOOKS_PER_ROW);
-  const plannedRows = chunkBooks(planned, BOOKS_PER_ROW);
-  const finishedRows = chunkBooks(finished, BOOKS_PER_ROW);
+  const readingItems = processBooksWithTags(reading);
+  const plannedItems = processBooksWithTags(planned);
+  const finishedItems = processBooksWithTags(finished);
+
+  const readingRows = chunkItems(readingItems, BOOKS_PER_ROW);
+  const plannedRows = chunkItems(plannedItems, BOOKS_PER_ROW);
+  const finishedRows = chunkItems(finishedItems, BOOKS_PER_ROW);
 
   const handleHover = (book) => setHoveredBook(book);
+  const handleLeave = () => setHoveredBook(null);
 
   return (
     <div className="bookshelf-wrapper arch-library">
@@ -76,7 +140,7 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
                 isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
 
@@ -87,7 +151,7 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
                 isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
 
@@ -98,7 +162,7 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
                 isFirstRow={index === 0}
                 books={chunk}
                 onHoverBook={handleHover}
-                onLeaveBook={() => setHoveredBook(null)}
+                onLeaveBook={handleLeave}
               />
             ))}
 

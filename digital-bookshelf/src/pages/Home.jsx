@@ -1,13 +1,12 @@
 // src/pages/Home.jsx
 
-import { AnimatePresence, motion } from "framer-motion"; // Добавляем импорт
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Bookshelf from "../components/shelf/Bookshelf";
+import "../components/shelf/Bookshelf.css";
 import { shelfService } from "../services/shelfService";
 import "./Home.css";
-// Импорт стилей Bookshelf нужен, так как там описан класс .fixed-book-panel
-import "../components/shelf/Bookshelf.css";
 
 const Home = () => {
   const [userBooks, setUserBooks] = useState([]);
