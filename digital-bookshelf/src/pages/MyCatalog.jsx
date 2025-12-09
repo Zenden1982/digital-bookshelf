@@ -1,15 +1,16 @@
-// src/pages/MyCatalog.jsx
-
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import UserBookCard from "../components/book/UserBookCard";
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
+import { tagService } from "../services/tagService"; // Импортируем tagService
 import "./MyCatalog.css";
+
 const STATUS_OPTIONS = [
   { value: "FINISHED", label: "Прочитано" },
   { value: "READING", label: "Читаю" },
   { value: "PLAN_TO_READ", label: "В планах" },
+  { value: "ABANDONED", label: "Отложено" },
 ];
 
 const SORT_OPTIONS = [
@@ -33,6 +34,7 @@ const MyCatalog = () => {
   const [filters, setFilters] = useState({
     query: searchParams.get("query") || "",
     status: searchParams.getAll("status") || [],
+    tag: searchParams.get("tag") || "", // Добавили поле для тега
     sort: initialSortOption.sort,
     direction: initialSortOption.direction,
     page: parseInt(searchParams.get("page") || "0", 10),
@@ -41,11 +43,18 @@ const MyCatalog = () => {
   const [userBooks, setUserBooks] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [availableTags, setAvailableTags] = useState([]); // Список всех тегов пользователя
+
+  // Загружаем список тегов при монтировании компонента
+  useEffect(() => {
+    tagService.getAllUserTags().then(setAvailableTags).catch(console.error);
+  }, []);
 
   const updateUrlParams = useCallback(
     (newFilters) => {
       const params = new URLSearchParams();
       if (newFilters.query) params.set("query", newFilters.query);
+      if (newFilters.tag) params.set("tag", newFilters.tag); // Сохраняем тег в URL
       if (newFilters.sort) params.set("sort", newFilters.sort);
       if (newFilters.direction) params.set("direction", newFilters.direction);
       params.set("page", newFilters.page ?? 0);
@@ -74,6 +83,13 @@ const MyCatalog = () => {
   const handleStatusChange = (statusValue) => {
     const newStatus = filters.status[0] === statusValue ? [] : [statusValue];
     const newFilters = { ...filters, status: newStatus, page: 0 };
+    setFilters(newFilters);
+    updateUrlParams(newFilters);
+  };
+
+  const handleTagChange = (e) => {
+    const newTag = e.target.value;
+    const newFilters = { ...filters, tag: newTag, page: 0 };
     setFilters(newFilters);
     updateUrlParams(newFilters);
   };
@@ -108,6 +124,7 @@ const MyCatalog = () => {
   return (
     <div className="catalog-page">
       <h1 className="catalog-title">Мой каталог</h1>
+
       <div className="filter-panel">
         <div className="status-filters">
           {STATUS_OPTIONS.map((opt) => (
@@ -122,18 +139,37 @@ const MyCatalog = () => {
             </button>
           ))}
         </div>
-        <select
-          className="sort-select"
-          value={currentSortOptionLabel}
-          onChange={handleSortChange}
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.label} value={opt.label}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+
+        <div className="secondary-filters">
+          {/* Фильтр по тегам */}
+          <select
+            className="tag-select"
+            value={filters.tag}
+            onChange={handleTagChange}
+          >
+            <option value="">Все теги</option>
+            {availableTags.map((tag) => (
+              <option key={tag.id || tag.name} value={tag.name}>
+                {tag.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Сортировка */}
+          <select
+            className="sort-select"
+            value={currentSortOptionLabel}
+            onChange={handleSortChange}
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.label} value={opt.label}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
       {loading ? (
         <div className="loader">Загрузка каталога...</div>
       ) : userBooks.length > 0 ? (

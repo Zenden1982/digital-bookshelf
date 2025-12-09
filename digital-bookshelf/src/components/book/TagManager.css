@@ -1,20 +1,20 @@
-/* src/components/book/TagManager.css */
 .tags-container {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 8px 0;
 }
 
 .tag-item {
   display: flex;
   align-items: center;
-  background-color: #e0e0e0;
+  background-color: #f0f0f0;
   color: #333;
   border-radius: 12px;
-  padding: 4px 8px;
+  padding: 2px 8px;
   font-size: 12px;
+  border: 1px solid #dcdcdc;
 }
 
 .tag-remove-btn {
@@ -25,14 +25,11 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  color: #999;
 }
-.tag-remove-btn .MuiSvgIcon-root {
-  font-size: 16px;
-  color: #95a5a6;
-  transition: color 0.2s;
-}
-.tag-remove-btn:hover .MuiSvgIcon-root {
-  color: #e74c3c;
+
+.tag-remove-btn:hover {
+  color: #e53935;
 }
 
 .add-tag-btn {
@@ -40,24 +37,65 @@
   border: none;
   cursor: pointer;
   color: #8b4513;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.add-tag-btn:hover {
+  color: #a0522d;
 }
 
 .add-tag-form {
   display: flex;
+  align-items: center;
   gap: 4px;
-}
-.add-tag-form input {
-  border: 1px solid #ccc;
+  background: #fff;
+  padding: 2px;
   border-radius: 4px;
-  padding: 4px 6px;
-  font-size: 12px;
+  border: 1px solid #e0e0e0;
 }
-.add-tag-form button {
+
+.tag-input {
   border: none;
-  background-color: #8b4513;
-  color: white;
-  border-radius: 4px;
+  outline: none;
+  padding: 4px;
   font-size: 12px;
-  padding: 4px 8px;
+  width: 100px;
+  border-bottom: 1px solid transparent;
+}
+
+.tag-input:focus {
+  border-bottom: 1px solid #8b4513;
+}
+
+.tag-action-btn {
+  border: none;
+  background: none;
+  border-radius: 4px;
+  padding: 2px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-action-btn.confirm {
+  color: #2e7d32;
+}
+
+.tag-action-btn.confirm:hover {
+  background-color: #e8f5e9;
+}
+
+.tag-action-btn.cancel {
+  color: #c62828;
+}
+
+.tag-action-btn.cancel:hover {
+  background-color: #ffebee;
+}
+
+.tag-action-btn .MuiSvgIcon-root {
+  font-size: 18px;
 }

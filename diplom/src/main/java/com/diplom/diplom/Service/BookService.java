@@ -281,7 +281,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
                 .topK(topK)
-                .similarityThreshold(0.65)
+                .similarityThreshold(0.4)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);
@@ -304,48 +304,6 @@ public class BookService {
     }
 
 
-    /**
-     * Генерирует и сохраняет вектор для книги в VectorStore
-     */
-    // private void generateAndSetEmbedding(Book book) {
-    // if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
-    // log.warn("Невозможно сгенерировать вектор для книги с id={}, так как
-    // отсутствует название.", book.getId());
-    // return;
-    // }
-
-    // log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
-
-    // StringBuilder textToEmbed = new StringBuilder();
-
-    // textToEmbed.append("Название: ").append(book.getTitle()).append("\n");
-
-    // if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
-    // textToEmbed.append("Автор: ").append(book.getAuthor()).append("\n");
-    // }
-
-    // if (book.getGenres() != null && !book.getGenres().isEmpty()) {
-    // textToEmbed.append("Жанры: ").append(String.join(", ",
-    // book.getGenres())).append("\n");
-    // }
-
-    // if (book.getAnnotation() != null && !book.getAnnotation().trim().isEmpty()) {
-    // String cleanAnnotation = book.getAnnotation().replaceAll("<[^>]*>", "");
-    // textToEmbed.append("Аннотация: ").append(cleanAnnotation);
-    // }
-
-    // Map<String, Object> metadata = new HashMap<>();
-    // metadata.put("book_id", book.getId());
-    // metadata.put("title", book.getTitle());
-    // metadata.put("author", book.getAuthor());
-
-    // Document document = new Document(textToEmbed.toString(), metadata);
-    // vectorStore.add(List.of(document));
-
-    // log.info("Вектор для книги '{}' успешно сохранен в VectorStore",
-    // book.getTitle());
-    // }
-
     public List<BookReadDTO> findSimilarBooksByBookId(Long bookId, int limit) {
         Book sourceBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -358,31 +316,17 @@ public class BookService {
             return Collections.emptyList();
         }
 
-        // ИЗМЕНЕНИЕ 1: Используем префикс ДОКУМЕНТА, а не запроса.
-        // Мы сравниваем Document (исходная книга) с Documents (база), поэтому префиксы должны совпадать.
         String formattedQuery = "title: none | text: " + baseQueryText;
 
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
                 .topK((int)(limit * 1.5) + 1)
-                // ИЗМЕНЕНИЕ 2: Убираем или снижаем порог.
-                // Для начала лучше вообще убрать, чтобы посмотреть, что возвращается.
-                .similarityThreshold(0.3)
+
+                .similarityThreshold(0.5)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
 
-        // --- ОТЛАДКА (потом можно убрать) ---
-        // Посмотрите в логах, какие реально скоры приходят.
-        // Возможно, они все в районе 0.4-0.5, поэтому 0.65 ничего не находил.
-    /*
-    for (Document doc : similarDocuments) {
-        log.info("Found book id: {} with score: {}",
-                 doc.getMetadata().get("book_id"),
-                 doc.getMetadata().get("distance")); // В зависимости от реализации, score или distance
-    }
-    */
-        // ------------------------------------
 
         if (similarDocuments.isEmpty()) {
             log.warn("Для книги {} похожих книг не найдено (даже с низким порогом)", bookId);
@@ -408,7 +352,6 @@ public class BookService {
                 .stream()
                 .collect(Collectors.toMap(Book::getId, Function.identity()));
 
-        // Возвращаем в том порядке, в котором вернула векторная база (по релевантности)
         return similarBookIds.stream()
                 .map(bookMap::get)
                 .filter(Objects::nonNull)

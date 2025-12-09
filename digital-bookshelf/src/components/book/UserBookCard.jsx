@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { shelfService } from "../../services/shelfService";
 import TagManager from "./TagManager";
 
-// Иконки
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";

@@ -72,3 +72,19 @@
   border: 2px dashed #95a5a6;
   border-radius: 8px;
 }
+.secondary-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.tag-select {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #bdbdbd;
+  background-color: #ffffff;
+  color: #546e7a;
+  min-width: 150px;
+}

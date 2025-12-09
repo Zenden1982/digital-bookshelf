@@ -47,12 +47,14 @@ public class TagService {
                 .orElseGet(() -> {
                     Tag newTag = new Tag();
                     newTag.setName(tagName);
-                    newTag.setUserBook(userBook);
                     newTag.setUser(currentUser);
                     return tagRepository.save(newTag);
                 });
 
-        userBook.getTags().add(tag);
+        if (!userBook.getTags().contains(tag)) {
+            userBook.getTags().add(tag);
+        }
+
         UserBook updatedUserBook = userBookRepository.save(userBook);
 
         return userBookService.map(updatedUserBook);
@@ -67,9 +69,8 @@ public class TagService {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new ResourceNotFoundException("Тег не найден"));
 
-        if (!userBook.getUser().getId().equals(currentUser.getId())
-                || !tag.getUser().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("Нет доступа к этой книге или тегу");
+        if (!userBook.getUser().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("Нет доступа к этой книге");
         }
 
         userBook.getTags().remove(tag);
@@ -93,6 +94,7 @@ public class TagService {
             throw new AccessDeniedException("Вы не можете удалить чужой тег");
         }
 
+        tag.getUserBooks().forEach(userBook -> userBook.getTags().remove(tag));
         tagRepository.delete(tag);
     }
 }

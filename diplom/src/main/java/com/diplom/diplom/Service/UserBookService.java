@@ -97,25 +97,23 @@ public class UserBookService {
             String currentUsername,
             int page,
             int size,
-            Status status, // Фильтр по статусу (может быть null)
-            String sort, // Поле для сортировки (например, "rating")
-            String direction // "ASC" или "DESC"
+            Status status,
+            String tag, // НОВЫЙ ПАРАМЕТР
+            String sort,
+            String direction
     ) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
 
-        // 1. Создаем объект сортировки
         Sort sorting = Sort.by(Sort.Direction.fromString(direction), sort);
-
-        // 2. Создаем объект пагинации с сортировкой
         Pageable pageable = PageRequest.of(page, size, sorting);
 
-        // 3. Создаем спецификацию (фильтры)
-        Specification<UserBook> spec = Specification
-                .where(UserBookSpecification.hasUser(currentUser))
-                .and(UserBookSpecification.hasStatus(status));
+        // Собираем спецификацию: Юзер + Статус + Тег
+        Specification<UserBook> spec = UserBookSpecification.hasUser(currentUser)
+                .and(UserBookSpecification.hasStatus(status))
+                .and(UserBookSpecification.hasTag(tag));
 
-        // 4. Выполняем запрос
+
         return userBookRepository.findAll(spec, pageable).map(this::map);
     }
 

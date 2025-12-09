@@ -1,7 +1,6 @@
-// src/components/book/TagManager.jsx
-
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CheckIcon from "@mui/icons-material/Check";
 import { useEffect, useState } from "react";
 import { tagService } from "../../services/tagService";
 import "./TagManager.css";
@@ -29,6 +28,9 @@ const TagManager = ({ userBookId, initialTags, onTagsUpdate }) => {
       onTagsUpdate(updatedUserBook.tags);
       setNewTagName("");
       setShowInput(false);
+
+      const refreshedTags = await tagService.getAllUserTags();
+      setAllUserTags(refreshedTags);
     } catch (error) {
       console.error("Не удалось добавить тег", error);
     }
@@ -47,6 +49,10 @@ const TagManager = ({ userBookId, initialTags, onTagsUpdate }) => {
     }
   };
 
+  const availableTags = allUserTags.filter(
+    (tag) => !tags.some((t) => t.id === tag.id)
+  );
+
   return (
     <div className="tags-container">
       {tags.map((tag) => (
@@ -55,32 +61,53 @@ const TagManager = ({ userBookId, initialTags, onTagsUpdate }) => {
           <button
             className="tag-remove-btn"
             onClick={() => handleRemoveTag(tag.id)}
+            title="Удалить"
           >
-            <CancelIcon />
+            <CancelIcon fontSize="small" />
           </button>
         </div>
       ))}
 
       {!showInput ? (
-        <button className="add-tag-btn" onClick={() => setShowInput(true)}>
+        <button
+          className="add-tag-btn"
+          onClick={() => setShowInput(true)}
+          title="Добавить тег"
+        >
           <AddCircleOutlineIcon />
         </button>
       ) : (
         <form onSubmit={handleAddTag} className="add-tag-form">
           <input
             type="text"
+            className="tag-input"
             value={newTagName}
             onChange={(e) => setNewTagName(e.target.value)}
-            placeholder="Новый тег..."
+            placeholder="Тег..."
             list="user-tags-list"
             autoFocus
           />
           <datalist id="user-tags-list">
-            {allUserTags.map((tag) => (
+            {availableTags.map((tag) => (
               <option key={tag.id} value={tag.name} />
             ))}
           </datalist>
-          <button type="submit">Ок</button>
+
+          <button type="submit" className="tag-action-btn confirm" title="Ок">
+            <CheckIcon fontSize="inherit" />
+          </button>
+
+          <button
+            type="button"
+            className="tag-action-btn cancel"
+            onClick={() => {
+              setShowInput(false);
+              setNewTagName("");
+            }}
+            title="Отмена"
+          >
+            <CancelIcon fontSize="inherit" />
+          </button>
         </form>
       )}
     </div>

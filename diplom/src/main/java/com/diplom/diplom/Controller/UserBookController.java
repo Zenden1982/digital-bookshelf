@@ -31,20 +31,14 @@ public class UserBookController {
 
     private final UserBookService userBookService;
 
-    /**
-     * Добавить книгу на "мою" полку.
-     * POST /api/shelf
-     */
+
     @PostMapping
     public ResponseEntity<UserBookReadDTO> addBookToMyShelf(@RequestBody UserBookCreateDTO dto) {
         String username = getCurrentUsername();
         return ResponseEntity.ok().body(userBookService.addBookToMyShelf(dto, username));
     }
 
-    /**
-     * Обновить состояние книги на "моей" полке.
-     * PATCH /api/shelf
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<UserBookReadDTO> updateMyUserBook(@PathVariable Long id, @RequestBody UserBookUpdateDTO dto) {
         dto.setUserBookId(id);
@@ -55,18 +49,17 @@ public class UserBookController {
     public ResponseEntity<Page<UserBookReadDTO>> getMyShelf(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) Status status, // Фильтр по статусу
-            @RequestParam(defaultValue = "id") String sort, // Сортировка по умолчанию по id
+            @RequestParam(required = false) Status status,
+            @RequestParam(required = false) String tag,
+            @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "DESC") String direction) {
+
         String username = getCurrentUsername();
-        Page<UserBookReadDTO> shelf = userBookService.getMyShelf(username, page, size, status, sort, direction);
+        Page<UserBookReadDTO> shelf = userBookService.getMyShelf(username, page, size, status, tag, sort, direction);
         return ResponseEntity.ok(shelf);
     }
 
-    /**
-     * Удалить книгу с "моей" полки.
-     * DELETE /api/shelf/{id}
-     */
+
     @DeleteMapping("/{id}")
     public void deleteMyUserBook(@PathVariable Long id) {
         userBookService.deleteMyUserBook(id, getCurrentUsername());

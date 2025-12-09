@@ -19,7 +19,6 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Обработчик изменения полей
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -74,6 +73,7 @@ const Login = () => {
               name="username"
               value={formData.username}
               onChange={handleChange}
+              placeholder="Введите имя пользователя"
               className={errors.username ? "input-error" : ""}
             />
             {errors.username && (
