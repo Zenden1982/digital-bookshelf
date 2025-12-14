@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -66,6 +67,7 @@ public class BookService {
     @Value("${google.books.api.key}")
     private String googleBooksApiKey;
 
+    private final JdbcTemplate jdbcTemplate;
     private final UserRepository userRepository;
 
     private final BookContentRepository bookContentRepository;
@@ -281,7 +283,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
                 .topK(topK)
-                .similarityThreshold(0.4)
+                .similarityThreshold(0.3)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);
@@ -320,9 +322,9 @@ public class BookService {
 
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
-                .topK((int)(limit * 1.5) + 1)
+                .topK((int)(limit * 2) + 1)
 
-                .similarityThreshold(0.5)
+                .similarityThreshold(0.4)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
@@ -470,6 +472,22 @@ public class BookService {
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
     }
 
+
+    private void removeOldVector(Long bookId) {
+        try {
+
+            String sql = "DELETE FROM vector_store WHERE metadata->>'book_id' = ?";
+
+            jdbcTemplate.update(sql, bookId.toString());
+
+            log.info("Удалены старые векторы для book_id: {}", bookId);
+
+        } catch (Exception e) {
+            log.warn("Ошибка при удалении старого вектора для книги {}: {}", bookId, e.getMessage());
+        }
+    }
+
+
     public Page<BookReadDTO> searchGoogleBooksByTitle(String title, int page, int size) {
         return searchGoogleBooksAdvanced("intitle", title, page, size);
     }
@@ -528,6 +546,7 @@ public class BookService {
     @Transactional
     public void regenerateAllEmbeddings() {
         log.info("Начинаем перегенерацию векторов...");
+        jdbcTemplate.update("TRUNCATE TABLE vector_store");
         List<Book> allBooks = bookRepository.findAll();
 
         int count = 0;
@@ -541,7 +560,6 @@ public class BookService {
                     log.warn("Не удалось удалить старый вектор для книги {}: {}", book.getId(), e.getMessage());
                 }
 
-                // 2. Генерируем новый
                 generateAndSetEmbedding(book);
                 count++;
 
@@ -651,6 +669,8 @@ public class BookService {
             log.warn("Невозможно сгенерировать вектор для книги с id={}, так как отсутствует название.", book.getId());
             return;
         }
+
+        removeOldVector(book.getId());
 
         log.info("Генерация и сохранение вектора для книги: {}", book.getTitle());
 

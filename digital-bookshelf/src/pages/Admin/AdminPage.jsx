@@ -1,5 +1,3 @@
-// src/pages/Admin/AdminPage.jsx
-
 import { useCallback, useEffect, useState } from "react";
 import FileUploadModal from "../../components/common/FileUploadModal";
 import Pagination from "../../components/common/Pagination";
@@ -11,7 +9,9 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
+import SyncIcon from "@mui/icons-material/Sync";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+
 const AdminPage = () => {
   const [books, setBooks] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -22,6 +22,7 @@ const AdminPage = () => {
   const [uploadBookId, setUploadBookId] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingBookId, setEditingBookId] = useState(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const fetchBooks = useCallback(async () => {
     setLoading(true);
@@ -100,13 +101,44 @@ const AdminPage = () => {
   const handleUploadSuccess = () => {
     alert("Текст успешно загружен!");
   };
+
+  const handleRegenerateEmbeddings = async () => {
+    if (
+      window.confirm(
+        "Это может занять некоторое время. Вы уверены, что хотите перегенерировать векторы всех книг?"
+      )
+    ) {
+      setIsRegenerating(true);
+      try {
+        const response = await adminService.regenerateEmbeddings();
+        alert(response || "Векторы успешно перегенерированы!");
+      } catch (error) {
+        alert("Ошибка при перегенерации векторов");
+        console.error(error);
+      } finally {
+        setIsRegenerating(false);
+      }
+    }
+  };
+
   return (
     <div className="admin-page">
       <header className="admin-header">
         <h1>Управление библиотекой</h1>
-        <button className="btn-primary add-book-btn" onClick={handleCreate}>
-          <AddIcon /> Добавить книгу
-        </button>
+        <div className="admin-header-actions">
+          <button className="btn-primary add-book-btn" onClick={handleCreate}>
+            <AddIcon /> Добавить книгу
+          </button>
+          <button
+            className="btn-secondary regenerate-btn"
+            onClick={handleRegenerateEmbeddings}
+            disabled={isRegenerating}
+            title="Перегенерировать векторы для всех книг"
+          >
+            <SyncIcon className={isRegenerating ? "spinning" : ""} />
+            {isRegenerating ? " Перегенерация..." : " Перегенерировать векторы"}
+          </button>
+        </div>
       </header>
 
       <div className="admin-toolbar">

@@ -1,5 +1,3 @@
-// src/services/adminService.js
-
 import api from "./api";
 
 export const adminService = {
@@ -83,6 +81,16 @@ export const adminService = {
       return response.data;
     } catch (error) {
       console.error(`Ошибка загрузки контента для книги ${bookId}:`, error);
+      throw error;
+    }
+  },
+
+  regenerateEmbeddings: async () => {
+    try {
+      const response = await api.post("/admin/regenerate-embeddings");
+      return response.data;
+    } catch (error) {
+      console.error("Ошибка при перегенерации векторов:", error);
       throw error;
     }
   },
