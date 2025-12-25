@@ -30,7 +30,9 @@ const BookDetailPage = () => {
   const { user } = useAuth();
 
   const [bookData, setBookData] = useState(null);
+
   const [similarBooks, setSimilarBooks] = useState([]);
+  const [isSimilarLoading, setIsSimilarLoading] = useState(true);
 
   const [userBookIds, setUserBookIds] = useState(new Set());
 
@@ -68,12 +70,14 @@ const BookDetailPage = () => {
   }, []);
 
   const fetchSimilarBooks = useCallback(() => {
+    setIsSimilarLoading(true);
     bookService
       .findSimilarBooks(bookId, 4)
       .then((data) => {
         setSimilarBooks(data);
       })
-      .catch((err) => console.error("Ошибка загрузки похожих книг:", err));
+      .catch((err) => console.error("Ошибка загрузки похожих книг:", err))
+      .finally(() => setIsSimilarLoading(false));
   }, [bookId]);
 
   useEffect(() => {
@@ -515,9 +519,15 @@ const BookDetailPage = () => {
             </button>
           )}
 
-          {similarBooks.length > 0 && (
-            <section className="similar-books-section">
-              <h3 className="section-title">Похожие книги</h3>
+          <section className="similar-books-section">
+            <h3 className="section-title">Похожие книги</h3>
+
+            {isSimilarLoading ? (
+              <div className="similar-books-loader-container">
+                <div className="loader-spinner small"></div>
+                <p>Подбираем похожие книги...</p>
+              </div>
+            ) : similarBooks.length > 0 ? (
               <div className="similar-books-grid">
                 {similarBooks.map((similarBook) => (
                   <Link
@@ -532,8 +542,13 @@ const BookDetailPage = () => {
                   </Link>
                 ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <div className="no-similar-books">
+                <AutoStoriesIcon style={{ fontSize: 40, color: "#d4c4a8" }} />
+                <p>Похожих книг пока не найдено</p>
+              </div>
+            )}
+          </section>
         </main>
       </div>
 

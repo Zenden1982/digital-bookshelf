@@ -26,9 +26,6 @@ public class BookController {
 
     private final BookService bookService;
 
-    /**
-     * Получить все книги из нашей базы с пагинацией.
-     */
     @GetMapping
     public ResponseEntity<Page<BookReadDTO>> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
@@ -38,18 +35,12 @@ public class BookController {
         return ResponseEntity.ok(books);
     }
 
-    /**
-     * Получить конкретную книгу по ее ID.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<BookDetailDTO> getBookById(@PathVariable Long id) {
         BookDetailDTO book = bookService.getBookById(id);
         return ResponseEntity.ok(book);
     }
 
-    /**
-     * Поиск книг в нашей библиотеке по названию, автору или ISBN.
-     */
     @GetMapping("/search")
     public ResponseEntity<Page<BookReadDTO>> searchInLibrary(@RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
@@ -58,9 +49,6 @@ public class BookController {
         return ResponseEntity.ok(books);
     }
 
-    /**
-     * Найти книги, похожие на заданный текст (семантический поиск).
-     */
     @GetMapping("/similar")
     public ResponseEntity<Page<BookReadDTO>> findSimilarBooksByQuery(
             @RequestParam String query,
@@ -85,7 +73,6 @@ public class BookController {
         String content = bookService.getBookContent(id);
 
         if (content == null) {
-            // Можно вернуть 404 или пустой контент, как решишь
             return ResponseEntity.ok(Map.of("content", ""));
         }
 

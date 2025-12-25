@@ -283,7 +283,7 @@ public class BookService {
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
                 .topK(topK)
-                .similarityThreshold(0.3)
+                .similarityThreshold(0.4)
                 .build();
 
         List<Document> similarDocs = vectorStore.similaritySearch(request);
@@ -553,12 +553,6 @@ public class BookService {
         for (Book book : allBooks) {
             try {
 
-                try {
-                    vectorStore.delete(List.of(book.getId().toString()));
-                } catch (Exception e) {
-                    // Игнорируем, если удалять нечего или ошибка удаления
-                    log.warn("Не удалось удалить старый вектор для книги {}: {}", book.getId(), e.getMessage());
-                }
 
                 generateAndSetEmbedding(book);
                 count++;

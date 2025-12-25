@@ -5,7 +5,7 @@ import { useState } from "react";
 import BookSpine from "./BookSpine";
 import "./Bookshelf.css";
 
-const BOOKS_PER_ROW = 14;
+const BOOKS_PER_ROW = 20;
 
 const processBooksWithTags = (books) => {
   if (!books || books.length === 0) return [];
