@@ -1,7 +1,6 @@
 .bookshelf-wrapper {
   position: relative;
   width: 100%;
-  /* max-width: 1100px; */
   margin: 0 auto;
   padding-bottom: 80px;
   perspective: 1200px;
@@ -15,6 +14,7 @@
   position: relative;
   border: 1px solid #3e2723;
   transition: all 0.5s ease;
+  min-width: 300px;
 }
 
 .cabinet-top {
@@ -77,25 +77,18 @@
   color: #d7ccc8;
   font-weight: 700;
 }
-.label-count {
-  background: rgba(255, 255, 255, 0.1);
-  color: #d7ccc8;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: "Inter", sans-serif;
-}
 
 .books-container {
   display: flex;
   align-items: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 2px;
   padding: 0 12px;
   min-height: 165px;
   position: relative;
   z-index: 2;
+  overflow: hidden;
 }
 
 .wooden-board {
@@ -158,24 +151,6 @@
   border-top: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.spine-finished-mark {
-  position: absolute;
-  top: 6px;
-  right: 50%;
-  transform: translateX(50%);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 10px;
-  font-weight: bold;
-}
-
-.empty-shelf-message {
-  text-align: center;
-  padding: 40px;
-  color: #a1887f;
-  font-family: "Inter", sans-serif;
-  font-style: italic;
-}
-
 .fixed-book-panel {
   position: fixed;
   bottom: 24px;
@@ -184,7 +159,6 @@
   z-index: 9999;
   width: 90%;
   max-width: 600px;
-
   background: rgba(30, 30, 35, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 16px;
@@ -261,10 +235,17 @@
   color: #64b5f6;
 }
 
+@media (max-width: 992px) {
+  .cabinet-frame {
+    padding: 32px 24px;
+  }
+}
+
 @media (max-width: 768px) {
   .cabinet-frame {
     padding: 24px 16px;
   }
+
   .fixed-book-panel {
     width: 95%;
     bottom: 12px;
@@ -273,10 +254,30 @@
   .panel-content {
     flex-direction: column;
     align-items: flex-start;
-    gap: 10px;
+    gap: 12px;
   }
   .panel-progress {
     width: 100%;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .cabinet-frame {
+    padding: 20px 10px;
+    border-radius: 8px;
+  }
+
+  .books-container {
+    padding: 0 4px;
+    justify-content: center;
+  }
+
+  .label-text {
+    font-size: 18px;
+  }
+
+  .cabinet-side {
+    width: 12px;
   }
 }

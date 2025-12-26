@@ -1,9 +1,8 @@
-/* src/pages/MyCatalog.css */
-
 .catalog-page {
   padding: 48px;
   background-color: #f5f1e8;
   flex-grow: 1;
+  min-height: 100vh;
 }
 
 .catalog-title {
@@ -19,15 +18,17 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 48px;
-  padding: 16px;
+  padding: 20px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  gap: 20px;
 }
 
 .status-filters {
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .filter-button {
@@ -41,6 +42,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .filter-button:hover {
@@ -54,13 +56,36 @@
   border-color: #d4af37;
 }
 
-.sort-select {
-  font-family: "Lora", serif;
+.secondary-filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.sort-select,
+.tag-select {
+  font-family: "Inter", sans-serif;
   font-size: 14px;
-  padding: 10px;
+  padding: 10px 14px;
   border-radius: 6px;
-  border: 1px solid #bdbdbd;
+  border: 1px solid #e0d8c8;
   background-color: #ffffff;
+  color: #2c3e50;
+  min-width: 160px;
+  cursor: pointer;
+  outline: none;
+}
+
+.sort-select:focus,
+.tag-select:focus {
+  border-color: #d4af37;
+}
+
+.books-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
 }
 
 .empty-catalog {
@@ -69,22 +94,83 @@
   font-family: "Lora", serif;
   font-size: 20px;
   color: #546e7a;
-  border: 2px dashed #95a5a6;
+  border: 2px dashed #e0d8c8;
   border-radius: 8px;
-}
-.secondary-filters {
-  display: flex;
-  gap: 12px;
-  align-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
-.tag-select {
+.loader {
+  text-align: center;
+  padding: 40px;
   font-family: "Inter", sans-serif;
-  font-size: 14px;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #bdbdbd;
-  background-color: #ffffff;
-  color: #546e7a;
-  min-width: 150px;
+  color: #8b4513;
+}
+
+@media (max-width: 1024px) {
+  .filter-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .status-filters {
+    justify-content: center;
+  }
+
+  .secondary-filters {
+    justify-content: space-between;
+  }
+
+  .sort-select,
+  .tag-select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .catalog-page {
+    padding: 24px 16px;
+  }
+
+  .catalog-title {
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .filter-panel {
+    padding: 16px;
+    margin-bottom: 32px;
+    gap: 16px;
+  }
+
+  .status-filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .filter-button {
+    text-align: center;
+    padding: 12px 8px;
+    font-size: 13px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .secondary-filters {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sort-select,
+  .tag-select {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .books-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
 }

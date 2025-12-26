@@ -1,8 +1,5 @@
-// src/pages/Home.jsx
-
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import Bookshelf from "../components/shelf/Bookshelf";
 import "../components/shelf/Bookshelf.css";
 import { shelfService } from "../services/shelfService";
@@ -12,8 +9,6 @@ const Home = () => {
   const [userBooks, setUserBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  // Состояние для подсказки теперь здесь
   const [hoveredBook, setHoveredBook] = useState(null);
 
   useEffect(() => {
@@ -105,11 +100,11 @@ const Home = () => {
               </>
             )}
           </div>
-        </div>
 
-        <Link to="/import" className="add-book-btn">
-          Добавить книгу
-        </Link>
+          {/* <Link to="/import" className="add-book-btn">
+            Импортировать книгу
+          </Link> */}
+        </div>
       </header>
 
       <div className="library-section">
@@ -120,17 +115,10 @@ const Home = () => {
         {hoveredBook && (
           <motion.div
             className="fixed-book-panel"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+            initial={{ y: 100, opacity: 0, translateX: "-50%" }}
+            animate={{ y: 0, opacity: 1, translateX: "-50%" }}
+            exit={{ y: 100, opacity: 0, translateX: "-50%" }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            style={{
-              position: "fixed",
-              bottom: "24px",
-              left: "50%",
-              translateX: "-50%",
-              zIndex: 9999,
-            }}
           >
             <div className="panel-content">
               <div className="panel-info">

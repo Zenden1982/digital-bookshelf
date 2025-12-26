@@ -1,15 +1,32 @@
-# Этап 1: Сборка
+FROM node:20-alpine AS frontend
+WORKDIR /frontend
+
+
+COPY digital-bookshelf/package*.json ./
+
+RUN npm ci
+
+COPY digital-bookshelf/ .
+
+ARG REACT_API_URL=/api/v1
+RUN echo "VITE_API_URL=${REACT_API_URL}" > .env
+
+RUN npm run build
+
+
 FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-COPY pom.xml .
-COPY src ./src
+COPY diplom/pom.xml .
+COPY diplom/src ./src
 
-# Собираем проект (убрали -DfinalName, пусть Maven называет как хочет)
+
+COPY --from=frontend /frontend/dist ./src/main/resources/static
+
+
 RUN mvn clean package -DskipTests
 
-# МАГИЯ: Находим любой JAR файл в папках target, исключая файлы с исходниками
-# и копируем его в корень образа под именем app.jar
+
 RUN find . -type f -name "*.jar" \
     | grep "target/" \
     | grep -v "sources" \
@@ -18,14 +35,14 @@ RUN find . -type f -name "*.jar" \
     | head -n 1 \
     | xargs -I {} cp {} /app/app.jar
 
-# Этап 2: Финальный образ
+
+
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-# Копируем найденный и переименованный файл из первого этапа
 COPY --from=build /app/app.jar app.jar
 
 EXPOSE 8080

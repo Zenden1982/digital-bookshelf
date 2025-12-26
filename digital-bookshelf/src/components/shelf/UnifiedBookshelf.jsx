@@ -1,11 +1,37 @@
-// src/components/shelf/UnifiedBookshelf.jsx
-
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BookSpine from "./BookSpine";
 import "./Bookshelf.css";
 
-const BOOKS_PER_ROW = 20;
+const useBooksPerRow = () => {
+  const [booksPerRow, setBooksPerRow] = useState(20);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width > 1400) {
+        setBooksPerRow(24);
+      } else if (width > 1200) {
+        setBooksPerRow(20);
+      } else if (width > 992) {
+        setBooksPerRow(16);
+      } else if (width > 768) {
+        setBooksPerRow(12);
+      } else if (width > 480) {
+        setBooksPerRow(8);
+      } else {
+        setBooksPerRow(6);
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return booksPerRow;
+};
 
 const processBooksWithTags = (books) => {
   if (!books || books.length === 0) return [];
@@ -106,6 +132,8 @@ const ShelfRow = ({ title, books, onHoverBook, onLeaveBook, isFirstRow }) => {
 const UnifiedBookshelf = ({ allBooks = [] }) => {
   const [hoveredBook, setHoveredBook] = useState(null);
 
+  const booksPerRow = useBooksPerRow();
+
   const reading = allBooks.filter((b) => b.status === "READING");
   const planned = allBooks.filter((b) => b.status === "PLAN_TO_READ");
   const finished = allBooks.filter((b) => b.status === "FINISHED");
@@ -114,9 +142,9 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
   const plannedItems = processBooksWithTags(planned);
   const finishedItems = processBooksWithTags(finished);
 
-  const readingRows = chunkItems(readingItems, BOOKS_PER_ROW);
-  const plannedRows = chunkItems(plannedItems, BOOKS_PER_ROW);
-  const finishedRows = chunkItems(finishedItems, BOOKS_PER_ROW);
+  const readingRows = chunkItems(readingItems, booksPerRow);
+  const plannedRows = chunkItems(plannedItems, booksPerRow);
+  const finishedRows = chunkItems(finishedItems, booksPerRow);
 
   const handleHover = (book) => setHoveredBook(book);
   const handleLeave = () => setHoveredBook(null);
@@ -179,6 +207,8 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
         </div>
       </div>
 
+      {/* Вынос панели из верстки компонента - она должна рендериться в Home.jsx или через портал, 
+          но если вы оставляете её здесь, вот код: */}
       <AnimatePresence>
         {hoveredBook && (
           <motion.div

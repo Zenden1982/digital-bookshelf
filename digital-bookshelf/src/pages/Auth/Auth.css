@@ -1,12 +1,12 @@
-/* src/pages/Auth/Auth.css */
-
 .auth-container {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #f5f1e8;
   padding: 24px;
+  box-sizing: border-box;
 }
 
 .auth-card {
@@ -16,7 +16,8 @@
   padding: 48px 40px;
   max-width: 440px;
   width: 100%;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  box-sizing: border-box;
 }
 
 .auth-card:hover {
@@ -30,6 +31,7 @@
   color: #2c3e50;
   margin-bottom: 8px;
   text-align: center;
+  line-height: 1.2;
 }
 
 .auth-subtitle {
@@ -38,6 +40,7 @@
   color: #546e7a;
   text-align: center;
   margin-bottom: 32px;
+  line-height: 1.5;
 }
 
 .auth-form {
@@ -68,6 +71,8 @@
   background-color: #ffffff;
   color: #2c3e50;
   transition: all 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .form-group input:focus {
@@ -105,6 +110,7 @@
   border-left: 4px solid #e74c3c;
   border-radius: 4px;
   color: #e74c3c;
+  line-height: 1.4;
 }
 
 .auth-button {
@@ -119,6 +125,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 8px;
+  touch-action: manipulation;
 }
 
 .auth-button:hover {
@@ -145,6 +152,7 @@
   color: #546e7a;
   text-align: center;
   margin-top: 24px;
+  line-height: 1.5;
 }
 
 .auth-link {
@@ -152,6 +160,7 @@
   font-weight: 600;
   text-decoration: none;
   transition: color 0.3s ease;
+  padding: 4px;
 }
 
 .auth-link:hover {
@@ -159,20 +168,65 @@
   text-decoration: underline;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 20px;
+    align-items: center;
+  }
+
   .auth-card {
     padding: 32px 24px;
+    max-width: 100%;
+  }
+
+  .auth-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 16px;
+    display: block;
+    overflow-y: auto;
+  }
+
+  .auth-container::before {
+    content: "";
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    margin-right: -0.25em;
+  }
+
+  .auth-card {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 24px 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }
 
   .auth-title {
     font-size: 28px;
+    margin-bottom: 4px;
   }
 
   .auth-subtitle {
     font-size: 14px;
+    margin-bottom: 24px;
   }
 
   .auth-form {
     gap: 20px;
+  }
+
+  .auth-button {
+    padding: 16px;
+    font-size: 16px;
+  }
+
+  .auth-button:hover {
+    transform: none;
   }
 }
