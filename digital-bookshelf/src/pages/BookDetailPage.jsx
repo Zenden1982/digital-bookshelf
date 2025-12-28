@@ -9,6 +9,8 @@ import { authService } from "../services/authService";
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
+import BookEditor from "./BookEditor";
+
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -39,6 +41,8 @@ const BookDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const isAdmin = authService.hasRole("ROLE_ADMIN");
 
@@ -135,7 +139,16 @@ const BookDetailPage = () => {
   };
 
   const handleEditBook = () => {
-    navigate(`/admin/books/edit/${bookData.book.id}`);
+    setIsEditorOpen(true);
+  };
+
+  const handleEditorClose = () => {
+    setIsEditorOpen(false);
+  };
+
+  const handleSaveSuccess = () => {
+    fetchBookData();
+    fetchSimilarBooks();
   };
 
   if (loading) {
@@ -556,6 +569,14 @@ const BookDetailPage = () => {
         <div className="updating-overlay">
           <div className="loader-spinner"></div>
         </div>
+      )}
+
+      {isEditorOpen && (
+        <BookEditor
+          bookId={bookData.book.id}
+          onClose={handleEditorClose}
+          onSaveSuccess={handleSaveSuccess}
+        />
       )}
     </div>
   );
