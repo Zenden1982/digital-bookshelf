@@ -9,7 +9,7 @@ import { authService } from "../services/authService";
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
-import BookEditor from "./BookEditor";
+import BookEditor from "./Admin/BookEditor";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";

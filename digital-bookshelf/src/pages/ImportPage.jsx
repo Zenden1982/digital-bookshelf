@@ -1,5 +1,3 @@
-// src/pages/ImportPage.jsx
-
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import BookCard from "../components/book/BookCard";
@@ -7,12 +5,6 @@ import Pagination from "../components/common/Pagination";
 import { importService } from "../services/importService";
 import { shelfService } from "../services/shelfService";
 import "./ImportPage.css";
-
-const SEARCH_TYPES = [
-  { value: "GENERAL", label: "Общий поиск" },
-  { value: "TITLE", label: "По названию" },
-  { value: "AUTHOR", label: "По автору" },
-];
 
 const ImportPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,6 +17,10 @@ const ImportPage = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setInputQuery(urlQuery);
+  }, [urlQuery]);
 
   useEffect(() => {
     if (!urlQuery) {

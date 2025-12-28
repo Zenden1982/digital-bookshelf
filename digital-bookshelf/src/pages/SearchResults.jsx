@@ -1,5 +1,3 @@
-// src/pages/SearchResults.jsx
-
 import PsychologyIcon from "@mui/icons-material/Psychology";
 import SearchIcon from "@mui/icons-material/Search";
 import { useCallback, useEffect, useState } from "react";
@@ -143,11 +141,17 @@ const SearchResults = () => {
               ? "Попробуйте изменить запрос или переключиться на обычный поиск"
               : "Попробуйте изменить запрос или использовать семантический поиск"}
           </p>
-          <Link to="/import" className="import-link">
+          <Link
+            to={`/import?q=${encodeURIComponent(query)}`}
+            className="import-link"
+          >
             Попробуйте найти книгу в глобальном каталоге и добавить её на наш
             сайт.
           </Link>
-          <Link to="/import" className="btn-primary">
+          <Link
+            to={`/import?q=${encodeURIComponent(query)}`}
+            className="btn-primary"
+          >
             Перейти к импорту
           </Link>
         </div>

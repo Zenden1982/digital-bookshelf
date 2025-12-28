@@ -1,13 +1,13 @@
-// src/components/layout/Header.jsx
-
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../services/authService";
 import { userService } from "../../services/userService";
 
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
+import MenuIcon from "@mui/icons-material/Menu";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PersonIcon from "@mui/icons-material/Person";
 import PsychologyIcon from "@mui/icons-material/Psychology";
@@ -19,14 +19,27 @@ import "./Header.css";
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const location = useLocation();
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchMode, setSearchMode] = useState("regular");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname === "/search") {
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q");
+      if (q) setSearchQuery(q);
+    } else {
+      setSearchQuery("");
+    }
+  }, [location.pathname, location.search]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       const mode = searchMode === "semantic" ? "semantic" : "regular";
+      setMobileMenuOpen(false);
       navigate(
         `/search?q=${encodeURIComponent(searchQuery.trim())}&mode=${mode}`
       );
@@ -35,6 +48,14 @@ const Header = () => {
 
   const toggleSearchMode = () => {
     setSearchMode((prev) => (prev === "regular" ? "semantic" : "regular"));
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   const getAvatarSrc = () => {
@@ -53,27 +74,37 @@ const Header = () => {
   };
 
   const placeholder =
-    searchMode === "semantic"
-      ? "Поиск по смыслу: 'книги о любви', 'детективы в Париже'..."
-      : "Поиск по названию, автору...";
+    searchMode === "semantic" ? "Поиск по смыслу..." : "Поиск...";
 
   const isAdmin = authService.hasRole("ROLE_ADMIN");
 
   return (
     <header className="app-header">
       <div className="header-container">
-        <NavLink to="/" className="header-logo">
+        <NavLink to="/" className="header-logo" onClick={closeMobileMenu}>
           <span className="logo-text">Цифровая полка</span>
         </NavLink>
 
-        <nav className="header-nav">
-          <NavLink to="/">Главная</NavLink>
-          <NavLink to="/my-catalog">Мой Каталог</NavLink>
-          <NavLink to="/map">Карта чтения</NavLink>
-          <NavLink to="/analytics">Аналитика</NavLink>
+        <nav className={`header-nav ${mobileMenuOpen ? "active" : ""}`}>
+          <NavLink to="/" onClick={closeMobileMenu}>
+            Главная
+          </NavLink>
+          <NavLink to="/my-catalog" onClick={closeMobileMenu}>
+            Мой Каталог
+          </NavLink>
+          <NavLink to="/map" onClick={closeMobileMenu}>
+            Карта чтения
+          </NavLink>
+          <NavLink to="/analytics" onClick={closeMobileMenu}>
+            Аналитика
+          </NavLink>
 
           {isAdmin && (
-            <NavLink to="/admin" className="admin-link">
+            <NavLink
+              to="/admin"
+              className="admin-link"
+              onClick={closeMobileMenu}
+            >
               <AdminPanelSettingsIcon
                 sx={{ fontSize: 18, marginRight: "4px" }}
               />
@@ -89,11 +120,6 @@ const Header = () => {
               className={`search-mode-toggle ${searchMode}`}
               onClick={toggleSearchMode}
               aria-label="Переключить режим поиска"
-              title={
-                searchMode === "regular"
-                  ? "Переключить на семантический поиск"
-                  : "Переключить на обычный поиск"
-              }
             >
               {searchMode === "regular" ? (
                 <MenuBookIcon sx={{ fontSize: 20 }} />
@@ -133,6 +159,14 @@ const Header = () => {
               </button>
             </div>
           </div>
+
+          <button
+            className="mobile-menu-btn"
+            onClick={toggleMobileMenu}
+            aria-label="Меню"
+          >
+            {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
         </div>
       </div>
     </header>
