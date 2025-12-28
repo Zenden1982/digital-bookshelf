@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import UserBookCard from "../components/book/UserBookCard";
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
-import { tagService } from "../services/tagService"; // Импортируем tagService
+import { tagService } from "../services/tagService";
 import "./MyCatalog.css";
 
 const STATUS_OPTIONS = [
@@ -34,7 +34,7 @@ const MyCatalog = () => {
   const [filters, setFilters] = useState({
     query: searchParams.get("query") || "",
     status: searchParams.getAll("status") || [],
-    tag: searchParams.get("tag") || "", // Добавили поле для тега
+    tag: searchParams.get("tag") || "",
     sort: initialSortOption.sort,
     direction: initialSortOption.direction,
     page: parseInt(searchParams.get("page") || "0", 10),
@@ -43,9 +43,8 @@ const MyCatalog = () => {
   const [userBooks, setUserBooks] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [availableTags, setAvailableTags] = useState([]); // Список всех тегов пользователя
+  const [availableTags, setAvailableTags] = useState([]);
 
-  // Загружаем список тегов при монтировании компонента
   useEffect(() => {
     tagService.getAllUserTags().then(setAvailableTags).catch(console.error);
   }, []);
@@ -54,7 +53,7 @@ const MyCatalog = () => {
     (newFilters) => {
       const params = new URLSearchParams();
       if (newFilters.query) params.set("query", newFilters.query);
-      if (newFilters.tag) params.set("tag", newFilters.tag); // Сохраняем тег в URL
+      if (newFilters.tag) params.set("tag", newFilters.tag);
       if (newFilters.sort) params.set("sort", newFilters.sort);
       if (newFilters.direction) params.set("direction", newFilters.direction);
       params.set("page", newFilters.page ?? 0);

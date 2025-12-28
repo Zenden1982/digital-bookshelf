@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.data.annotation.CreatedDate;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -78,7 +79,7 @@ public class Book {
     @Builder.Default
     private List<ShelfItem> shelfItems = new java.util.ArrayList<>();
 
-    @OneToMany(mappedBy = "book")
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<UserBook> userBooks = new java.util.ArrayList<>();
 

@@ -13,7 +13,6 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Состояние для подсказки теперь здесь
   const [hoveredBook, setHoveredBook] = useState(null);
 
   useEffect(() => {
