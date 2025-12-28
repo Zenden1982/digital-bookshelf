@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../services/authService";
 import { userService } from "../../services/userService";
@@ -19,9 +19,21 @@ import "./Header.css";
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMode, setSearchMode] = useState("regular");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname === "/search") {
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q");
+      if (q) setSearchQuery(q);
+    } else {
+      setSearchQuery("");
+    }
+  }, [location.pathname, location.search]);
 
   const handleSearch = (e) => {
     e.preventDefault();

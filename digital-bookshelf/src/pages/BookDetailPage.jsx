@@ -1,14 +1,3 @@
-// src/pages/BookDetailPage.jsx
-
-import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-
-import BookCard from "../components/book/BookCard";
-import { useAuth } from "../context/AuthContext";
-import { authService } from "../services/authService";
-import { bookService } from "../services/bookService";
-import { shelfService } from "../services/shelfService";
-
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -21,25 +10,26 @@ import PauseCircleFilledIcon from "@mui/icons-material/PauseCircleFilled";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
-
+import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import BookCard from "../components/book/BookCard";
+import { useAuth } from "../context/AuthContext";
+import { authService } from "../services/authService";
+import { bookService } from "../services/bookService";
+import { shelfService } from "../services/shelfService";
 import "./BookDetailPage.css";
 
 const BookDetailPage = () => {
   const { bookId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-
   const [bookData, setBookData] = useState(null);
-
   const [similarBooks, setSimilarBooks] = useState([]);
   const [isSimilarLoading, setIsSimilarLoading] = useState(true);
-
   const [userBookIds, setUserBookIds] = useState(new Set());
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-
   const isAdmin = authService.hasRole("ROLE_ADMIN");
 
   const fetchBookData = useCallback(() => {
@@ -88,7 +78,6 @@ const BookDetailPage = () => {
 
   const handleRatingChange = async (newRating) => {
     if (!bookData.userBook) return;
-
     setIsUpdating(true);
     try {
       await shelfService.updateMyUserBook(bookData.userBook.id, {
@@ -104,7 +93,6 @@ const BookDetailPage = () => {
 
   const handleStatusChange = async (newStatus) => {
     if (!bookData.userBook) return;
-
     setIsUpdating(true);
     try {
       await shelfService.updateMyUserBook(bookData.userBook.id, {
@@ -165,7 +153,6 @@ const BookDetailPage = () => {
   const { book, userBook } = bookData;
   const coverUrl =
     book.coverUrl || "https://via.placeholder.com/400x600.png?text=Нет+обложки";
-
   const canRead = book.hasContent === true || bookData.hasContent === true;
 
   return (

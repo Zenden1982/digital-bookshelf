@@ -1,5 +1,3 @@
-// src/pages/Admin/BookEditor.jsx
-
 import { useEffect, useState } from "react";
 import { adminService } from "../../services/adminService";
 import "./BookEditor.css";
@@ -116,7 +114,7 @@ const BookEditor = ({ bookId, onClose, onSaveSuccess }) => {
       <div className="editor-modal">
         <div className="editor-header">
           <h2>{bookId ? "Редактирование книги" : "Новая книга"}</h2>
-          <button className="close-btn" onClick={onClose}>
+          <button className="close-btn" onClick={onClose} type="button">
             <CloseIcon />
           </button>
         </div>

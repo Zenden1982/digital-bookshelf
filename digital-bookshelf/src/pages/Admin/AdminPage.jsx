@@ -173,17 +173,19 @@ const AdminPage = () => {
             <tbody>
               {books.map((book) => (
                 <tr key={book.id}>
-                  <td>{book.id}</td>
-                  <td>
+                  <td data-label="ID">{book.id}</td>
+                  <td data-label="Обложка">
                     <img
                       src={book.coverUrl || "https://via.placeholder.com/50"}
                       alt="cover"
                       className="table-cover"
                     />
                   </td>
-                  <td className="fw-bold">{book.title}</td>
-                  <td>{book.author}</td>
-                  <td>
+                  <td data-label="Название" className="fw-bold">
+                    {book.title}
+                  </td>
+                  <td data-label="Автор">{book.author}</td>
+                  <td data-label="Год">
                     {book.publishedDate
                       ? book.publishedDate.split("-")[0]
                       : "-"}

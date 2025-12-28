@@ -207,8 +207,6 @@ const UnifiedBookshelf = ({ allBooks = [] }) => {
         </div>
       </div>
 
-      {/* Вынос панели из верстки компонента - она должна рендериться в Home.jsx или через портал, 
-          но если вы оставляете её здесь, вот код: */}
       <AnimatePresence>
         {hoveredBook && (
           <motion.div
