@@ -38,10 +38,6 @@ public class TagController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Добавить тег к книге на полке.
-     * Тело запроса: {"tagName": "на-отпуск"}
-     */
     @PostMapping("/userbook/{userBookId}")
     public ResponseEntity<UserBookReadDTO> addTagToUserBook(
             @PathVariable Long userBookId,
@@ -51,9 +47,6 @@ public class TagController {
         return ResponseEntity.ok(updatedUserBook);
     }
 
-    /**
-     * Удалить тег с книги на полке.
-     */
     @DeleteMapping("/userbook/{userBookId}/tag/{tagId}")
     public ResponseEntity<UserBookReadDTO> removeTagFromUserBook(
             @PathVariable Long userBookId,

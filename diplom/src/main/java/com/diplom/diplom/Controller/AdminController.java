@@ -24,7 +24,6 @@ public class AdminController {
 
     @PostMapping("/regenerate-embeddings")
     public ResponseEntity<String> regenerateEmbeddings() {
-        // Лучше запускать асинхронно, если книг много, но для простоты можно синхронно
         bookService.regenerateAllEmbeddings();
         return ResponseEntity.ok("Процесс перегенерации векторов запущен/завершен.");
     }

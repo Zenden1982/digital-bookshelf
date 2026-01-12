@@ -5,9 +5,7 @@ import { authService } from "../../services/authService";
 import { userService } from "../../services/userService";
 
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import CloseIcon from "@mui/icons-material/Close";
 import LogoutIcon from "@mui/icons-material/Logout";
-import MenuIcon from "@mui/icons-material/Menu";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PersonIcon from "@mui/icons-material/Person";
 import PsychologyIcon from "@mui/icons-material/Psychology";
@@ -159,14 +157,6 @@ const Header = () => {
               </button>
             </div>
           </div>
-
-          <button
-            className="mobile-menu-btn"
-            onClick={toggleMobileMenu}
-            aria-label="Меню"
-          >
-            {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-          </button>
         </div>
       </div>
     </header>
