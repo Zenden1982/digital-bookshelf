@@ -370,6 +370,9 @@ public class BookService {
                         book.getGenres() != null && !book.getGenres().isEmpty()
                                 ? "Жанры: " + String.join(", ", book.getGenres())
                                 : null,
+                        book.getGenres() != null && !book.getGenres().isEmpty() 
+                                ? "Жанры: " + String.join(", ", book.getGenres())
+                                : null,
                         book.getAnnotation() != null ? "Аннотация: " + book.getAnnotation() : null
                 )
                 .filter(Objects::nonNull)
@@ -676,6 +679,10 @@ public class BookService {
 
         if (book.getAuthor() != null && !book.getAuthor().trim().isEmpty()) {
             textToEmbed.append("Автор: ").append(book.getAuthor()).append(". ");
+        }
+
+        if (book.getGenres() != null && !book.getGenres().isEmpty()) {
+            textToEmbed.append("Жанры: ").append(String.join(", ", book.getGenres())).append(". ");
         }
 
         if (book.getGenres() != null && !book.getGenres().isEmpty()) {

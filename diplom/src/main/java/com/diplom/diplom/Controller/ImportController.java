@@ -31,9 +31,6 @@ public class ImportController {
 
     private final BookService bookService;
 
-    /**
-     * (АДМИН) Поиск книг в Google Books для импорта.
-     */
     @GetMapping("/search-google")
     public ResponseEntity<Page<BookReadDTO>> searchGoogleBooks(
             @RequestParam String query,
@@ -44,20 +41,13 @@ public class ImportController {
         return ResponseEntity.ok(results);
     }
 
-    /**
-     * (АДМИН) Импортировать книгу по ISBN.
-     */
     @PostMapping("/isbn/{isbn}")
     public ResponseEntity<BookReadDTO> importByIsbn(@PathVariable String isbn) {
         Book importedBook = bookService.importBookByIsbn(isbn);
-        // Используем маппер, чтобы вернуть DTO
         BookReadDTO bookDTO = BookReadDTO.toDTO(importedBook);
         return ResponseEntity.status(HttpStatus.CREATED).body(bookDTO); // 201 Created ResponseEntity;
     }
 
-    /**
-     * (АДМИН) Обновить данные существующей книги.
-     */
     @PutMapping("/books/{id}")
     public ResponseEntity<BookReadDTO> updateBook(
             @PathVariable Long id,
@@ -67,13 +57,10 @@ public class ImportController {
         return ResponseEntity.ok(updatedBook);
     }
 
-    /**
-     * (АДМИН) Удалить книгу из базы.
-     */
     @DeleteMapping("/books/{id}")
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
-        return ResponseEntity.noContent().build(); // Стандартный ответ для DELETE
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/search-by-title")

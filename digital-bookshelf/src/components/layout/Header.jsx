@@ -66,9 +66,8 @@ const Header = () => {
       }
       return userService.getAvatarUrl(user.avatarUrl);
     }
-    return `https://api.dicebear.com/7.x/initials/svg?seed=${
-      user?.username || "U"
-    }`;
+    return `https://api.dicebear.com/7.x/initials/svg?seed=${user?.username || "U"
+      }`;
   };
 
   const placeholder =
@@ -92,6 +91,9 @@ const Header = () => {
           </NavLink>
           <NavLink to="/map" onClick={closeMobileMenu}>
             Карта чтения
+          </NavLink>
+          <NavLink to="/recommendations" onClick={closeMobileMenu}>
+            Рекомендации
           </NavLink>
           <NavLink to="/analytics" onClick={closeMobileMenu}>
             Аналитика

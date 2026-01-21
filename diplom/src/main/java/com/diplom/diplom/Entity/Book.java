@@ -58,6 +58,8 @@ public class Book {
 
     private List<String> genres;
 
+
+
     private String googleBookId;
 
     private LocalDateTime publishedDate;

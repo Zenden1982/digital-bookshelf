@@ -15,6 +15,8 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
     "axios": "^1.13.2",
+    "epubjs": "^0.3.93",
+    "fast-xml-parser": "^5.3.3",
     "framer-motion": "^12.23.25",
     "jwt-decode": "^4.0.0",
     "react": "^19.1.1",

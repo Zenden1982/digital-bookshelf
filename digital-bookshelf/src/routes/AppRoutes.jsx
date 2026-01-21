@@ -15,6 +15,8 @@ import ImportPage from "../pages/ImportPage";
 import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
 import SearchResults from "../pages/SearchResults";
+import Recommendations from "../pages/Recommendations";
+import ReadingMapPage from "../pages/ReadingMapPage";
 import Settings from "../pages/Settings";
 import AdminRoute from "./AdminRoute";
 const AppRoutes = () => {
@@ -107,11 +109,13 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+
+
       <Route
         path="/map"
         element={
           <PrivateRoute>
-            <Chat />
+            <ReadingMapPage />
           </PrivateRoute>
         }
       />
@@ -120,6 +124,15 @@ const AppRoutes = () => {
         element={
           <PrivateRoute>
             <Chat />
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/recommendations"
+        element={
+          <PrivateRoute>
+            <Recommendations />
           </PrivateRoute>
         }
       />
