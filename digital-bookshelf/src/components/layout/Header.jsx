@@ -1,3 +1,5 @@
+// src/components/layout/Header.jsx
+
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -39,7 +41,7 @@ const Header = () => {
       const mode = searchMode === "semantic" ? "semantic" : "regular";
       setMobileMenuOpen(false);
       navigate(
-        `/search?q=${encodeURIComponent(searchQuery.trim())}&mode=${mode}`
+        `/search?q=${encodeURIComponent(searchQuery.trim())}&mode=${mode}`,
       );
     }
   };
@@ -83,6 +85,15 @@ const Header = () => {
           <span className="logo-text">Цифровая полка</span>
         </NavLink>
 
+        {/* Кнопка гамбургера для мобильных */}
+        {/* <button
+          className="mobile-menu-btn"
+          onClick={toggleMobileMenu}
+          aria-label="Меню"
+        >
+          ☰
+        </button> */}
+
         <nav className={`header-nav ${mobileMenuOpen ? "active" : ""}`}>
           <NavLink to="/" onClick={closeMobileMenu}>
             Главная
@@ -90,6 +101,12 @@ const Header = () => {
           <NavLink to="/my-catalog" onClick={closeMobileMenu}>
             Мой Каталог
           </NavLink>
+
+          {/* НОВАЯ ССЫЛКА НА РЕКОМЕНДАЦИИ */}
+          <NavLink to="/recommendations" onClick={closeMobileMenu}>
+            Рекомендации
+          </NavLink>
+
           <NavLink to="/map" onClick={closeMobileMenu}>
             Карта чтения
           </NavLink>
@@ -106,7 +123,7 @@ const Header = () => {
               <AdminPanelSettingsIcon
                 sx={{ fontSize: 18, marginRight: "4px" }}
               />
-              Админ-панель
+              Админ
             </NavLink>
           )}
         </nav>
@@ -118,6 +135,11 @@ const Header = () => {
               className={`search-mode-toggle ${searchMode}`}
               onClick={toggleSearchMode}
               aria-label="Переключить режим поиска"
+              title={
+                searchMode === "semantic"
+                  ? "Включен поиск по смыслу"
+                  : "Обычный поиск"
+              }
             >
               {searchMode === "regular" ? (
                 <MenuBookIcon sx={{ fontSize: 20 }} />
@@ -146,7 +168,7 @@ const Header = () => {
                 <strong>{user?.username}</strong>
                 <span>{user?.email}</span>
               </div>
-              <NavLink to="/profile">
+              <NavLink to="/settings">
                 <PersonIcon /> Профиль
               </NavLink>
               <NavLink to="/settings">

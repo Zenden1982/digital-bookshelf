@@ -3,14 +3,20 @@ package com.diplom.diplom.Controller;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
-import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
+import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Service.BookService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,7 +35,7 @@ public class AdminController {
     }
 
     @PostMapping("/books")
-    public ResponseEntity<BookReadDTO>  createBook(@RequestBody BookCreateUpdateDTO bookCreateUpdateDTO)
+    public ResponseEntity<BookReadDTO> createBook(@RequestBody BookCreateUpdateDTO bookCreateUpdateDTO)
             throws IOException {
         return ResponseEntity.ok(bookService.addBook(bookCreateUpdateDTO));
     }

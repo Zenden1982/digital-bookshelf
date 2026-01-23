@@ -1,6 +1,7 @@
 // src/routes/AppRoutes.jsx
 
 import { Navigate, Route, Routes } from "react-router-dom";
+import AdminRoute from "./AdminRoute";
 import PrivateRoute from "./PrivateRoute";
 import PublicRoute from "./PublicRoute";
 
@@ -14,9 +15,10 @@ import Home from "../pages/Home";
 import ImportPage from "../pages/ImportPage";
 import MyCatalog from "../pages/MyCatalog";
 import Reader from "../pages/Reader";
+import Recommendations from "../pages/Recommendations"; // <--- НОВЫЙ ИМПОРТ
 import SearchResults from "../pages/SearchResults";
 import Settings from "../pages/Settings";
-import AdminRoute from "./AdminRoute";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -81,6 +83,16 @@ const AppRoutes = () => {
         }
       />
 
+      {/* Страница рекомендаций */}
+      <Route
+        path="/recommendations"
+        element={
+          <PrivateRoute>
+            <Recommendations />
+          </PrivateRoute>
+        }
+      />
+
       <Route
         path="/book/:bookId"
         element={
@@ -107,6 +119,8 @@ const AppRoutes = () => {
           </PrivateRoute>
         }
       />
+
+      {/* Пока заглушки Chat для карты и аналитики, можно потом заменить */}
       <Route
         path="/map"
         element={

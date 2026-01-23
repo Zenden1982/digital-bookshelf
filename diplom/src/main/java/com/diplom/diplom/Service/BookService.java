@@ -147,6 +147,7 @@ public class BookService {
         Book book = bookRepository.save(BookCreateUpdateDTO.toBook(bookCreateUpdateDTO));
         return BookReadDTO.toDTO(book);
     }
+
     @Transactional
     public Page<BookReadDTO> searchInMyLibrary(String query, int page, int size) {
 
@@ -296,7 +297,6 @@ public class BookService {
                 .map(this::mapToBookReadDTO)
                 .collect(Collectors.toList());
 
-
         PageRequest pageRequest = PageRequest.of(page, size);
         int start = (int) pageRequest.getOffset();
         int end = Math.min(start + pageRequest.getPageSize(), dtoList.size());
@@ -305,12 +305,10 @@ public class BookService {
         return new PageImpl<>(pageContent, pageRequest, dtoList.size());
     }
 
-
     public List<BookReadDTO> findSimilarBooksByBookId(Long bookId, int limit) {
         Book sourceBook = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Книга с ID " + bookId + " не найдена"
-                ));
+                        "Книга с ID " + bookId + " не найдена"));
 
         String baseQueryText = buildSearchQuery(sourceBook);
 
@@ -322,13 +320,12 @@ public class BookService {
 
         SearchRequest request = SearchRequest.builder()
                 .query(formattedQuery)
-                .topK((int)(limit * 2) + 1)
+                .topK((int) (limit * 2) + 1)
 
                 .similarityThreshold(0.4)
                 .build();
 
         List<Document> similarDocuments = vectorStore.similaritySearch(request);
-
 
         if (similarDocuments.isEmpty()) {
             log.warn("Для книги {} похожих книг не найдено (даже с низким порогом)", bookId);
@@ -361,17 +358,14 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-
-
     private String buildSearchQuery(Book book) {
         return Stream.of(
-                        book.getTitle() != null ? "Название: " + book.getTitle() : null,
-                        book.getAuthor() != null ? "Автор: " + book.getAuthor() : null,
-                        book.getGenres() != null && !book.getGenres().isEmpty()
-                                ? "Жанры: " + String.join(", ", book.getGenres())
-                                : null,
-                        book.getAnnotation() != null ? "Аннотация: " + book.getAnnotation() : null
-                )
+                book.getTitle() != null ? "Название: " + book.getTitle() : null,
+                book.getAuthor() != null ? "Автор: " + book.getAuthor() : null,
+                book.getGenres() != null && !book.getGenres().isEmpty()
+                        ? "Жанры: " + String.join(", ", book.getGenres())
+                        : null,
+                book.getAnnotation() != null ? "Аннотация: " + book.getAnnotation() : null)
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining("\n"));
     }
@@ -472,7 +466,6 @@ public class BookService {
                 .orElseThrow(() -> new ResourceNotFoundException("Пользователь не найден: " + username));
     }
 
-
     private void removeOldVector(Long bookId) {
         try {
 
@@ -486,7 +479,6 @@ public class BookService {
             log.warn("Ошибка при удалении старого вектора для книги {}: {}", bookId, e.getMessage());
         }
     }
-
 
     public Page<BookReadDTO> searchGoogleBooksByTitle(String title, int page, int size) {
         return searchGoogleBooksAdvanced("intitle", title, page, size);
@@ -552,7 +544,6 @@ public class BookService {
         int count = 0;
         for (Book book : allBooks) {
             try {
-
 
                 generateAndSetEmbedding(book);
                 count++;
@@ -693,7 +684,6 @@ public class BookService {
         metadata.put("author", book.getAuthor());
 
         Document document = new Document(textToEmbed.toString(), metadata);
-
 
         vectorStore.add(List.of(document));
 

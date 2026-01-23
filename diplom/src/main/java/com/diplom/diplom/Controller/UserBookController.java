@@ -31,13 +31,11 @@ public class UserBookController {
 
     private final UserBookService userBookService;
 
-
     @PostMapping
     public ResponseEntity<UserBookReadDTO> addBookToMyShelf(@RequestBody UserBookCreateDTO dto) {
         String username = getCurrentUsername();
         return ResponseEntity.ok().body(userBookService.addBookToMyShelf(dto, username));
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<UserBookReadDTO> updateMyUserBook(@PathVariable Long id, @RequestBody UserBookUpdateDTO dto) {
@@ -59,21 +57,21 @@ public class UserBookController {
         return ResponseEntity.ok(shelf);
     }
 
-
     @DeleteMapping("/{id}")
     public void deleteMyUserBook(@PathVariable Long id) {
         userBookService.deleteMyUserBook(id, getCurrentUsername());
     }
 
-    @GetMapping("/by-status")
-    public ResponseEntity<Page<UserBookReadDTO>> getMyShelfByStatus(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam String status) {
-        String username = getCurrentUsername();
-        Page<UserBookReadDTO> userBooks = userBookService.getMyShelfByStatus(page, size, username, status);
-        return ResponseEntity.ok(userBooks);
-    }
+    // @GetMapping("/by-status")
+    // public ResponseEntity<Page<UserBookReadDTO>> getMyShelfByStatus(
+    // @RequestParam(defaultValue = "0") int page,
+    // @RequestParam(defaultValue = "20") int size,
+    // @RequestParam String status) {
+    // String username = getCurrentUsername();
+    // Page<UserBookReadDTO> userBooks = userBookService.getMyShelfByStatus(page,
+    // size, username, status);
+    // return ResponseEntity.ok(userBooks);
+    // }
 
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

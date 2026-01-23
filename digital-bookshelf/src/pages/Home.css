@@ -390,3 +390,261 @@
     display: none;
   }
 }
+
+/* --- 1. Декоративный разделитель --- */
+.section-divider {
+  text-align: center;
+  margin: 60px 0 50px 0;
+  position: relative;
+  opacity: 0.6;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: "";
+  display: inline-block;
+  width: 30%;
+  height: 1px;
+  background-color: #d4af37; /* Золото */
+  vertical-align: middle;
+}
+
+.divider-icon {
+  font-family: serif;
+  font-size: 24px;
+  color: #8b4513;
+  padding: 0 20px;
+  vertical-align: middle;
+}
+
+/* --- 2. Контейнер секции (Светлая карточка) --- */
+.recommended-section {
+  background-color: #fff;
+  border: 1px solid #e0d8c8;
+  position: relative;
+  padding: 40px 50px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.03),
+    inset 0 0 0 1px #fdfbf5;
+  border-radius: 4px;
+  margin-bottom: 80px;
+}
+
+/* Золотой акцент сверху */
+.recommended-section::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 3px;
+  background: #d4af37;
+  border-radius: 0 0 4px 4px;
+}
+
+/* --- 3. Заголовок секции --- */
+.rec-header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #f0e6d2;
+  padding-bottom: 15px;
+}
+
+.rec-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rec-title {
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.rec-subtitle {
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: #8b4513;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* --- 4. Кнопка "В каталог" --- */
+.rec-link-all {
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d4af37;
+  text-decoration: none;
+  padding: 8px 20px;
+  border: 1px solid #d4af37;
+  border-radius: 20px;
+  background: transparent;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.rec-link-all:hover {
+  background: #d4af37;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+}
+
+/* --- 5. Сетка карточек (Одинаковая высота) --- */
+.rec-grid {
+  display: grid;
+  /* Адаптивные колонки: не уже 220px */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 30px;
+  /* Растягиваем элементы по высоте */
+  align-items: stretch;
+}
+
+/* Обертка карточки - превращаем в Flex-контейнер */
+.rec-card-wrapper {
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  border-radius: 8px;
+  display: flex; /* Важно! */
+  flex-direction: column; /* Важно! */
+}
+
+.rec-card-wrapper:hover {
+  transform: translateY(-8px);
+}
+
+.rec-card-wrapper:active {
+  transform: scale(0.98);
+}
+
+/* Растягиваем сам BookCard внутри обертки */
+.rec-card-wrapper .book-card {
+  flex: 1; /* Занимает всю доступную высоту */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #f0f0f0; /* Легкая граница для аккуратности */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.rec-card-wrapper .book-card-body {
+  flex: 1; /* Тело карточки тоже растягивается */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Текст сверху, кнопки снизу */
+}
+
+/* --- 6. Всплывающая панель (Темная тема) --- */
+.fixed-book-panel {
+  background: #2c3e50;
+  color: #f5f1e8;
+  border: 1px solid #d4af37;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  min-width: 280px;
+}
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.panel-info strong {
+  display: block;
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+  margin-bottom: 4px;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.panel-info span {
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  font-size: 14px;
+  color: #d4af37;
+}
+
+.fixed-book-panel .progress-label {
+  color: #d4af37;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fixed-book-panel .progress-bar-track {
+  background: rgba(255, 255, 255, 0.1);
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 4px;
+}
+
+.fixed-book-panel .progress-bar-fill {
+  background: #d4af37;
+}
+
+.fixed-book-panel .panel-badge {
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fixed-book-panel .panel-badge.finished {
+  background: #27ae60;
+  color: white;
+}
+
+.fixed-book-panel .panel-badge.planned {
+  background: transparent;
+  color: #bdc3c7;
+  border: 1px solid #7f8c8d;
+}
+
+/* --- Адаптивность --- */
+@media (max-width: 768px) {
+  .rec-header-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .rec-link-all {
+    align-self: flex-start;
+    font-size: 12px;
+  }
+
+  .recommended-section {
+    padding: 25px;
+    margin-bottom: 40px;
+  }
+
+  .rec-grid {
+    grid-template-columns: repeat(2, 1fr); /* Две колонки на планшете */
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rec-grid {
+    grid-template-columns: 1fr; /* Одна колонка на телефоне */
+  }
+
+  .section-divider {
+    margin: 40px 0;
+  }
+}

@@ -27,7 +27,6 @@ public class UserBookReadDTO {
     private List<Tag> tags;
     private Boolean isFavorite;
 
-
     public static UserBookReadDTO toDTO(UserBook userBook) {
         return UserBookReadDTO.builder()
                 .id(userBook.getId())

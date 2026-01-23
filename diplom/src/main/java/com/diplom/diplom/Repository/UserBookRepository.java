@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.diplom.diplom.Entity.Book;
@@ -18,18 +19,19 @@ import com.diplom.diplom.Entity.UserBook;
 @Repository
 public interface UserBookRepository extends JpaRepository<UserBook, Long>, JpaSpecificationExecutor<UserBook> {
 
-    Optional<UserBook> findByUserAndBook(User user, Book book);
-
-    Page<UserBook> findByUserId(Long userId, Pageable pageable);
-
-    Page<UserBook> findByUserUsername(String username, Pageable pageable);
-
-    Optional<UserBook> findByUserIdAndBookId(Long userId, Long bookId);
+    List<UserBook> findByUser(User user);
 
     Page<UserBook> findByUser(User user, Pageable pageable);
 
-    Page<UserBook> findByUserAndStatus(User user, String status, Pageable pageable);
+    Optional<UserBook> findByUserAndBook(User user, Book book);
 
+    boolean existsByUserAndBook(User user, Book book);
+
+    // Старый метод (можно оставить, но мы будем использовать новый)
     @Query("SELECT ub.book.id FROM UserBook ub WHERE ub.user.id = :userId AND ub.book.id IN :bookIds")
-    Set<Long> findBookIdsByUser(Long userId, List<Long> bookIds);
+    Set<Long> findBookIdsByUser(@Param("userId") Long userId, @Param("bookIds") List<Long> bookIds);
+
+    // НОВЫЙ МЕТОД: Достаем ВСЕ id книг пользователя
+    @Query("SELECT ub.book.id FROM UserBook ub WHERE ub.user.id = :userId")
+    Set<Long> findAllBookIdsByUserId(@Param("userId") Long userId);
 }

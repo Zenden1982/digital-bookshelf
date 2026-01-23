@@ -73,16 +73,24 @@ const BookDetailPage = () => {
       .catch((err) => console.error("Ошибка проверки библиотеки:", err));
   }, []);
 
+  // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
   const fetchSimilarBooks = useCallback(() => {
     setIsSimilarLoading(true);
+    // Используем новый API (v2)
     bookService
-      .findSimilarBooks(bookId, 4)
-      .then((data) => {
-        setSimilarBooks(data);
+      .getRecommendationsSimilarTo(bookId, 0, 4)
+      .then((pageData) => {
+        // API возвращает массив объектов { book: {...}, score: 0.9, explanation: null }
+        // Нам нужно извлечь только поле 'book' для отображения
+        const booksOnly = pageData.content
+          ? pageData.content.map((item) => item.book)
+          : [];
+        setSimilarBooks(booksOnly);
       })
       .catch((err) => console.error("Ошибка загрузки похожих книг:", err))
       .finally(() => setIsSimilarLoading(false));
   }, [bookId]);
+  // -----------------------
 
   useEffect(() => {
     fetchBookData();

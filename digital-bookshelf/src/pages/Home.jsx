@@ -2,16 +2,23 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import BookCard from "../components/book/BookCard";
 import Bookshelf from "../components/shelf/Bookshelf";
 import "../components/shelf/Bookshelf.css";
+import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 import "./Home.css";
 
 const Home = () => {
+  const navigate = useNavigate();
+
   const [userBooks, setUserBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [recommendations, setRecommendations] = useState([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
 
   const [hoveredBook, setHoveredBook] = useState(null);
 
@@ -29,7 +36,20 @@ const Home = () => {
       }
     };
 
+    const fetchRecommendations = async () => {
+      try {
+        setLoadingRecs(true);
+        const recData = await bookService.getHistoryRecommendations(0, 5);
+        setRecommendations(recData.content || []);
+      } catch (err) {
+        console.error("Ошибка загрузки рекомендаций:", err);
+      } finally {
+        setLoadingRecs(false);
+      }
+    };
+
     fetchShelf();
+    fetchRecommendations();
   }, []);
 
   const stats = {
@@ -43,7 +63,7 @@ const Home = () => {
             userBooks
               .filter((b) => b.status === "READING")
               .reduce((sum, b) => sum + (b.progress || 0), 0) /
-              userBooks.filter((b) => b.status === "READING").length
+              userBooks.filter((b) => b.status === "READING").length,
           )
         : 0,
   };
@@ -114,6 +134,41 @@ const Home = () => {
       <div className="library-section">
         <Bookshelf books={userBooks} onHoverChange={setHoveredBook} />
       </div>
+
+      {/* --- БЛОК РЕКОМЕНДАЦИЙ --- */}
+      {!loadingRecs && recommendations.length > 0 && (
+        <>
+          <div className="section-divider">
+            <span className="divider-icon">❦</span>
+          </div>
+
+          <section className="recommended-section">
+            <div className="rec-header-wrapper">
+              <div className="rec-titles">
+                <h2 className="rec-title">Новые поступления</h2>
+                <span className="rec-subtitle">
+                  Подобрано специально для вашей коллекции
+                </span>
+              </div>
+              <Link to="/recommendations" className="rec-link-all">
+                В каталог →
+              </Link>
+            </div>
+
+            <div className="rec-grid">
+              {recommendations.map((item) => (
+                <div
+                  key={item.book.id}
+                  className="rec-card-wrapper"
+                  onClick={() => navigate(`/book/${item.book.id}`)}
+                >
+                  <BookCard book={item.book} isAdded={false} />
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
 
       <AnimatePresence>
         {hoveredBook && (

@@ -100,8 +100,7 @@ public class UserBookService {
             Status status,
             String tag, // НОВЫЙ ПАРАМЕТР
             String sort,
-            String direction
-    ) {
+            String direction) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
 
@@ -112,7 +111,6 @@ public class UserBookService {
         Specification<UserBook> spec = UserBookSpecification.hasUser(currentUser)
                 .and(UserBookSpecification.hasStatus(status))
                 .and(UserBookSpecification.hasTag(tag));
-
 
         return userBookRepository.findAll(spec, pageable).map(this::map);
     }
@@ -149,11 +147,14 @@ public class UserBookService {
         userBookRepository.deleteById(userBookId);
     }
 
-    @Transactional
-    public Page<UserBookReadDTO> getMyShelfByStatus(int page, int size, String currentUsername, String status) {
-        User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
-        return userBookRepository.findByUserAndStatus(currentUser, status, PageRequest.of(page, size))
-                .map(this::map);
-    }
+    // @Transactional
+    // public Page<UserBookReadDTO> getMyShelfByStatus(int page, int size, String
+    // currentUsername, String status) {
+    // User currentUser = userRepository.findByUsername(currentUsername)
+    // .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " +
+    // currentUsername));
+    // return userBookRepository.findByUserAndStatus(currentUser, status,
+    // PageRequest.of(page, size))
+    // .map(this::map);
+    // }
 }
