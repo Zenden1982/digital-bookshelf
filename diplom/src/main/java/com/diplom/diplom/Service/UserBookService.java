@@ -85,6 +85,8 @@ public class UserBookService {
             userBook.setStatus(dto.getStatus());
         if (dto.getRating() != null)
             userBook.setRating(dto.getRating());
+        if (dto.getIsFavorite() != null)
+            userBook.setIsFavorite(dto.getIsFavorite());
 
         return map(userBookRepository.save(userBook));
     }
@@ -100,7 +102,8 @@ public class UserBookService {
             Status status,
             String tag, // НОВЫЙ ПАРАМЕТР
             String sort,
-            String direction) {
+            String direction,
+            Boolean isFavorite) {
         User currentUser = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + currentUsername));
 
@@ -110,7 +113,8 @@ public class UserBookService {
         // Собираем спецификацию: Юзер + Статус + Тег
         Specification<UserBook> spec = UserBookSpecification.hasUser(currentUser)
                 .and(UserBookSpecification.hasStatus(status))
-                .and(UserBookSpecification.hasTag(tag));
+                .and(UserBookSpecification.hasTag(tag))
+                .and(UserBookSpecification.hasIsFavorite(isFavorite));
 
         return userBookRepository.findAll(spec, pageable).map(this::map);
     }

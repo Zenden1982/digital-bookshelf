@@ -1,5 +1,3 @@
-// src/components/book/UserBookCard.jsx
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { shelfService } from "../../services/shelfService";
@@ -8,6 +6,8 @@ import TagManager from "./TagManager";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import FavoriteIcon from "@mui/icons-material/Favorite"; // Залитое сердце
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"; // Контур
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
@@ -44,12 +44,43 @@ const UserBookCard = ({ userBook, onUpdate }) => {
   const { book } = userBook;
 
   const [currentStatus, setCurrentStatus] = useState(userBook.status);
+
+  // --- ЛОГИКА СЕРДЕЧКА ---
+  // Проверяем оба варианта имени поля (isFavorite или favorite) для надежности
+  const [isFavorite, setIsFavorite] = useState(
+    userBook.isFavorite ?? userBook.favorite ?? false,
+  );
+
   const [currentTags, setCurrentTags] = useState(userBook.tags || []);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const coverUrl =
     book.coverUrl || "https://via.placeholder.com/300x450.png?text=Нет+обложки";
+
+  // Обработчик клика по сердечку (Toggle)
+  const handleFavoriteToggle = async (e) => {
+    e.stopPropagation(); // Не переходим на страницу книги
+
+    const newState = !isFavorite;
+
+    // 1. Оптимистичное обновление (сразу меняем цвет)
+    setIsFavorite(newState);
+
+    try {
+      // 2. Отправляем на сервер
+      await shelfService.updateMyUserBook(userBook.id, {
+        isFavorite: newState,
+      });
+
+      // Если родитель (Catalog) хочет обновить список (например, убрать книгу из фильтра "Любимые")
+      // можно вызвать onUpdate, но с небольшой задержкой, чтобы пользователь увидел анимацию
+      /* if (onUpdate && !newState) onUpdate(); */
+    } catch (error) {
+      console.error("Ошибка при обновлении избранного:", error);
+      setIsFavorite(!newState); // Откатываем назад при ошибке
+    }
+  };
 
   const handleStatusChange = async (newStatus) => {
     setIsLoading(true);
@@ -69,7 +100,7 @@ const UserBookCard = ({ userBook, onUpdate }) => {
     setIsMenuOpen(false);
     if (
       window.confirm(
-        `Вы уверены, что хотите удалить книгу "${book.title}" с полки?`
+        `Вы уверены, что хотите удалить книгу "${book.title}" с полки?`,
       )
     ) {
       setIsLoading(true);
@@ -84,9 +115,11 @@ const UserBookCard = ({ userBook, onUpdate }) => {
   };
 
   const handleCardClick = (e) => {
+    // Игнорируем клик, если нажали на интерактивные элементы
     if (
       e.target.closest(".card-menu-container") ||
       e.target.closest(".tag-manager") ||
+      e.target.closest(".favorite-btn") ||
       e.target.closest(".tags-container")
     ) {
       return;
@@ -110,6 +143,7 @@ const UserBookCard = ({ userBook, onUpdate }) => {
 
         <div className="cover-overlay"></div>
 
+        {/* Статус (слева сверху) */}
         <div
           className="status-badge"
           style={{ backgroundColor: statusMap[currentStatus]?.color }}
@@ -117,6 +151,15 @@ const UserBookCard = ({ userBook, onUpdate }) => {
           {statusMap[currentStatus]?.icon}
           <span>{statusMap[currentStatus]?.label}</span>
         </div>
+
+        {/* Кнопка "Любимое" (слева под статусом) */}
+        <button
+          className={`favorite-btn ${isFavorite ? "active" : ""}`}
+          onClick={handleFavoriteToggle}
+          title={isFavorite ? "Убрать из любимых" : "Добавить в любимые"}
+        >
+          {isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+        </button>
 
         {userBook.rating && (
           <div className="rating-badge">
@@ -158,6 +201,7 @@ const UserBookCard = ({ userBook, onUpdate }) => {
         />
       </div>
 
+      {/* Меню (справа сверху) */}
       <div className="card-menu-container">
         <button
           className="menu-toggle"
@@ -177,10 +221,10 @@ const UserBookCard = ({ userBook, onUpdate }) => {
               }}
             />
             <div className="status-menu" onClick={(e) => e.stopPropagation()}>
+              {/* ... (код меню без изменений) ... */}
               <div className="menu-header">
                 <p>Изменить статус</p>
               </div>
-
               <div className="menu-options">
                 {Object.entries(statusMap).map(
                   ([statusKey, { label, icon, color }]) => (
@@ -199,12 +243,10 @@ const UserBookCard = ({ userBook, onUpdate }) => {
                         <CheckCircleIcon className="check-icon" />
                       )}
                     </button>
-                  )
+                  ),
                 )}
               </div>
-
               <div className="menu-divider"></div>
-
               <div className="menu-actions">
                 <button
                   className="menu-action-button edit-button"

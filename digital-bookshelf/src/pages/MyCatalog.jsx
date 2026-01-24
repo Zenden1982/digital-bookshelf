@@ -4,6 +4,11 @@ import UserBookCard from "../components/book/UserBookCard";
 import Pagination from "../components/common/Pagination";
 import { shelfService } from "../services/shelfService";
 import { tagService } from "../services/tagService";
+
+// Иконки для сердечка
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+
 import "./MyCatalog.css";
 
 const STATUS_OPTIONS = [
@@ -28,13 +33,14 @@ const MyCatalog = () => {
     SORT_OPTIONS.find(
       (opt) =>
         opt.sort === searchParams.get("sort") &&
-        opt.direction === searchParams.get("direction")
+        opt.direction === searchParams.get("direction"),
     ) || SORT_OPTIONS[0];
 
   const [filters, setFilters] = useState({
     query: searchParams.get("query") || "",
     status: searchParams.getAll("status") || [],
     tag: searchParams.get("tag") || "",
+    isFavorite: searchParams.get("isFavorite") === "true", // Добавили фильтр по любимым
     sort: initialSortOption.sort,
     direction: initialSortOption.direction,
     page: parseInt(searchParams.get("page") || "0", 10),
@@ -54,13 +60,14 @@ const MyCatalog = () => {
       const params = new URLSearchParams();
       if (newFilters.query) params.set("query", newFilters.query);
       if (newFilters.tag) params.set("tag", newFilters.tag);
+      if (newFilters.isFavorite) params.set("isFavorite", "true"); // Сохраняем в URL
       if (newFilters.sort) params.set("sort", newFilters.sort);
       if (newFilters.direction) params.set("direction", newFilters.direction);
       params.set("page", newFilters.page ?? 0);
       newFilters.status.forEach((s) => params.append("status", s));
       setSearchParams(params);
     },
-    [setSearchParams]
+    [setSearchParams],
   );
 
   const fetchCatalogData = useCallback(() => {
@@ -93,6 +100,14 @@ const MyCatalog = () => {
     updateUrlParams(newFilters);
   };
 
+  // Обработчик нажатия на фильтр "Любимое"
+  const handleFavoriteToggle = () => {
+    const newFavorite = !filters.isFavorite;
+    const newFilters = { ...filters, isFavorite: newFavorite, page: 0 };
+    setFilters(newFilters);
+    updateUrlParams(newFilters);
+  };
+
   const handleSortChange = (e) => {
     const selectedLabel = e.target.value;
     const option = SORT_OPTIONS.find((opt) => opt.label === selectedLabel);
@@ -116,7 +131,7 @@ const MyCatalog = () => {
 
   const currentSortOptionLabel = (
     SORT_OPTIONS.find(
-      (opt) => opt.sort === filters.sort && opt.direction === filters.direction
+      (opt) => opt.sort === filters.sort && opt.direction === filters.direction,
     ) || SORT_OPTIONS[0]
   ).label;
 
@@ -140,6 +155,23 @@ const MyCatalog = () => {
         </div>
 
         <div className="secondary-filters">
+          {/* Кнопка фильтрации по Любимым */}
+          <button
+            className={`favorite-filter-btn ${
+              filters.favorite ? "active" : ""
+            }`}
+            onClick={handleFavoriteToggle}
+            title={filters.favorite ? "Показать все" : "Только любимые"}
+          >
+            {filters.favorite ? (
+              <FavoriteIcon fontSize="small" />
+            ) : (
+              <FavoriteBorderIcon fontSize="small" />
+            )}
+          </button>
+
+          <div className="divider-vertical" />
+
           {/* Фильтр по тегам */}
           <select
             className="tag-select"

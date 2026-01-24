@@ -50,10 +50,12 @@ public class UserBookController {
             @RequestParam(required = false) Status status,
             @RequestParam(required = false) String tag,
             @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "DESC") String direction) {
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) Boolean isFavorite) {
 
         String username = getCurrentUsername();
-        Page<UserBookReadDTO> shelf = userBookService.getMyShelf(username, page, size, status, tag, sort, direction);
+        Page<UserBookReadDTO> shelf = userBookService.getMyShelf(username, page, size, status, tag, sort, direction,
+                isFavorite);
         return ResponseEntity.ok(shelf);
     }
 

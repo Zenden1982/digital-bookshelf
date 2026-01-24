@@ -20,12 +20,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.diplom.diplom.Entity.Book;
-import com.diplom.diplom.Entity.DTO.BookReadDTO;
-import com.diplom.diplom.Entity.DTO.RecommendationMixRequestDTO;
-import com.diplom.diplom.Entity.DTO.RecommendationResultDTO;
 import com.diplom.diplom.Entity.Status;
 import com.diplom.diplom.Entity.User;
 import com.diplom.diplom.Entity.UserBook;
+import com.diplom.diplom.Entity.DTO.BookReadDTO;
+import com.diplom.diplom.Entity.DTO.RecommendationMixRequestDTO;
+import com.diplom.diplom.Entity.DTO.RecommendationResultDTO;
 import com.diplom.diplom.Exception.ResourceNotFoundException;
 import com.diplom.diplom.Repository.BookRepository;
 import com.diplom.diplom.Repository.TagRepository;
@@ -48,39 +48,109 @@ public class RecommendationService {
 
     /*
      * =============================================================================
-     * =====
-     * БЛОК 1: Контекстные рекомендации ("Потому что вам понравился X")
+     * БЛОК 1: Контекстные рекомендации (MULTI-ANCHOR DIVERSITY)
      * =============================================================================
-     * =====
      */
     public Page<RecommendationResultDTO> getRecommendationsBasedOnHistory(int page, int size) {
         User user = getCurrentUser();
-        // 1. Находим "якорь" — последнюю книгу, с которой было позитивное
-        // взаимодействие
-        Book anchorBook = findLastActiveBook(user);
 
-        if (anchorBook == null) {
-            // Холодный старт: если истории нет, возвращаем популярное или пустоту
+        // 1. Берем историю
+        List<UserBook> potentialAnchors = buildUserAnchors(user);
+
+        if (potentialAnchors == null || potentialAnchors.isEmpty()) {
             return Page.empty();
         }
 
-        log.info("[REC][History] Anchor book found: ID={} Title='{}'", anchorBook.getId(), anchorBook.getTitle());
+        // 2. Выбираем НЕСКОЛЬКО случайных якорей (например, до 3-х)
+        List<UserBook> modifiableAnchors = new ArrayList<>(potentialAnchors);
+        Collections.shuffle(modifiableAnchors);
+        // Берем первые 3 книги (или меньше, если всего книг мало)
+        int anchorsCount = Math.min(3, modifiableAnchors.size());
+        List<UserBook> selectedAnchors = modifiableAnchors.subList(0, anchorsCount);
 
-        // 2. Ищем похожие на этот якорь (TopK=50, Threshold=0.4 - достаточно близкие)
-        String queryText = buildItemToItemQueryText(anchorBook);
-        List<ScoredCandidate> candidates = vectorSearchCandidates(queryText, 50, 0.4, null);
+        log.info("[REC][History] Using {} anchors: {}", anchorsCount,
+                selectedAnchors.stream().map(ub -> ub.getBook().getTitle()).toList());
 
-        // 3. Фильтруем прочитанное
+        // 3. Собираем рекомендации для КАЖДОГО якоря
+        // Используем Map, чтобы исключить дубликаты (Key = BookId)
+        Map<Long, ScoredCandidate> uniqueCandidates = new java.util.HashMap<>();
+        // Также храним объяснение ("Похоже на X") для каждой книги
+        Map<Long, String> explanations = new java.util.HashMap<>();
+
+        // Набор ID книг, которые пользователь уже читал (для фильтрации)
         Set<Long> ownedIds = userBookRepository.findAllBookIdsByUserId(user.getId());
-        ownedIds.add(anchorBook.getId());
 
-        List<ScoredCandidate> filtered = candidates.stream()
-                .filter(c -> !ownedIds.contains(c.bookId))
-                .toList();
+        for (UserBook anchorUserBook : selectedAnchors) {
+            Book anchor = anchorUserBook.getBook();
 
-        // 4. Маппинг в результат с объяснением
-        return mapToResultPage(filtered, List.of(), List.of(anchorBook), List.of(), page, size,
-                "Потому что вам понравился \"" + anchorBook.getTitle() + "\"");
+            // Запрос вектора для текущего якоря
+            String queryText = buildItemToItemQueryText(anchor);
+            // Ищем чуть меньше кандидатов на каждый якорь, чтобы не спамить
+            List<ScoredCandidate> candidates = vectorSearchCandidates(queryText, 20, 0.25, null);
+
+            for (ScoredCandidate c : candidates) {
+                // Фильтр: не своя, не прочитанная
+                if (ownedIds.contains(c.bookId) || c.bookId.equals(anchor.getId())) {
+                    continue;
+                }
+
+                // Добавляем или обновляем (если уже есть, можно повысить скор, но пока просто
+                // оставляем макс)
+                if (!uniqueCandidates.containsKey(c.bookId)
+                        || uniqueCandidates.get(c.bookId).similarity < c.similarity) {
+                    uniqueCandidates.put(c.bookId, c);
+                    // Запоминаем, почему мы это рекомендуем
+                    explanations.put(c.bookId, "Похоже на \"" + anchor.getTitle() + "\"");
+                }
+            }
+        }
+
+        // 4. Превращаем Map в List и сортируем
+        List<ScoredCandidate> finalCandidates = new ArrayList<>(uniqueCandidates.values());
+
+        // Опция А: Сортировка по Score (самые похожие сверху)
+        finalCandidates.sort(Comparator.comparingDouble((ScoredCandidate c) -> c.similarity).reversed());
+
+        // Опция Б: Shuffle (для максимального разнообразия, чтобы книги от разных
+        // якорей перемешались)
+        // Collections.shuffle(finalCandidates); // Раскомментируй, если хочешь полный
+        // микс
+
+        // 5. Пагинация и Маппинг
+        int from = Math.min(page * size, finalCandidates.size());
+        int to = Math.min(from + size, finalCandidates.size());
+        List<ScoredCandidate> pageCandidates = finalCandidates.subList(from, to);
+
+        // Загружаем книги из БД
+        List<Long> ids = pageCandidates.stream().map(c -> c.bookId).toList();
+        Map<Long, Book> booksMap = bookRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(Book::getId, b -> b));
+
+        List<RecommendationResultDTO> content = new ArrayList<>();
+
+        for (ScoredCandidate c : pageCandidates) {
+            Book b = booksMap.get(c.bookId);
+            if (b == null)
+                continue;
+
+            BookReadDTO bookDto = BookReadDTO.toDTO(b);
+            if (bookDto != null) {
+                bookDto.setIsAdded(false);
+                bookDto.setAddedAt(null);
+            }
+
+            // Берем объяснение, которое сохранили ранее
+            String explanationText = explanations.getOrDefault(c.bookId, "Рекомендовано вам");
+
+            content.add(RecommendationResultDTO.builder()
+                    .book(bookDto)
+                    .similarity(c.similarity)
+                    .score(c.similarity)
+                    .explanation(explanationText)
+                    .build());
+        }
+
+        return new PageImpl<>(content, PageRequest.of(page, size), finalCandidates.size());
     }
 
     /*
@@ -176,7 +246,7 @@ public class RecommendationService {
         // Чтобы работала пред-фильтрация, pageCount и publishedDate должны быть
         // сохранены в metadata документа при ETL.
 
-        List<ScoredCandidate> candidates = vectorSearchCandidates(queryText, 100, 0.4, null); // Берем с запасом
+        List<ScoredCandidate> candidates = vectorSearchCandidates(queryText, 100, 0.3, null); // Берем с запасом
 
         Set<Long> ownedIds = userBookRepository.findAllBookIdsByUserId(user.getId());
         List<ScoredCandidate> filtered = new ArrayList<>();
@@ -298,7 +368,7 @@ public class RecommendationService {
                 .filter(ub -> Boolean.TRUE.equals(ub.getIsFavorite())
                         || (ub.getStatus() == Status.FINISHED && ub.getRating() != null && ub.getRating() >= 4))
                 .sorted(Comparator.comparing(UserBook::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
-                .limit(5)
+                .limit(10)
                 .toList();
     }
 

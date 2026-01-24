@@ -13,6 +13,6 @@ public class UserBookUpdateDTO {
 
     private Status status;
     private Integer rating;
-
+    private Boolean isFavorite;
     private Integer currentPage;
 }

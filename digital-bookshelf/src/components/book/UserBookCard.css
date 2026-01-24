@@ -448,3 +448,32 @@
 .user-book-card {
   animation: cardAppear 0.3s ease-out;
 }
+
+.favorite-btn {
+  position: absolute;
+  top: 50px; /* Сдвигаем вниз под бейдж статуса (он ~36px высотой + отступ) */
+  left: 12px;
+  background: rgba(0, 0, 0, 0.3); /* Темный фон для контраста */
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  color: #fff;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+.favorite-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+  transform: scale(1.1);
+}
+
+.favorite-btn.active {
+  color: #ff4757;
+  background: rgba(255, 255, 255, 0.9);
+}

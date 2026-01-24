@@ -174,17 +174,11 @@ const Home = () => {
         {hoveredBook && (
           <motion.div
             className="fixed-book-panel"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+            initial={{ y: 50, opacity: 0, x: "-50%" }} // x: "-50%" важно для центрирования
+            animate={{ y: 0, opacity: 1, x: "-50%" }}
+            exit={{ y: 50, opacity: 0, x: "-50%" }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            style={{
-              position: "fixed",
-              bottom: "24px",
-              left: "50%",
-              translateX: "-50%",
-              zIndex: 9999,
-            }}
+            // Убираем style={{...}}, так как все перенесли в CSS и motion props
           >
             <div className="panel-content">
               <div className="panel-info">
