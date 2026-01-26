@@ -328,7 +328,7 @@ const BookDetailPage = () => {
                 {userBook.progress > 0 && (
                   <div className="progress-section">
                     <div className="progress-header">
-                      <span>Прогресс</span>
+                      <span>Прогресс чтения</span>
                       <span className="progress-percent">
                         {userBook.progress}%
                       </span>
@@ -339,9 +339,29 @@ const BookDetailPage = () => {
                         style={{ width: `${userBook.progress}%` }}
                       />
                     </div>
-                    {userBook.currentPage && userBook.totalPages && (
-                      <p className="progress-pages">
-                        {userBook.currentPage} из {userBook.totalPages} стр.
+
+                    {userBook.status === "READING" && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#7f8c8d",
+                          marginTop: "8px",
+                          textAlign: "right",
+                        }}
+                      >
+                        В процессе чтения
+                      </p>
+                    )}
+                    {userBook.status === "FINISHED" && (
+                      <p
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "#27ae60",
+                          marginTop: "8px",
+                          textAlign: "right",
+                        }}
+                      >
+                        Завершено
                       </p>
                     )}
                   </div>

@@ -39,7 +39,8 @@ const FileUploadModal = ({ bookId, userBookId, onClose, onSuccess }) => {
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Ошибка загрузки. Убедитесь, что файл текстовый (UTF-8).");
+      // Обновлен текст ошибки
+      setError("Ошибка загрузки. Убедитесь, что формат файла поддерживается.");
     } finally {
       setLoading(false);
     }
@@ -56,15 +57,17 @@ const FileUploadModal = ({ bookId, userBookId, onClose, onSuccess }) => {
         </div>
 
         <div className="modal-body">
+          {/* Обновлена подсказка */}
           <p className="upload-hint">
-            Поддерживаются файлы .txt (UTF-8).
+            Поддерживаются файлы: <b>.txt, .fb2, .epub</b>.
             {userBookId && " Книга будет сохранена как ваша личная копия."}
           </p>
 
           <label className={`file-drop-area ${file ? "has-file" : ""}`}>
             <input
               type="file"
-              accept=".txt"
+              // Добавлены новые расширения и MIME-типы
+              accept=".txt, .fb2, .epub, application/epub+zip, text/xml"
               onChange={handleFileChange}
               hidden
             />

@@ -1,0 +1,272 @@
+.reading-map-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f5f1e8;
+}
+
+.map-loader {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f1e8;
+  gap: 24px;
+}
+
+.map-loader-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e8e8e8;
+  border-top-color: #8b4513;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.map-loader h2 {
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  color: #546e7a;
+  font-weight: 500;
+  margin: 0;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* UI поверх канваса */
+.map-ui-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e0d8c8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 320px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.map-ui-overlay:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.map-ui-overlay h1 {
+  font-family: "Playfair Display", serif;
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  color: #2c3e50;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.map-ui-overlay p {
+  font-size: 14px;
+  color: #546e7a;
+  margin-bottom: 16px;
+  line-height: 1.5;
+  font-family: "Inter", sans-serif;
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-family: "Inter", sans-serif;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 10px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dot.finished {
+  background-color: #2ecc71;
+}
+.dot.reading {
+  background-color: #e67e22;
+}
+.dot.planned {
+  background-color: #3498db;
+}
+
+.hint {
+  font-size: 12px !important;
+  color: #8b4513 !important;
+  margin-bottom: 0 !important;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Кнопки управления */
+.map-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid #e0d8c8;
+  background: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  color: #8b4513;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Inter", sans-serif;
+  backdrop-filter: blur(4px);
+}
+
+.map-control-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.2);
+  background: rgba(255, 255, 255, 1);
+}
+
+.map-control-btn:active {
+  transform: scale(0.98);
+}
+
+.map-control-btn.reset {
+  font-size: 16px;
+}
+
+/* Индикатор зума */
+.zoom-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0d8c8;
+  font-size: 12px;
+  font-family: "Inter", sans-serif;
+  color: #546e7a;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(4px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .map-ui-overlay {
+    max-width: 280px;
+    padding: 20px;
+    top: 16px;
+    left: 16px;
+  }
+
+  .map-ui-overlay h1 {
+    font-size: 24px;
+  }
+
+  .map-ui-overlay p {
+    font-size: 13px;
+  }
+
+  .legend-item {
+    font-size: 12px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .map-controls {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .map-control-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .zoom-indicator {
+    top: 16px;
+    right: 16px;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-ui-overlay {
+    max-width: calc(100vw - 32px);
+    padding: 16px;
+  }
+
+  .map-ui-overlay h1 {
+    font-size: 20px;
+  }
+
+  .map-ui-overlay p {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .legend {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .map-control-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+}
+
+/* Tooltip для узлов (опционально) */
+.node-tooltip {
+  position: absolute;
+  background: rgba(44, 62, 80, 0.95);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: "Inter", sans-serif;
+  pointer-events: none;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

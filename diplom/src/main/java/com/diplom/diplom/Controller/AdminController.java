@@ -1,7 +1,6 @@
 package com.diplom.diplom.Controller;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.diplom.diplom.Entity.DTO.BookCreateUpdateDTO;
 import com.diplom.diplom.Entity.DTO.BookReadDTO;
 import com.diplom.diplom.Service.BookService;
+import com.diplom.diplom.Service.FileParserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class AdminController {
 
     private final BookService bookService;
+    private final FileParserService fileParserService; // <-- Добавили
 
     @PostMapping("/regenerate-embeddings")
     public ResponseEntity<String> regenerateEmbeddings() {
@@ -47,20 +48,26 @@ public class AdminController {
     }
 
     @PostMapping(value = "/books/{bookId}/content", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    // @PreAuthorize("hasRole('ADMIN')") // Раскомментируй, если настроен Security
     public ResponseEntity<String> uploadBookContentAdmin(
             @PathVariable Long bookId,
             @RequestPart("file") MultipartFile file) {
 
         try {
-            String contentText = new String(file.getBytes(), StandardCharsets.UTF_8);
+            // ВМЕСТО: String contentText = new String(file.getBytes(), ...);
+            // ПИШЕМ:
+            String contentText = fileParserService.parseContent(file);
+
+            if (contentText.isEmpty()) {
+                return ResponseEntity.badRequest().body("Не удалось извлечь текст из файла.");
+            }
 
             bookService.uploadContentAsAdmin(bookId, contentText);
+            return ResponseEntity.ok("Текст успешно сохранен (распознано символов: " + contentText.length() + ")");
 
-            return ResponseEntity.ok("Текст успешно сохранен для книги ID " + bookId);
-
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body("Ошибка чтения файла");
+            return ResponseEntity.internalServerError().body("Ошибка обработки файла: " + e.getMessage());
         }
     }
 }
