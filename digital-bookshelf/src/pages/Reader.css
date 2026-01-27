@@ -1,9 +1,11 @@
-/* src/pages/Reader.css */
-
+/* =========================
+   Global & Layout
+========================= */
 .reader-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* Поддержка мобильных браузеров */
   overflow: hidden;
   background-color: var(--bg-color);
   color: var(--text-color);
@@ -12,27 +14,46 @@
     color 0.3s;
 }
 
-/* ===== ТЕМЫ ===== */
+/* Сброс box-sizing для всех элементов внутри читалки */
+.reader-container * {
+  box-sizing: border-box;
+}
+
+/* =========================
+   Themes
+========================= */
 .theme-light {
   --bg-color: #ffffff;
   --text-color: #2c3e50;
   --header-border: rgba(0, 0, 0, 0.1);
+  --paper-bg: rgba(0, 0, 0, 0.02);
+  --paper-border: rgba(0, 0, 0, 0.08);
 }
+
 .theme-sepia {
   --bg-color: #f4ecd8;
   --text-color: #5b4636;
   --header-border: rgba(91, 70, 54, 0.2);
+  --paper-bg: rgba(255, 255, 255, 0.35);
+  --paper-border: rgba(91, 70, 54, 0.18);
 }
+
 .theme-dark {
   --bg-color: #1a1a1a;
   --text-color: #cccccc;
   --header-border: rgba(255, 255, 255, 0.1);
+  --paper-bg: rgba(255, 255, 255, 0.04);
+  --paper-border: rgba(255, 255, 255, 0.1);
 }
 
-/* ===== HEADER & FOOTER ===== */
+/* =========================
+   Header & Footer
+========================= */
 .reader-header,
 .reader-footer {
-  padding: 10px 20px;
+  flex-shrink: 0; /* Не сжимать хедер и футер */
+  height: 60px;
+  padding: 0 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -57,6 +78,13 @@
   white-space: nowrap;
 }
 
+.reader-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Buttons */
 .icon-btn {
   background: none;
   border: none;
@@ -64,11 +92,16 @@
   color: inherit;
   padding: 8px;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .icon-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(127, 127, 127, 0.15);
 }
 
 .icon-btn:disabled {
@@ -76,42 +109,213 @@
   cursor: not-allowed;
 }
 
-.theme-dark .icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+/* =========================
+   Viewport (Main Area)
+========================= */
+.reader-viewport {
+  flex: 1; /* Занимает все оставшееся место */
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Отступ самой "бумаги" от краев экрана */
+  padding: 20px 0;
 }
 
-.icon-btn .MuiSvgIcon-root {
-  font-size: 24px;
+/* Ограничиваем "бумагу" на десктопе */
+.reader-page {
+  /* Максимальная ширина текста */
+  width: 100%;
+  max-width: 900px;
+
+  /* Высота на всю доступную область вьюпорта */
+  height: 100%;
+
+  position: relative;
+  overflow: hidden; /* Скрываем вылезающий текст */
+
+  /* Визуализация "листа" */
+  background: var(--paper-bg);
+  border: 1px solid var(--paper-border);
+  border-radius: 8px;
+
+  /* Внутренние отступы текста от границ "листа" */
+  /* Важно: JS берет ширину контента без учета этих паддингов */
+  padding: 20px 40px;
 }
 
-/* ===== ПАНЕЛЬ НАСТРОЕК ===== */
+/* На мобильных убираем "бумагу" и паддинги, чтобы влезло больше текста */
+@media (max-width: 600px) {
+  .reader-viewport {
+    padding: 0;
+  }
+  .reader-page {
+    border: none;
+    border-radius: 0;
+    padding: 10px 15px; /* Минимальные отступы для телефона */
+  }
+}
+
+/* =========================
+   Content (Columns)
+   FIX FOR DRIFTING
+========================= */
+.reader-content.reader-content-paged {
+  width: 100%;
+  height: 100%;
+
+  column-fill: auto;
+
+  /* ГЛАВНОЕ ИЗМЕНЕНИЕ: */
+  /* Ставим hidden. Это физически убирает возможность браузера 
+     скроллить при выделении текста. */
+  overflow-x: hidden;
+  overflow-y: hidden;
+
+  text-align: justify;
+}
+
+/* =========================
+   Typography & Elements
+========================= */
+.reader-content p {
+  margin-bottom: 0.5em;
+  text-indent: 1.5em;
+  line-height: 1.6;
+  widows: 2;
+  orphans: 2;
+}
+
+/* Заголовки */
+.reader-content h1,
+.reader-content h2,
+.reader-content h3,
+.fb2-title,
+.fb2-subtitle {
+  text-align: center;
+  font-weight: bold;
+  margin: 1.5em 0 1em;
+
+  /* Запрет разрыва заголовка между колонками */
+  break-inside: avoid;
+  page-break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+
+  /* Запрет отрыва заголовка от следующего текста */
+  break-after: avoid;
+}
+
+.fb2-title {
+  font-size: 1.5em;
+  width: 100%;
+}
+.fb2-subtitle {
+  font-size: 1.2em;
+}
+
+/* Картинки */
+.reader-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1em auto;
+  break-inside: avoid; /* Не рвать картинки */
+}
+
+/* Цитаты и эпиграфы */
+.fb2-epigraph,
+.fb2-cite {
+  margin: 1.5em 0;
+  padding-left: 2em;
+  font-style: italic;
+  border-left: 3px solid currentColor;
+  opacity: 0.85;
+  break-inside: avoid;
+}
+
+.fb2-text-author {
+  text-align: right;
+  font-style: italic;
+  margin-top: 0.5em;
+}
+
+.empty-line {
+  height: 1em;
+}
+
+/* =========================
+   Selection Popover (AI)
+========================= */
+.selection-ai-popover {
+  position: fixed; /* Используем fixed, т.к. координаты считаем относительно окна */
+  transform: translate(-50%, -100%);
+  z-index: 9999;
+
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+
+  border-radius: 12px;
+  background: rgba(30, 30, 35, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.sel-ai-btn {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sel-ai-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.sel-ai-btn.primary {
+  background: #d4af37; /* Gold/Classic accent */
+  color: #1a1a1a;
+}
+.sel-ai-btn.primary:hover {
+  background: #e5c150;
+}
+
+/* =========================
+   Settings Panel
+========================= */
 .settings-panel {
   position: absolute;
-  top: 64px;
-  right: 1rem;
-  width: 320px;
-  max-height: calc(100vh - 144px);
-  background: #ffffff;
+  top: 65px;
+  right: 15px;
+  width: 300px;
+  background: var(--bg-color);
+  border: 1px solid var(--header-border);
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  z-index: 90;
-  overflow-y: auto;
-  animation: slideDown 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+  padding: 10px 0;
+  animation: fadeSlideIn 0.2s ease-out;
 }
 
-.theme-dark .settings-panel {
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-}
-
-.theme-sepia .settings-panel {
-  background: #fff9e6;
-}
-
-@keyframes slideDown {
+@keyframes fadeSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -120,576 +324,172 @@
 }
 
 .settings-section {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--header-border);
 }
-
-.theme-dark .settings-section {
-  border-bottom-color: #3a3a3a;
-}
-
 .settings-section:last-child {
   border-bottom: none;
 }
 
 .settings-section h3 {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #546e7a;
+  margin: 0 0 10px 0;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 1rem 0;
+  opacity: 0.7;
 }
 
-.theme-dark .settings-section h3 {
-  color: #b0b0b0;
-}
-
-/* Размер шрифта */
-.font-size-controls {
+.font-size-controls,
+.theme-controls {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 8px;
+}
+.theme-controls {
+  flex-direction: column;
 }
 
 .font-size-controls button {
   flex: 1;
-  padding: 0.75rem;
-  background: #f5f1e8;
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1rem;
+  padding: 6px;
+  border: 1px solid var(--header-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #2c3e50;
 }
-
-.font-size-controls button:hover:not(:disabled) {
-  background: #8b4513;
-  border-color: #8b4513;
-  color: #ffffff;
-}
-
-.font-size-controls button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
 .font-size-controls span {
-  font-weight: 600;
-  color: #546e7a;
-  min-width: 50px;
-  text-align: center;
-}
-
-/* Темы */
-.theme-controls {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  font-weight: bold;
 }
 
-.theme-controls button {
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  padding: 0.875rem 1rem;
-  background: #f5f1e8;
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: #2c3e50;
   text-align: left;
 }
-
-.theme-controls button:hover {
-  border-color: #8b4513;
-  transform: translateX(4px);
+.theme-btn:hover {
+  background: rgba(127, 127, 127, 0.1);
 }
-
-.theme-controls button.active {
-  background: #8b4513;
-  border-color: #8b4513;
-  color: #ffffff;
-}
-
-/* ===== ОБЛАСТЬ ЧТЕНИЯ ===== */
-.reader-viewport {
-  flex: 1; /* Занимает всё свободное место между хедером и футером */
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-
-  /* Центрирование */
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-
-  /* Отступ только для контента, через padding самого viewport */
-  padding: 20px 0;
-  box-sizing: border-box; /* Важно: чтобы padding не увеличивал высоту */
-
-  background-color: var(--bg-color);
-  z-index: 1; /* Контент ниже интерфейса */
-}
-
-.reader-content {
-  /* ВАЖНО: Высота 100% от родителя (.reader-viewport). 
-     Родитель уже ограничен флексом (flex: 1), поэтому текст 
-     никогда не залезет под футер. */
-  height: 100%;
-
-  /* Ширина и колонки */
-  width: 100%;
-  max-width: 900px;
-
-  column-fill: auto;
-  column-gap: 60px;
-  column-count: 1;
-
-  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-  will-change: transform;
-
-  /* Внутренние отступы */
-  padding: 0 20px;
-  box-sizing: border-box;
-
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-/* На мобильных убираем ограничение ширины, чтобы использовать все место */
-@media (max-width: 768px) {
-  .reader-content {
-    max-width: 100%;
-    padding: 0 15px;
-  }
-}
-
-/* Исправления для заголовков, чтобы они не разрывались */
-.reader-content h1,
-.reader-content h2,
-.reader-content h3,
-.fb2-title,
-.fb2-subtitle {
-  break-inside: avoid;
-  page-break-inside: avoid;
-  -webkit-column-break-inside: avoid;
-}
-
-/* ===== СТИЛИ FB2 КОНТЕНТА ===== */
-
-/* Параграфы */
-.reader-content p,
-.fb2-content p {
-  margin-bottom: 0.5em;
-  text-indent: 1.5em;
-  text-align: justify;
-  line-height: 1.7;
-  orphans: 2;
-  widows: 2;
-}
-
-/* Заголовки */
-.fb2-title {
-  font-size: 1.5em;
+.theme-btn.active {
+  background: rgba(127, 127, 127, 0.15);
+  border-color: var(--header-border);
   font-weight: bold;
-  margin: 2em 0 1em;
-  text-align: center;
-  break-inside: avoid;
-  page-break-inside: avoid;
-  width: 100%;
 }
 
-.fb2-title p {
-  margin: 0;
-  padding: 0;
-  text-indent: 0;
-  font-size: inherit;
-  font-weight: inherit;
-  text-align: center;
-}
-
-.fb2-subtitle {
-  font-size: 1.2em;
-  font-weight: bold;
-  margin: 1.5em 0 1em;
-  text-align: center;
-  break-inside: avoid;
-}
-
-.reader-content h1,
-.reader-content h2,
-.reader-content h3 {
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-  font-weight: bold;
-  break-after: avoid;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
-.reader-content h1 {
-  font-size: 1.5em;
-  text-align: center;
-}
-
-.reader-content h2 {
-  font-size: 1.3em;
-  text-align: center;
-}
-
-.reader-content h3 {
-  font-size: 1.1em;
-}
-
-/* Вложенные P в заголовках */
-.reader-content h2 p,
-.reader-content h3 p {
-  margin: 0;
-  padding: 0;
-  text-indent: 0;
-  font-size: inherit;
-  font-weight: inherit;
-  text-align: inherit;
-}
-
-/* Разделы */
-.fb2-section {
-  margin-bottom: 2em;
-}
-
-/* Эпиграфы и цитаты */
-.fb2-epigraph {
-  margin: 2em 0;
-  padding-left: 2em;
-  font-style: italic;
-  border-left: 3px solid currentColor;
-  opacity: 0.8;
-}
-
-.fb2-cite {
-  margin: 1.5em 0;
-  padding-left: 2em;
-  border-left: 3px solid currentColor;
-  opacity: 0.8;
-}
-
-.fb2-text-author {
-  text-align: right;
-  font-style: italic;
-  margin-top: 0.5em;
-  text-indent: 0;
-}
-
-.empty-line {
-  height: 1em;
-}
-
-/* Форматирование текста */
-.reader-content em,
-.fb2-content em {
-  font-style: italic;
-}
-
-.reader-content strong,
-.fb2-content strong,
-.reader-content b {
-  font-weight: 700;
-}
-
-.reader-content i {
-  font-style: italic;
-}
-
-/* ===== ФУТЕР И НАВИГАЦИЯ ===== */
+/* =========================
+   Navigation & Progress
+========================= */
 .page-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 180px;
+  min-width: 140px;
 }
 
 .page-numbers {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-color);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 6px;
 }
 
 .progress-bar-mini {
   width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+  height: 4px;
+  background: rgba(127, 127, 127, 0.2);
+  border-radius: 2px;
   overflow: hidden;
-}
-
-.theme-dark .progress-bar-mini {
-  background: rgba(255, 255, 255, 0.1);
 }
 
 .progress-fill-mini {
   height: 100%;
-  background: linear-gradient(90deg, #27ae60 0%, #d4af37 100%);
-  border-radius: 3px;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #d4af37;
+  transition: width 0.3s ease;
 }
 
 .nav-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: rgba(0, 0, 0, 0.05);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--header-border);
+}
+.nav-btn:hover {
+  background-color: var(--text-color);
+  color: var(--bg-color);
 }
 
-.theme-dark .nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: #8b4513;
-  color: #ffffff;
-  transform: scale(1.1);
-}
-
-.nav-btn:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-
-/* ===== EMPTY STATE ===== */
+/* =========================
+   Empty State / Loading
+========================= */
+.reader-loading,
 .reader-empty-state {
-  flex: 1;
   display: flex;
-  justify-content: center;
+  flex: 1;
   align-items: center;
-  padding: 2rem;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .empty-message-box {
-  background: #ffffff;
-  padding: 3rem;
-  border-radius: 16px;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-}
-
-.theme-dark .empty-message-box {
-  background: #2a2a2a;
-}
-
-.theme-sepia .empty-message-box {
-  background: #fff9e6;
-}
-
-.empty-message-box h2 {
-  font-size: 1.75rem;
-  color: var(--text-color);
-  margin: 1rem 0;
-}
-
-.empty-message-box > p {
-  color: #546e7a;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  padding: 40px;
+  max-width: 400px;
 }
 
 .btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  background: #8b4513;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(139, 69, 19, 0.3);
-}
-
-.btn-primary:hover {
-  background: #6b3410;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(139, 69, 19, 0.4);
-}
-
-/* ===== LOADING STATE ===== */
-.reader-loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-size: 1.2rem;
-  color: #546e7a;
-}
-
-/* ===== SCROLLBAR (для панели настроек) ===== */
-.settings-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.settings-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.settings-panel::-webkit-scrollbar-thumb {
+  margin-top: 20px;
+  padding: 10px 20px;
   background: #d4af37;
-  border-radius: 4px;
+  border: none;
+  color: #1a1a1a;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: #c4a030;
 }
 
-.settings-panel::-webkit-scrollbar-thumb:hover {
-  background: #c4a037;
-}
+/* =========================
+   Responsive Adjustments
+========================= */
+@media (max-width: 480px) {
+  .sel-ai-btn span {
+    display: none;
+  } /* Скрываем текст в кнопках AI */
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .reader-header {
-    padding: 0.5rem 1rem;
+  .reader-header,
+  .reader-footer {
+    padding: 0 10px;
+    height: 50px;
   }
 
   .reader-title {
-    font-size: 1rem;
-    max-width: 200px;
-  }
-
-  .icon-btn .MuiSvgIcon-root {
-    font-size: 20px;
-  }
-
-  .settings-panel {
-    width: calc(100vw - 2rem);
-    right: 1rem;
-    left: 1rem;
-  }
-
-  .reader-content {
-    padding: 0 1rem;
-  }
-
-  .reader-footer {
-    padding: 0.5rem 1rem;
-    gap: 1rem;
+    max-width: 180px;
+    font-size: 0.95rem;
   }
 
   .page-info {
-    min-width: 120px;
+    min-width: 100px;
   }
-
-  .page-numbers {
-    font-size: 0.875rem;
-  }
-
   .nav-btn {
-    width: 40px;
-    height: 40px;
-  }
-}
-
-@media (max-width: 480px) {
-  .reader-title {
-    font-size: 0.9rem;
-    max-width: 150px;
+    width: 36px;
+    height: 36px;
   }
 
-  .empty-message-box {
-    padding: 2rem 1.5rem;
-  }
-
-  .empty-message-box h2 {
-    font-size: 1.5rem;
-  }
-}
-.theme-controls .theme-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.reader-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.reader-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.theme-controls .theme-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* popover возле выделения */
-.selection-ai-popover {
-  position: fixed; /* важно: координаты из getBoundingClientRect */
-  transform: translate(-50%, -100%);
-  z-index: 9999;
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 14px;
-  background: rgba(30, 30, 35, 0.92);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  pointer-events: auto;
-}
-
-.sel-ai-btn {
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  padding: 8px 10px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease;
-}
-
-.sel-ai-btn:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.sel-ai-btn.primary {
-  background: rgba(139, 69, 19, 0.9);
-}
-.sel-ai-btn.primary:hover {
-  background: rgba(139, 69, 19, 1);
-}
-
-@media (max-width: 480px) {
-  .selection-ai-popover {
-    gap: 6px;
-    padding: 6px;
-    border-radius: 12px;
-  }
-  .sel-ai-btn span {
-    display: none; /* на очень маленьком экране оставим только иконки */
+  /* На мобильных заголовки поменьше */
+  .fb2-title {
+    font-size: 1.3em;
+    margin-top: 1em;
   }
 }

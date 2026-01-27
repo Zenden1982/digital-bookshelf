@@ -1,6 +1,3 @@
-// src/components/shelf/BookSpine.jsx
-
-import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Bookshelf.css";
@@ -17,16 +14,6 @@ const SPINE_COLORS = [
   "#B03A2E",
   "#117864",
 ];
-
-const bookVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 300, damping: 20 },
-  },
-};
 
 function getColorIndex(bookId) {
   if (!bookId) return 0;
@@ -58,27 +45,12 @@ const BookSpine = ({ book, onHover, onLeave }) => {
 
   const style = useMemo(() => {
     const width = calculateWidth(pageCount);
-
-    let backgroundColor;
-    if (semanticColor) {
-      backgroundColor = semanticColor;
-    } else {
-      const colorIndex = getColorIndex(bookId);
-      backgroundColor = SPINE_COLORS[colorIndex];
-    }
+    let backgroundColor = semanticColor || SPINE_COLORS[getColorIndex(bookId)];
 
     const backgroundStyle = coverUrl
       ? {
           backgroundImage: `
-            linear-gradient(
-              to right, 
-              rgba(0,0,0,0.4) 0%, 
-              rgba(0,0,0,0.1) 8%, 
-              rgba(0,0,0,0) 15%,
-              rgba(0,0,0,0) 85%,
-              rgba(0,0,0,0.1) 92%,
-              rgba(0,0,0,0.4) 100%
-            ),
+            linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 15%, rgba(0,0,0,0) 85%, rgba(0,0,0,0.4) 100%),
             url(${coverUrl})
           `,
           backgroundPosition: "center center",
@@ -95,28 +67,22 @@ const BookSpine = ({ book, onHover, onLeave }) => {
   }, [bookId, pageCount, semanticColor, coverUrl]);
 
   const handleClick = (e) => {
-    e.stopPropagation();
+    // ВАЖНО: При клике мы переходим, но DnD блокирует клик при перетаскивании.
+    // Это стандартное поведение, все ок.
     if (bookId) {
       navigate(`/book/${bookId}`);
     }
   };
 
   return (
-    <motion.div
+    <div
       className="book-spine"
       style={style}
       onClick={handleClick}
       onMouseEnter={() => onHover && onHover(book)}
       onMouseLeave={onLeave}
-      variants={bookVariants}
-      whileHover={{
-        y: -12,
-        zIndex: 100,
-        transition: { type: "spring", stiffness: 400, damping: 15 },
-      }}
     >
       <div className="spine-highlight" />
-
       {status === "READING" && progress > 0 && (
         <div className="spine-progress-track">
           <div
@@ -125,7 +91,7 @@ const BookSpine = ({ book, onHover, onLeave }) => {
           />
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
