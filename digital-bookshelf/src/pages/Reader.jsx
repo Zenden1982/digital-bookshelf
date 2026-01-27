@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+
 import FileUploadModal from "../components/common/FileUploadModal";
+import ReaderAiDrawer from "../components/reader/ReaderAiDrawer";
+
 import { bookService } from "../services/bookService";
 import { shelfService } from "../services/shelfService";
 
@@ -8,9 +11,19 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
+
+import PsychologyIcon from "@mui/icons-material/Psychology";
+import SummarizeIcon from "@mui/icons-material/Summarize";
+import TranslateIcon from "@mui/icons-material/Translate";
+
 import "./Reader.css";
 
-// ===== FB2 PARSER (Без изменений) =====
+// ===== FB2 PARSER (без изменений) =====
 const parseFB2ToHTML = (fb2Content) => {
   try {
     const parser = new DOMParser();
@@ -26,10 +39,37 @@ const parseFB2ToHTML = (fb2Content) => {
     const body = xmlDoc.querySelector("body");
     if (!body) return null;
 
+    const escapeHtml = (text) => {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    };
+
+    const processInlineElements = (node) => {
+      let result = "";
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === 3) {
+          result += escapeHtml(child.textContent);
+        } else if (child.nodeType === 1) {
+          switch (child.nodeName) {
+            case "emphasis":
+              result += `<em>${escapeHtml(child.textContent)}</em>`;
+              break;
+            case "strong":
+              result += `<strong>${escapeHtml(child.textContent)}</strong>`;
+              break;
+            default:
+              result += escapeHtml(child.textContent);
+          }
+        }
+      });
+      return result;
+    };
+
     const processNode = (node) => {
       let result = "";
       switch (node.nodeName) {
-        case "title":
+        case "title": {
           const titleParagraphs = node.querySelectorAll("p");
           if (titleParagraphs.length > 0) {
             result += '<h2 class="fb2-title">';
@@ -39,15 +79,15 @@ const parseFB2ToHTML = (fb2Content) => {
             result += "</h2>";
           }
           break;
+        }
         case "subtitle":
           result += `<h3 class="fb2-subtitle">${escapeHtml(node.textContent)}</h3>`;
           break;
-        case "p":
+        case "p": {
           const text = node.textContent.trim();
-          if (text) {
-            result += `<p>${processInlineElements(node)}</p>`;
-          }
+          if (text) result += `<p>${processInlineElements(node)}</p>`;
           break;
+        }
         case "empty-line":
           result += '<div class="empty-line"></div>';
           break;
@@ -79,33 +119,6 @@ const parseFB2ToHTML = (fb2Content) => {
       return result;
     };
 
-    const processInlineElements = (node) => {
-      let result = "";
-      node.childNodes.forEach((child) => {
-        if (child.nodeType === 3) {
-          result += escapeHtml(child.textContent);
-        } else if (child.nodeType === 1) {
-          switch (child.nodeName) {
-            case "emphasis":
-              result += `<em>${escapeHtml(child.textContent)}</em>`;
-              break;
-            case "strong":
-              result += `<strong>${escapeHtml(child.textContent)}</strong>`;
-              break;
-            default:
-              result += escapeHtml(child.textContent);
-          }
-        }
-      });
-      return result;
-    };
-
-    const escapeHtml = (text) => {
-      const div = document.createElement("div");
-      div.textContent = text;
-      return div.innerHTML;
-    };
-
     body.childNodes.forEach((child) => {
       if (child.nodeType === 1) html += processNode(child);
     });
@@ -118,8 +131,8 @@ const parseFB2ToHTML = (fb2Content) => {
   }
 };
 
-// Константа отступа между колонками (должна совпадать с CSS)
 const COLUMN_GAP = 60;
+const MAX_SELECTED = 6000;
 
 const Reader = () => {
   const { bookId } = useParams();
@@ -133,12 +146,10 @@ const Reader = () => {
   const [loading, setLoading] = useState(true);
   const [userBookId, setUserBookId] = useState(null);
 
-  // 1. Новое состояние для хранения прогресса (процентов)
   const [initialProgress, setInitialProgress] = useState(null);
 
-  // Настройки
   const [fontSize, setFontSize] = useState(
-    parseInt(localStorage.getItem("reader-font-size") || "18"),
+    parseInt(localStorage.getItem("reader-font-size") || "18", 10),
   );
   const [theme, setTheme] = useState(
     localStorage.getItem("reader-theme") || "light",
@@ -146,30 +157,48 @@ const Reader = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // ВАЖНО: Храним ширину контента, а не ширину окна
   const [contentWidth, setContentWidth] = useState(800);
 
-  useEffect(() => {
-    localStorage.setItem("reader-font-size", fontSize.toString());
-  }, [fontSize]);
+  // AI
+  const [aiOpen, setAiOpen] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+
+  // popover над выделением
+  const [selectionUI, setSelectionUI] = useState({
+    open: false,
+    x: 0,
+    y: 0,
+  });
+
+  // параметры запуска AI при открытии
+  const [aiInitialAction, setAiInitialAction] = useState("qa");
+  const [aiAutoSend, setAiAutoSend] = useState(false);
+
+  useEffect(
+    () => localStorage.setItem("reader-font-size", fontSize.toString()),
+    [fontSize],
+  );
+  useEffect(() => localStorage.setItem("reader-theme", theme), [theme]);
 
   useEffect(() => {
-    localStorage.setItem("reader-theme", theme);
-  }, [theme]);
+    if (aiOpen) setShowSettings(false);
+  }, [aiOpen]);
 
   // Загрузка книги
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
+
         const detail = await bookService.getBookDetail(bookId);
         setTitle(detail.book.title);
 
         if (detail.userBook) {
           setUserBookId(detail.userBook.id);
-
-          // 2. Если есть сохраненный прогресс, запоминаем его (не применяем сразу)
-          if (detail.userBook.progress) {
+          if (
+            detail.userBook.progress !== null &&
+            detail.userBook.progress !== undefined
+          ) {
             setInitialProgress(detail.userBook.progress);
           }
         }
@@ -179,16 +208,17 @@ const Reader = () => {
           const content = contentData.content;
 
           if (content.includes("<?xml") || content.includes("<FictionBook")) {
-            console.log("Detected FB2 format, parsing...");
             const parsedHtml = parseFB2ToHTML(content);
             setHtmlContent(parsedHtml || "<p>Ошибка парсинга FB2</p>");
           } else {
-            console.log("Detected HTML format");
             setHtmlContent(content);
           }
+        } else {
+          setHtmlContent("");
         }
       } catch (e) {
         console.error("Error loading book:", e);
+        setHtmlContent("");
       } finally {
         setLoading(false);
       }
@@ -196,60 +226,44 @@ const Reader = () => {
     loadData();
   }, [bookId]);
 
-  // ПЕРЕСЧЕТ СТРАНИЦ и ВОССТАНОВЛЕНИЕ ПОЗИЦИИ
+  // Пересчет страниц + восстановление позиции
   useEffect(() => {
     if (!contentRef.current || !htmlContent) return;
 
     const calculateLayout = () => {
       const element = contentRef.current;
 
-      // Получаем реальную ширину колонки
       const rect = element.getBoundingClientRect();
-      const width = rect.width;
+      const width = rect.width || 800;
       setContentWidth(width);
 
-      // Считаем общее количество страниц
       const total = Math.ceil(
         (element.scrollWidth + COLUMN_GAP) / (width + COLUMN_GAP),
       );
+      const safeTotal = Math.max(1, total);
+      setTotalPages(safeTotal);
 
-      setTotalPages(Math.max(1, total));
-
-      // 3. Логика восстановления: применяем прогресс только когда страницы посчитаны
-      if (initialProgress !== null && total > 0) {
-        // Формула: (Процент / 100) * Всего страниц = Индекс страницы
-        // Используем Math.floor, чтобы не перепрыгнуть вперед
-        // Math.max(0, ...) и Math.min(..., total - 1) для безопасности границ
-        let targetPage = Math.floor((initialProgress / 100) * total);
-
-        // Коррекция: если прогресс был 100%, не улетаем за пределы массива
-        if (initialProgress === 100) targetPage = total - 1;
-
-        targetPage = Math.max(0, Math.min(targetPage, total - 1));
-
+      if (initialProgress !== null && safeTotal > 0) {
+        let targetPage = Math.floor((initialProgress / 100) * safeTotal);
+        if (initialProgress === 100) targetPage = safeTotal - 1;
+        targetPage = Math.max(0, Math.min(targetPage, safeTotal - 1));
         setCurrentPage(targetPage);
-
-        // Сбрасываем флаг, чтобы при ресайзе окна нас не откидывало
         setInitialProgress(null);
       }
     };
 
-    // Даем браузеру время на рендер стилей
     const timer = setTimeout(calculateLayout, 150);
     window.addEventListener("resize", calculateLayout);
-
     return () => {
       window.removeEventListener("resize", calculateLayout);
       clearTimeout(timer);
     };
-  }, [htmlContent, fontSize, showSettings, initialProgress]); // Добавлен initialProgress
+  }, [htmlContent, fontSize, showSettings, initialProgress]);
 
-  // Навигация
   const handlePageChange = (newPage) => {
     if (newPage < 0 || newPage >= totalPages) return;
     setCurrentPage(newPage);
 
-    // 4. Сохраняем прогресс (Округляем, чтобы не хранить дроби)
     if (userBookId) {
       const progress = Math.round(((newPage + 1) / totalPages) * 100);
       shelfService
@@ -258,24 +272,136 @@ const Reader = () => {
     }
   };
 
+  // Клавиши навигации + AI hotkeys
   useEffect(() => {
     const handleKey = (e) => {
+      const tag = (e.target?.tagName || "").toLowerCase();
+      const isTyping =
+        tag === "input" || tag === "textarea" || e.target?.isContentEditable;
+      if (isTyping) return;
+
       if (e.key === "ArrowLeft") handlePageChange(currentPage - 1);
       if (e.key === "ArrowRight") handlePageChange(currentPage + 1);
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setAiInitialAction("qa");
+        setAiAutoSend(false);
+        setAiOpen(true);
+      }
+
+      if (e.key === "Escape") {
+        setShowSettings(false);
+        setAiOpen(false);
+        setSelectionUI({ open: false, x: 0, y: 0 });
+      }
     };
+
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [currentPage, totalPages]); // handlePageChange зависит от userBookId
+  }, [currentPage, totalPages]);
 
-  // RENDER
+  // Хелпер: открыть AI по выбранному действию
+  const openAiForAction = (action) => {
+    setAiInitialAction(action);
+    // если есть выделение — сразу отправляем
+    setAiAutoSend(Boolean(selectedText && selectedText.trim().length > 0));
+    setAiOpen(true);
+    setSelectionUI({ open: false, x: 0, y: 0 });
+  };
+
+  // Выделение текста -> показываем мини-панель возле выделения
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+
+    const clearIfOutside = (evt) => {
+      // если кликнули вне панели выбора — скрыть
+      const pop = document.querySelector(".selection-ai-popover");
+      if (pop && pop.contains(evt.target)) return;
+      setSelectionUI((prev) => ({ ...prev, open: false }));
+    };
+
+    const handleMouseUp = () => {
+      const sel = window.getSelection();
+      if (!sel) return;
+
+      const text = sel.toString().trim();
+      if (!text) {
+        setSelectionUI((prev) => ({ ...prev, open: false }));
+        return;
+      }
+
+      // только если выделение внутри контента
+      const anchorNode = sel.anchorNode;
+      if (!anchorNode || !el.contains(anchorNode)) {
+        setSelectionUI((prev) => ({ ...prev, open: false }));
+        return;
+      }
+
+      // ограничиваем
+      setSelectedText(text.slice(0, MAX_SELECTED));
+
+      // позиция панели: берём bounding rect выделения
+      const range = sel.rangeCount ? sel.getRangeAt(0) : null;
+      if (!range) return;
+
+      const rect = range.getBoundingClientRect();
+      if (!rect || (rect.width === 0 && rect.height === 0)) return;
+
+      // Позиционирование относительно окна
+      const x = rect.left + rect.width / 2;
+      const y = Math.max(12, rect.top - 10);
+
+      setSelectionUI({ open: true, x, y });
+    };
+
+    el.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousedown", clearIfOutside);
+
+    return () => {
+      el.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousedown", clearIfOutside);
+    };
+  }, [htmlContent, selectedText]);
+
   if (loading) return <div className="reader-loading">Загрузка...</div>;
 
   if (!htmlContent) {
     return (
-      <div className="reader-container">
+      <div className={`reader-container theme-${theme}`}>
+        <header className="reader-header">
+          <button
+            className="icon-btn"
+            onClick={() => navigate(-1)}
+            title="Назад"
+          >
+            <ArrowBackIcon />
+          </button>
+
+          <span className="reader-title">{title || "Читалка"}</span>
+
+          <div className="reader-header-actions">
+            <button
+              className="icon-btn"
+              onClick={() => setAiOpen(true)}
+              title="AI помощник (Ctrl+K)"
+            >
+              <SmartToyIcon />
+            </button>
+            <button
+              className="icon-btn"
+              onClick={() => setShowSettings(!showSettings)}
+              title="Настройки"
+            >
+              <SettingsIcon />
+            </button>
+          </div>
+        </header>
+
         <div className="reader-empty-state">
           <div className="empty-message-box">
-            <h2>📖 Нет текста</h2>
+            <h2>Нет текста</h2>
             <p>Для этой книги еще не загружен текст</p>
             <button
               className="btn-primary"
@@ -285,6 +411,7 @@ const Reader = () => {
             </button>
           </div>
         </div>
+
         {showUploadModal && (
           <FileUploadModal
             userBookId={userBookId}
@@ -293,6 +420,15 @@ const Reader = () => {
             onSuccess={() => window.location.reload()}
           />
         )}
+
+        <ReaderAiDrawer
+          open={aiOpen}
+          onClose={() => setAiOpen(false)}
+          selectedText={selectedText}
+          bookTitle={title}
+          initialAction={aiInitialAction}
+          autoSendOnOpen={aiAutoSend}
+        />
       </div>
     );
   }
@@ -300,16 +436,33 @@ const Reader = () => {
   return (
     <div className={`reader-container theme-${theme}`}>
       <header className="reader-header">
-        <button className="icon-btn" onClick={() => navigate(-1)}>
+        <button className="icon-btn" onClick={() => navigate(-1)} title="Назад">
           <ArrowBackIcon />
         </button>
+
         <span className="reader-title">{title}</span>
-        <button
-          className="icon-btn"
-          onClick={() => setShowSettings(!showSettings)}
-        >
-          <SettingsIcon />
-        </button>
+
+        <div className="reader-header-actions">
+          <button
+            className="icon-btn"
+            onClick={() => {
+              setAiInitialAction("qa");
+              setAiAutoSend(false);
+              setAiOpen(true);
+            }}
+            title="AI помощник (Ctrl+K)"
+          >
+            <SmartToyIcon />
+          </button>
+
+          <button
+            className="icon-btn"
+            onClick={() => setShowSettings(!showSettings)}
+            title="Настройки"
+          >
+            <SettingsIcon />
+          </button>
+        </div>
       </header>
 
       {showSettings && (
@@ -320,6 +473,7 @@ const Reader = () => {
               <button
                 onClick={() => setFontSize(Math.max(12, fontSize - 2))}
                 disabled={fontSize <= 12}
+                title="Уменьшить"
               >
                 A-
               </button>
@@ -327,31 +481,41 @@ const Reader = () => {
               <button
                 onClick={() => setFontSize(Math.min(32, fontSize + 2))}
                 disabled={fontSize >= 32}
+                title="Увеличить"
               >
                 A+
               </button>
             </div>
           </div>
+
           <div className="settings-section">
             <h3>Тема</h3>
             <div className="theme-controls">
               <button
-                className={theme === "light" ? "active" : ""}
+                className={theme === "light" ? "active theme-btn" : "theme-btn"}
                 onClick={() => setTheme("light")}
+                title="Светлая"
               >
-                ☀️ Светлая
+                <LightModeIcon fontSize="small" />
+                <span>Светлая</span>
               </button>
+
               <button
-                className={theme === "sepia" ? "active" : ""}
+                className={theme === "sepia" ? "active theme-btn" : "theme-btn"}
                 onClick={() => setTheme("sepia")}
+                title="Сепия"
               >
-                📜 Сепия
+                <AutoAwesomeIcon fontSize="small" />
+                <span>Сепия</span>
               </button>
+
               <button
-                className={theme === "dark" ? "active" : ""}
+                className={theme === "dark" ? "active theme-btn" : "theme-btn"}
                 onClick={() => setTheme("dark")}
+                title="Темная"
               >
-                🌙 Темная
+                <DarkModeIcon fontSize="small" />
+                <span>Темная</span>
               </button>
             </div>
           </div>
@@ -365,14 +529,59 @@ const Reader = () => {
           className="reader-content"
           style={{
             fontSize: `${fontSize}px`,
-            // Математика сдвига: -Page * (Ширина контента + GAP)
             transform: `translateX(${-currentPage * (contentWidth + COLUMN_GAP)}px)`,
-            // Жестко задаем ширину колонки, чтобы браузер не самовольничал
             columnWidth: `${contentWidth}px`,
             columnGap: `${COLUMN_GAP}px`,
           }}
           dangerouslySetInnerHTML={{ __html: htmlContent }}
         />
+
+        {/* popover над выделением */}
+        {selectionUI.open && (
+          <div
+            className="selection-ai-popover"
+            style={{
+              left: `${selectionUI.x}px`,
+              top: `${selectionUI.y}px`,
+            }}
+          >
+            <button
+              className="sel-ai-btn"
+              onClick={() => openAiForAction("explain")}
+              title="Объяснить"
+            >
+              <PsychologyIcon fontSize="small" />
+              <span>Объяснить</span>
+            </button>
+
+            <button
+              className="sel-ai-btn"
+              onClick={() => openAiForAction("translate")}
+              title="Перевести"
+            >
+              <TranslateIcon fontSize="small" />
+              <span>Перевод</span>
+            </button>
+
+            <button
+              className="sel-ai-btn"
+              onClick={() => openAiForAction("summarize")}
+              title="Пересказать"
+            >
+              <SummarizeIcon fontSize="small" />
+              <span>Пересказ</span>
+            </button>
+
+            <button
+              className="sel-ai-btn primary"
+              onClick={() => openAiForAction("qa")}
+              title="Открыть чат"
+            >
+              <SmartToyIcon fontSize="small" />
+              <span>Чат</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <footer className="reader-footer">
@@ -380,6 +589,7 @@ const Reader = () => {
           className="icon-btn nav-btn"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 0}
+          title="Назад"
         >
           <ArrowBackIosIcon />
         </button>
@@ -400,10 +610,20 @@ const Reader = () => {
           className="icon-btn nav-btn"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages - 1}
+          title="Вперед"
         >
           <ArrowForwardIosIcon />
         </button>
       </footer>
+
+      <ReaderAiDrawer
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        selectedText={selectedText}
+        bookTitle={title}
+        initialAction={aiInitialAction}
+        autoSendOnOpen={aiAutoSend}
+      />
     </div>
   );
 };

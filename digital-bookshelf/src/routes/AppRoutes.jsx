@@ -7,6 +7,7 @@ import PublicRoute from "./PublicRoute";
 
 // Импорт страниц
 import AdminPage from "../pages/Admin/AdminPage";
+import AnalyticsPage from "../pages/AnalyticsPage";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
 import BookDetailPage from "../pages/BookDetailPage";
@@ -133,7 +134,7 @@ const AppRoutes = () => {
         path="/analytics"
         element={
           <PrivateRoute>
-            <Chat />
+            <AnalyticsPage />
           </PrivateRoute>
         }
       />

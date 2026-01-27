@@ -1,33 +1,61 @@
-import { useEffect, useRef, useState } from "react";
+import * as d3 from "d3-force";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import { useNavigate } from "react-router-dom";
-import api from "../services/api";
-import "./Chat.css";
+import apiClient from "../services/api"; // ваш apiClient
+import "./Chat.css"; // лучше вынести CSS в отдельный файл
+
+const STATUS_COLORS = {
+  FINISHED: "#27ae60",
+  READING: "#e67e22",
+  PLAN_TO_READ: "#3498db",
+  DEFAULT: "#bdc3c7",
+};
+
+const BG_COLOR = "#fdfbf7";
+const COLUMN_BG = "#f5f1e8";
+
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
 const ReadingMap = () => {
   const navigate = useNavigate();
-  const graphRef = useRef();
+  const graphRef = useRef(null);
 
   const [data, setData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
+
   const [dimensions, setDimensions] = useState({
     w: window.innerWidth,
     h: window.innerHeight,
   });
+
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // --- 1. Загрузка данных ---
+  // чтобы не делать setState на каждом кадре рендера графа
+  const zoomRafRef = useRef(null);
+  const lastZoomRef = useRef(1);
+
+  // --- 1) Загрузка данных ---
   useEffect(() => {
     const fetchGraph = async () => {
       try {
         setLoading(true);
-        const res = await api.get("/map");
-        const responseData = res.data || res;
 
-        const nodes = responseData.nodes || [];
-        const links = responseData.links || [];
+        // ожидаем GET /api/v1/map (т.к. baseURL у apiClient = /api/v1)
+        const res = await apiClient.get("/map");
+        const responseData = res.data;
 
-        // Предзагрузка картинок
+        const nodes = (responseData?.nodes || []).map((n) => ({
+          ...n,
+          // нормализуем group
+          group: n.group || "DEFAULT",
+          // нормализуем val
+          val: typeof n.val === "number" ? n.val : 1,
+        }));
+
+        const links = responseData?.links || [];
+
+        // предзагрузка картинок
         nodes.forEach((node) => {
           if (node.img) {
             const img = new Image();
@@ -54,81 +82,146 @@ const ReadingMap = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // --- 2. Обработчики ---
+  // --- 2) Настройка сил (самое важное) ---
+  useEffect(() => {
+    if (!graphRef.current) return;
+    if (!data.nodes?.length) return;
+
+    const fg = graphRef.current;
+
+    // 1) Отталкивание (делаем сильнее)
+    const charge = fg.d3Force("charge");
+    if (charge) charge.strength(-260).distanceMax(900);
+
+    // 2) Ссылки: увеличиваем расстояние, чуть ослабляем "пружину"
+    const linkForce = fg.d3Force("link");
+    if (linkForce) {
+      linkForce
+        .distance((link) => {
+          const v = typeof link.value === "number" ? link.value : 1;
+          // чем сильнее связь — тем ближе, но не слишком близко
+          return clamp(260 / (v * 0.8), 140, 340);
+        })
+        .strength(0.08);
+    }
+
+    // 3) Главная сила против «слипания» — collide
+    // Радиус коллизии зависит от размера узла
+    fg.d3Force(
+      "collide",
+      d3
+        .forceCollide((node) => {
+          const base = 14;
+          const r = base + (node.val || 1) * 2.2;
+          return r + 6; // +gap
+        })
+        .iterations(2),
+    );
+
+    // 4) Центрирование
+    fg.d3Force("center", d3.forceCenter(0, 0));
+
+    // 5) Разводим статусы по "зонам" (чтобы кластеры не лежали в одной куче)
+    // FINISHED слева, READING по центру, PLAN справа
+    fg.d3Force(
+      "x",
+      d3
+        .forceX((node) => {
+          if (node.group === "FINISHED") return -dimensions.w * 0.18;
+          if (node.group === "READING") return 0;
+          if (node.group === "PLAN_TO_READ") return dimensions.w * 0.18;
+          return 0;
+        })
+        .strength(0.06),
+    );
+
+    fg.d3Force(
+      "y",
+      d3
+        .forceY((node) => {
+          // чуть разнести по вертикали крупные/важные
+          const v = node.val || 1;
+          return v > 4 ? -60 : 0;
+        })
+        .strength(0.03),
+    );
+
+    // Перезапускаем симуляцию
+    fg.d3ReheatSimulation();
+  }, [data.nodes, data.links, dimensions.w, dimensions.h]);
+
+  // --- 3) Управление ---
   const handleNodeClick = (node) => {
-    graphRef.current.centerAt(node.x, node.y, 1000);
-    graphRef.current.zoom(3, 1000);
+    if (!graphRef.current) return;
+    graphRef.current.centerAt(node.x, node.y, 700);
+    graphRef.current.zoom(2.6, 700);
   };
 
-  const handleRightClick = (node) => {
-    navigate(`/books/${node.id}`);
+  const handleNodeRightClick = (node) => {
+    // у вас ранее было /books/${node.id}, в проекте встречалось /book/:id
+    // выберите правильный роут:
+    navigate(`/book/${node.id}`);
   };
 
   const handleZoomIn = () => {
-    const currentZoom = graphRef.current.zoom();
-    graphRef.current.zoom(Math.min(currentZoom * 1.5, 8), 400);
+    if (!graphRef.current) return;
+    const current = graphRef.current.zoom();
+    graphRef.current.zoom(Math.min(current * 1.35, 8), 250);
   };
 
   const handleZoomOut = () => {
-    const currentZoom = graphRef.current.zoom();
-    graphRef.current.zoom(Math.max(currentZoom / 1.5, 0.5), 400);
+    if (!graphRef.current) return;
+    const current = graphRef.current.zoom();
+    graphRef.current.zoom(Math.max(current / 1.35, 0.5), 250);
   };
 
   const handleResetView = () => {
-    graphRef.current.zoomToFit(400);
+    if (!graphRef.current) return;
+    graphRef.current.zoomToFit(450, 60);
   };
 
-  // --- 3. Улучшенная Отрисовка Узла ---
+  // --- 4) Рисование узлов (улучшено) ---
   const paintNode = (node, ctx, globalScale) => {
-    // Сохраняем зум для UI
-    if (Math.abs(globalScale - zoomLevel) > 0.1) {
-      setZoomLevel(globalScale);
+    // Обновление zoom-индикатора без спама setState
+    const z = globalScale;
+    if (Math.abs(z - lastZoomRef.current) > 0.08) {
+      lastZoomRef.current = z;
+      cancelAnimationFrame(zoomRafRef.current);
+      zoomRafRef.current = requestAnimationFrame(() => setZoomLevel(z));
     }
 
-    // Базовый размер
-    const baseRadius = 8;
-    // Увеличиваем радиус в зависимости от важности (val)
-    const radius = baseRadius + node.val * 1.5;
+    const val = node.val || 1;
+    const radius = clamp(10 + val * 2.2, 12, 26);
 
-    // Цвета статусов
-    let borderColor = "#bdc3c7";
-    if (node.group === "FINISHED")
-      borderColor = "#27ae60"; // Сочный зеленый
-    else if (node.group === "READING")
-      borderColor = "#d35400"; // Темно-оранжевый
-    else if (node.group === "PLAN_TO_READ") borderColor = "#2980b9"; // Темно-синий
+    const borderColor = STATUS_COLORS[node.group] || STATUS_COLORS.DEFAULT;
 
-    // --- ТЕНЬ (Глубина) ---
-    ctx.shadowColor = "rgba(0, 0, 0, 0.2)";
+    // Тень
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
     ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
 
-    // --- 1. Внешняя обводка (Статус) ---
+    // Обводка статуса
     ctx.beginPath();
-    ctx.arc(node.x, node.y, radius + 2, 0, 2 * Math.PI, false);
+    ctx.arc(node.x, node.y, radius + 3, 0, 2 * Math.PI);
     ctx.fillStyle = borderColor;
     ctx.fill();
 
-    // Сбрасываем тень для внутренних элементов, чтобы не было грязи
+    // Белая подложка
     ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-
-    // --- 2. Белая подложка (border gap) ---
     ctx.beginPath();
-    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+    ctx.arc(node.x, node.y, radius + 0.5, 0, 2 * Math.PI);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
 
-    // --- 3. Картинка ---
+    // Аватар/обложка
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius - 1.5, 0, 2 * Math.PI);
+    ctx.clip();
+
     if (node.imgObj) {
-      ctx.save();
-      ctx.beginPath();
-      // Картинка чуть меньше белой подложки
-      ctx.arc(node.x, node.y, radius - 1.5, 0, 2 * Math.PI, false);
-      ctx.clip();
       try {
         ctx.drawImage(
           node.imgObj,
@@ -137,46 +230,54 @@ const ReadingMap = () => {
           (radius - 1.5) * 2,
           (radius - 1.5) * 2,
         );
-      } catch (e) {}
-      ctx.restore();
+      } catch (_) {}
     } else {
-      // Если нет картинки — серая заглушка
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, radius - 1.5, 0, 2 * Math.PI, false);
       ctx.fillStyle = "#ecf0f1";
-      ctx.fill();
+      ctx.fillRect(
+        node.x - (radius - 1.5),
+        node.y - (radius - 1.5),
+        (radius - 1.5) * 2,
+        (radius - 1.5) * 2,
+      );
     }
 
-    // --- 4. Текст (Smart Label) ---
-    // Показываем текст, если зум > 1.2 ИЛИ если узел очень важный (val > 4)
-    const showText = globalScale > 1.2 || node.val > 4;
+    ctx.restore();
 
+    // Подпись (при увеличении)
+    const showText = globalScale > 1.15 || val > 4;
     if (showText) {
-      const fontSize = 12 / globalScale; // Шрифт не становится гигантским при зуме
-      // Ограничиваем мин/макс размер шрифта для читаемости
-      const safeFontSize = Math.min(Math.max(fontSize, 4), 16);
+      const fontSize = clamp(12 / globalScale, 7, 14);
+      const textY = node.y + radius + fontSize + 6;
 
-      ctx.font = `600 ${safeFontSize}px "Inter", sans-serif`;
+      ctx.font = `600 ${fontSize}px Inter, system-ui, -apple-system, Segoe UI, Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      const textY = node.y + radius + safeFontSize + 2;
+      // halo
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.lineWidth = 4;
+      ctx.strokeText(node.name || "", node.x, textY);
 
-      // ОБВОДКА ТЕКСТА (HALO) — самое важное для читаемости
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.lineWidth = 3;
-      ctx.lineJoin = "round";
-      ctx.strokeText(node.name, node.x, textY);
-
-      // САМ ТЕКСТ
       ctx.fillStyle = "#2c3e50";
-      ctx.fillText(node.name, node.x, textY);
+      ctx.fillText(node.name || "", node.x, textY);
     }
   };
 
+  // область клика побольше
+  const nodePointerAreaPaint = (node, color, ctx) => {
+    const val = node.val || 1;
+    const radius = clamp(12 + val * 2.2, 14, 30) + 10;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI);
+    ctx.fill();
+  };
+
+  const linkColor = useMemo(() => "rgba(100, 100, 100, 0.18)", []);
+
   if (loading) {
     return (
-      <div className="map-loader">
+      <div className="map-loader" style={{ backgroundColor: COLUMN_BG }}>
         <div className="map-loader-spinner"></div>
         <h2>Строим карту смыслов...</h2>
       </div>
@@ -184,11 +285,14 @@ const ReadingMap = () => {
   }
 
   return (
-    <div className="reading-map-container">
+    <div
+      className="reading-map-container"
+      style={{ backgroundColor: COLUMN_BG }}
+    >
       {/* UI: Легенда */}
       <div className="map-ui-overlay">
-        <h1>Карта Чтения</h1>
-        <p>Книги притягиваются по смыслу.</p>
+        <h1>Карта чтения</h1>
+        <p>Книги притягиваются по смыслу и статусу.</p>
 
         <div className="legend">
           <div className="legend-item">
@@ -201,7 +305,8 @@ const ReadingMap = () => {
             <span className="dot planned"></span> В планах
           </div>
         </div>
-        <p className="hint">ЛКМ — зум, ПКМ — открыть</p>
+
+        <p className="hint">ЛКМ — фокус, ПКМ — открыть книгу</p>
       </div>
 
       {/* UI: Кнопки */}
@@ -236,32 +341,18 @@ const ReadingMap = () => {
         width={dimensions.w}
         height={dimensions.h}
         graphData={data}
-        // --- НАСТРОЙКА РАССТОЯНИЙ (ФИЗИКА) ---
-
-        // 1. Увеличиваем силу отталкивания (по умолчанию около -30)
-        // Ставим -120, чтобы книги сильнее разлетались в стороны
-        d3Force={("charge", (force) => force.strength(-120))}
-        // 2. Увеличиваем длину связей
-        // Раньше было: 100 / ...
-        // Ставим: 250 / ... — это сделает нити в 2.5 раза длиннее
-        linkDistance={(link) => 1000 / (link.value * 0.5)}
-        // Остальные настройки оставляем как есть
-        d3AlphaDecay={0.01}
-        d3VelocityDecay={0.4}
-        cooldownTicks={100}
-        linkColor={() => "rgba(100, 100, 100, 0.2)"}
-        linkWidth={(link) => Math.sqrt(link.value) * 1.2}
         nodeCanvasObject={paintNode}
-        nodePointerAreaPaint={(node, color, ctx) => {
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, node.val * 2 + 10, 0, 2 * Math.PI, false);
-          ctx.fillStyle = color;
-          ctx.fill();
-        }}
+        nodePointerAreaPaint={nodePointerAreaPaint}
         onNodeClick={handleNodeClick}
-        onNodeRightClick={handleRightClick}
-        backgroundColor="#fdfbf7"
+        onNodeRightClick={handleNodeRightClick}
+        linkColor={() => linkColor}
+        linkWidth={(link) => clamp(Math.sqrt(link.value || 1) * 1.1, 0.6, 3)}
+        linkDirectionalParticles={0} // можно включить 1-2 для красоты, но не обязательно
+        backgroundColor={BG_COLOR}
         enableNodeDrag={true}
+        cooldownTicks={140}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.35}
       />
     </div>
   );

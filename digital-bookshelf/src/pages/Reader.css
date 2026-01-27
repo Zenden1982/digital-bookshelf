@@ -613,3 +613,83 @@
     font-size: 1.5rem;
   }
 }
+.theme-controls .theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reader-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reader-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-controls .theme-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* popover возле выделения */
+.selection-ai-popover {
+  position: fixed; /* важно: координаты из getBoundingClientRect */
+  transform: translate(-50%, -100%);
+  z-index: 9999;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: rgba(30, 30, 35, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+}
+
+.sel-ai-btn {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+
+.sel-ai-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.sel-ai-btn.primary {
+  background: rgba(139, 69, 19, 0.9);
+}
+.sel-ai-btn.primary:hover {
+  background: rgba(139, 69, 19, 1);
+}
+
+@media (max-width: 480px) {
+  .selection-ai-popover {
+    gap: 6px;
+    padding: 6px;
+    border-radius: 12px;
+  }
+  .sel-ai-btn span {
+    display: none; /* на очень маленьком экране оставим только иконки */
+  }
+}
