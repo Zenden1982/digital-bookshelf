@@ -171,6 +171,11 @@ const Recommendations = () => {
               onChange={(e) => setMoodText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleMoodSearch()}
             />
+            {/* 
+               Здесь тоже желательно обернуть текст в span, если захотите добавить 
+               стиль .mood-btn span { z-index: 1; position: relative; } в будущем,
+               но пока для mood-btn это не критично, если CSS не перекрывает его.
+            */}
             <button
               className="mood-btn"
               onClick={handleMoodSearch}
@@ -186,45 +191,47 @@ const Recommendations = () => {
           <div className="mood-filters">
             <div className="filter-group">
               <label>Объем:</label>
+              {/* Исправление: Оборачиваем текст в span для работы z-index */}
               <button
                 className={lengthFilter === "ANY" ? "active" : ""}
                 onClick={() => setLengthFilter("ANY")}
               >
-                Любой
+                <span>Любой</span>
               </button>
               <button
                 className={lengthFilter === "SHORT" ? "active" : ""}
                 onClick={() => setLengthFilter("SHORT")}
               >
-                Короткое (&lt;350)
+                <span>Короткое (&lt;350)</span>
               </button>
               <button
                 className={lengthFilter === "LONG" ? "active" : ""}
                 onClick={() => setLengthFilter("LONG")}
               >
-                Длинное (&gt;500)
+                <span>Длинное (&gt;500)</span>
               </button>
             </div>
 
             <div className="filter-group">
               <label>Эпоха:</label>
+              {/* Исправление: Оборачиваем текст в span для работы z-index */}
               <button
                 className={ageFilter === "ANY" ? "active" : ""}
                 onClick={() => setAgeFilter("ANY")}
               >
-                Любая
+                <span>Любая</span>
               </button>
               <button
                 className={ageFilter === "NEW" ? "active" : ""}
                 onClick={() => setAgeFilter("NEW")}
               >
-                Новое (2000+)
+                <span>Новое (2000+)</span>
               </button>
               <button
                 className={ageFilter === "CLASSIC" ? "active" : ""}
                 onClick={() => setAgeFilter("CLASSIC")}
               >
-                Классика (&lt;1990)
+                <span>Классика (&lt;1990)</span>
               </button>
             </div>
           </div>

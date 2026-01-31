@@ -1,3 +1,4 @@
+// src/pages/Reader.jsx
 import {
   useCallback,
   useEffect,
@@ -42,9 +43,7 @@ const useDebounce = (callback, delay) => {
 
   const debouncedCallback = useCallback(
     (...args) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       timeoutRef.current = setTimeout(() => {
         callback(...args);
       }, delay);
@@ -211,7 +210,7 @@ const Reader = () => {
   // State: Navigation
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [pageWidth, setPageWidth] = useState(800); // Для реактивности размеров
+  const [pageWidth, setPageWidth] = useState(800);
 
   // State: AI & Modal
   const [aiOpen, setAiOpen] = useState(false);
@@ -236,23 +235,18 @@ const Reader = () => {
   }, [aiOpen]);
 
   /* =========================
-      Helpers
+     Helpers
   ========================= */
 
-  // Расчет страниц на основе scrollWidth
   const updateMetrics = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    // Реальная ширина видимой области (одна колонка)
     const clientW = el.clientWidth;
     setPageWidth(clientW);
 
-    // Полная ширина контента (все колонки)
     const scrollW = el.scrollWidth;
 
-    // Считаем страницы. +GAP добавляем для корректного деления,
-    // так как scrollWidth включает gap-ы между колонками
     const total = Math.max(
       1,
       Math.ceil((scrollW + COLUMN_GAP) / (clientW + COLUMN_GAP)),
@@ -269,17 +263,15 @@ const Reader = () => {
   };
 
   /* =========================
-      Navigation Logic
+     Navigation Logic
   ========================= */
 
   const scrollToPage = (idx, behavior = "smooth") => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    // Всегда берем актуальную ширину из DOM
     const w = el.clientWidth;
-    const gap = COLUMN_GAP;
-    const step = w + gap;
+    const step = w + COLUMN_GAP;
 
     const targetX = idx * step;
     el.scrollTo({ left: targetX, behavior });
@@ -296,11 +288,9 @@ const Reader = () => {
   };
 
   /* =========================
-      Scroll Synchronization
-      (Fix for drifting)
+     Scroll Synchronization
   ========================= */
 
-  // Используем debounce для обновления стейта при скролле
   const handleScrollDebounced = useDebounce(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -309,8 +299,6 @@ const Reader = () => {
     const w = el.clientWidth;
     const step = w + COLUMN_GAP;
 
-    // Вычисляем индекс страницы по факту: где мы сейчас находимся?
-    // Math.round исправляет мелкие смещения (1-2px)
     const actualPage = Math.round(currentX / step);
 
     if (actualPage !== currentPage) {
@@ -323,43 +311,29 @@ const Reader = () => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const onScroll = () => {
-      handleScrollDebounced();
-    };
-
+    const onScroll = () => handleScrollDebounced();
     el.addEventListener("scroll", onScroll);
     return () => el.removeEventListener("scroll", onScroll);
   }, [handleScrollDebounced]);
 
   /* =========================
-      Fix: Prevent drag-scroll
-      (Nuclear Option - overflow hidden)
+     Fix: Prevent drag-scroll
   ========================= */
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
     const onMouseDown = () => {
-      // 1. Запоминаем скролл
       const currentScroll = el.scrollLeft;
-
-      // 2. Блокируем скролл на уровне CSS
-      // Это полностью отключает возможность браузера двигать контент
       el.style.overflowX = "hidden";
-
-      // 3. Восстанавливаем позицию (на случай сброса)
       el.scrollLeft = currentScroll;
     };
 
     const onMouseUp = () => {
-      // 1. Возвращаем скролл обратно
-      // Пустая строка удаляет инлайн-стиль и возвращает настройки из CSS-класса
       el.style.overflowX = "";
     };
 
-    // Слушаем начало выделения только внутри контейнера
     el.addEventListener("mousedown", onMouseDown);
-    // Слушаем конец выделения везде (вдруг мышь ушла за пределы)
     window.addEventListener("mouseup", onMouseUp);
 
     return () => {
@@ -369,12 +343,13 @@ const Reader = () => {
   }, []);
 
   /* =========================
-      Load & Layout Effects
+     Load & Layout Effects
   ========================= */
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
+
         const detail = await bookService.getBookDetail(bookId);
         setTitle(detail?.book?.title || "");
 
@@ -412,21 +387,22 @@ const Reader = () => {
         setLoading(false);
       }
     };
+
     load();
   }, [bookId]);
 
-  // Пересчет при изменении контента, шрифта или размеров окна
+  // ВАЖНО: добавили aiOpen, чтобы при открытии sidebar пересчитывались колонки/страницы
   useLayoutEffect(() => {
     if (!htmlContent || !scrollerRef.current) return;
 
-    // 1. Считаем страницы
     updateMetrics();
 
-    // 2. Логика восстановления прогресса (только один раз при загрузке)
+    // восстановление прогресса 1 раз
     if (initialProgress !== null) {
       const el = scrollerRef.current;
       const w = el.clientWidth;
       const scrollW = el.scrollWidth;
+
       const total = Math.max(
         1,
         Math.ceil((scrollW + COLUMN_GAP) / (w + COLUMN_GAP)),
@@ -436,14 +412,12 @@ const Reader = () => {
       if (initialProgress === 100) idx = total - 1;
       idx = clamp(idx, 0, total - 1);
 
-      // Скроллим без анимации
       scrollToPage(idx, "auto");
       setInitialProgress(null);
     }
 
     const onResize = () => {
       updateMetrics();
-      // При ресайзе "примагничиваемся" к текущей странице
       requestAnimationFrame(() => {
         if (scrollerRef.current) {
           const w = scrollerRef.current.clientWidth;
@@ -455,13 +429,12 @@ const Reader = () => {
 
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [htmlContent, fontSize, updateMetrics]);
+  }, [htmlContent, fontSize, updateMetrics, aiOpen]); // <--- тут aiOpen
 
   /* =========================
-      Input Handlers
+     Input Handlers
   ========================= */
 
-  // Клавиатура
   useEffect(() => {
     const onKeyDown = (e) => {
       const tag = (e.target?.tagName || "").toLowerCase();
@@ -489,7 +462,6 @@ const Reader = () => {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [currentPage, totalPages]);
 
-  // Выделение текста (Popup)
   useEffect(() => {
     const root = scrollerRef.current;
     if (!root) return;
@@ -510,7 +482,6 @@ const Reader = () => {
         return;
       }
 
-      // Проверяем, что выделение внутри читалки
       if (root.contains(sel.anchorNode)) {
         setSelectedText(text.slice(0, MAX_SELECTED));
 
@@ -544,9 +515,8 @@ const Reader = () => {
   };
 
   /* =========================
-      Render
+     Render
   ========================= */
-
   if (loading) return <div className="reader-loading">Загрузка...</div>;
 
   if (!htmlContent) {
@@ -563,6 +533,7 @@ const Reader = () => {
           <span className="reader-title">{title || "Читалка"}</span>
           <div className="reader-header-actions"></div>
         </header>
+
         <div className="reader-empty-state">
           <div className="empty-message-box">
             <h2>Нет текста</h2>
@@ -575,6 +546,7 @@ const Reader = () => {
             </button>
           </div>
         </div>
+
         {showUploadModal && (
           <FileUploadModal
             userBookId={userBookId}
@@ -667,7 +639,12 @@ const Reader = () => {
       )}
 
       {/* Main Viewport */}
-      <div className="reader-viewport reader-viewport-paged" ref={containerRef}>
+      <div
+        className={`reader-viewport reader-viewport-paged ${
+          aiOpen ? "with-sidebar" : ""
+        }`}
+        ref={containerRef}
+      >
         <div className="reader-page">
           <div
             ref={scrollerRef}
@@ -751,6 +728,7 @@ const Reader = () => {
         bookTitle={title}
         initialAction={aiInitialAction}
         autoSendOnOpen={aiAutoSend}
+        currentTheme={`theme-${theme}`}
       />
     </div>
   );

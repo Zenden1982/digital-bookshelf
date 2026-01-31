@@ -1,5 +1,6 @@
 package com.diplom.diplom.Controller;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +12,7 @@ import com.diplom.diplom.Entity.DTO.AiChatResponse;
 import com.diplom.diplom.Service.AiChatService;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("/api/v1/ai")
@@ -22,5 +24,10 @@ public class AiController {
     @PostMapping("/chat")
     public ResponseEntity<AiChatResponse> chat(@RequestBody AiChatRequest req) {
         return ResponseEntity.ok(new AiChatResponse(aiChatService.chat(req)));
+    }
+
+    @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> chatStream(@RequestBody AiChatRequest req) {
+        return aiChatService.chatStream(req);
     }
 }

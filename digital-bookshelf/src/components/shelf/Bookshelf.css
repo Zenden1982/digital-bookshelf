@@ -1,7 +1,8 @@
+/* src/components/shelf/Bookshelf.css */
+
 .bookshelf-wrapper {
   position: relative;
   width: 100%;
-  /* max-width: 1100px; */
   margin: 0 auto;
   padding-bottom: 80px;
   perspective: 1200px;
@@ -89,6 +90,7 @@
   font-family: "Inter", sans-serif;
 }
 
+/* === ОБНОВЛЕННЫЙ КОНТЕЙНЕР ПОЛКИ === */
 .books-container {
   display: flex;
   align-items: flex-end;
@@ -98,6 +100,21 @@
   min-height: 165px;
   position: relative;
   z-index: 2;
+
+  /* Анимация подсветки при перетаскивании */
+  border-radius: 8px;
+  transition:
+    background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.3s ease,
+    border 0.3s ease;
+  border: 1px dashed transparent; /* Скрытая рамка по умолчанию */
+}
+
+/* Состояние, когда книга летит над полкой */
+.books-container.drag-over {
+  background-color: rgba(255, 215, 0, 0.08); /* Легкий золотой свет */
+  box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .wooden-board {
@@ -124,20 +141,17 @@
     inset 1px 0 2px rgba(255, 255, 255, 0.15),
     inset -1px 0 2px rgba(0, 0, 0, 0.2),
     1px 0 2px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
   margin-bottom: 0;
   transition: transform 0.2s ease;
   flex-shrink: 0;
-  cursor: grab; /* Показываем руку */
-  touch-action: none; /* Важно для мобильных драгов */
-}
 
-.book-spine:hover {
-  z-index: 50;
+  /* Курсоры и тач */
+  cursor: grab;
+  touch-action: none;
 }
 
 .book-spine:active {
-  cursor: grabbing; /* Сжатая рука при перетаскивании */
+  cursor: grabbing;
 }
 
 .spine-highlight {
@@ -289,4 +303,54 @@
     width: 100%;
     align-items: flex-start;
   }
+}
+
+/* === АНИМАЦИЯ DRAG AND DROP === */
+
+/* Книга в полете (Overlay) */
+.drag-overlay-book {
+  cursor: grabbing;
+  pointer-events: none; /* Важно! Чтобы оверлей не мешал определять зону дропа */
+  z-index: 10000;
+}
+
+/* Стилизация самого корешка внутри оверлея */
+.drag-overlay-book .book-spine {
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    /* Глубокая тень "полета" */ 0 10px 15px rgba(0, 0, 0, 0.3);
+  opacity: 0.95;
+  /* Трансформацию rotate задаем в JS, но здесь можно подстраховаться */
+}
+
+/* Книга-призрак (оригинал, который остался на полке во время перетаскивания) */
+.book-placeholder {
+  opacity: 0.3;
+  filter: grayscale(1);
+  transform: scale(0.95);
+  transition: opacity 0.2s;
+}
+/* Внешний контейнер двигается dnd-kit'ом (translate), hover не трогаем */
+.draggable-book {
+  display: inline-block;
+}
+
+/* Внутренний контейнер — именно он "приподнимается" */
+.draggable-book-inner {
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease;
+  will-change: transform;
+}
+
+/* Подъем при наведении */
+.draggable-book:hover .draggable-book-inner {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.35));
+}
+
+/* Пока тащим — hover отключаем, чтобы не дергалось */
+.draggable-book[style*="z-index: 999"] .draggable-book-inner {
+  transform: none;
+  filter: none;
 }

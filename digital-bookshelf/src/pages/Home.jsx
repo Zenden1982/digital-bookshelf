@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react"; // Добавили useCallback
 import { Link, useNavigate } from "react-router-dom";
 import BookCard from "../components/book/BookCard";
 import Bookshelf from "../components/shelf/Bookshelf";
@@ -51,6 +51,39 @@ const Home = () => {
     fetchShelf();
     fetchRecommendations();
   }, []);
+
+  // --- ЛОГИКА DRAG & DROP ---
+  const handleStatusChange = useCallback(
+    async (bookId, newStatus) => {
+      // 1. Сохраняем текущее состояние для отката
+      const prevBooks = [...userBooks];
+
+      // 2. Оптимистичное обновление UI
+      setUserBooks((prev) =>
+        prev.map((item) => {
+          const currentId = item.id || item.book?.id;
+          // Приводим к строке для надежного сравнения
+          if (String(currentId) === String(bookId)) {
+            return { ...item, status: newStatus };
+          }
+          return item;
+        }),
+      );
+
+      // 3. Отправка на сервер
+      try {
+        // ИСПОЛЬЗУЕМ СУЩЕСТВУЮЩИЙ МЕТОД СЕРВИСА
+        await shelfService.updateMyUserBook(bookId, { status: newStatus });
+      } catch (err) {
+        console.error("Ошибка при смене статуса:", err);
+        // Откат изменений при ошибке
+        setUserBooks(prevBooks);
+        // Можно добавить красивый тост вместо alert
+        alert("Не удалось переместить книгу. Попробуйте еще раз.");
+      }
+    },
+    [userBooks],
+  );
 
   const stats = {
     total: userBooks.length,
@@ -132,7 +165,11 @@ const Home = () => {
       </header>
 
       <div className="library-section">
-        <Bookshelf books={userBooks} onHoverChange={setHoveredBook} />
+        <Bookshelf
+          books={userBooks}
+          onHoverChange={setHoveredBook}
+          onStatusChange={handleStatusChange} // <-- Передаем обработчик
+        />
       </div>
 
       {/* --- БЛОК РЕКОМЕНДАЦИЙ --- */}
@@ -174,11 +211,10 @@ const Home = () => {
         {hoveredBook && (
           <motion.div
             className="fixed-book-panel"
-            initial={{ y: 50, opacity: 0, x: "-50%" }} // x: "-50%" важно для центрирования
+            initial={{ y: 50, opacity: 0, x: "-50%" }}
             animate={{ y: 0, opacity: 1, x: "-50%" }}
             exit={{ y: 50, opacity: 0, x: "-50%" }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            // Убираем style={{...}}, так как все перенесли в CSS и motion props
           >
             <div className="panel-content">
               <div className="panel-info">

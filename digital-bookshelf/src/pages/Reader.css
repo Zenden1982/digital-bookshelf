@@ -303,24 +303,18 @@
   top: 65px;
   right: 15px;
   width: 300px;
+
+  /* Ключевые привязки к теме */
   background: var(--bg-color);
+  color: var(--text-color);
   border: 1px solid var(--header-border);
   border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+
+  /* Немного “стекла” как у остальных панелей */
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
   z-index: 50;
   padding: 10px 0;
   animation: fadeSlideIn 0.2s ease-out;
-}
-
-@keyframes fadeSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .settings-section {
@@ -339,6 +333,7 @@
   opacity: 0.7;
 }
 
+/* Кнопки размера шрифта уже завязаны на var(--header-border)/inherit */
 .font-size-controls,
 .theme-controls {
   display: flex;
@@ -356,7 +351,16 @@
   color: inherit;
   border-radius: 6px;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease;
 }
+
+.font-size-controls button:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.15);
+  transform: translateY(-1px);
+}
+
 .font-size-controls span {
   display: flex;
   align-items: center;
@@ -365,6 +369,8 @@
   font-weight: bold;
 }
 
+/* Кнопки темы уже используют var(--header-border)/color: inherit – 
+   они тоже автоматически подстраиваются под .theme-light/.theme-dark */
 .theme-btn {
   display: flex;
   align-items: center;
@@ -377,6 +383,9 @@
   border-radius: 6px;
   cursor: pointer;
   text-align: left;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 .theme-btn:hover {
   background: rgba(127, 127, 127, 0.1);
@@ -492,4 +501,47 @@
     font-size: 1.3em;
     margin-top: 1em;
   }
+}
+
+.reader-viewport {
+  transition: margin-right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  margin-right: 0;
+}
+
+/* Когда AI панель открыта — освобождаем место справа */
+.reader-viewport.with-sidebar {
+  margin-right: 420px; /* должно соответствовать ширине drawer */
+}
+
+/* На мобильных сдвиг не делаем (там drawer лучше как модалка) */
+@media (max-width: 768px) {
+  .reader-viewport.with-sidebar {
+    margin-right: 0;
+  }
+}
+/* Force settings to follow theme (override any global white backgrounds) */
+.reader-container .settings-panel {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--header-border) !important;
+}
+
+.reader-container .settings-panel .settings-section {
+  background: transparent !important;
+}
+
+/* Иногда глобальные стили вешают белый фон на button/span */
+.reader-container .settings-panel button,
+.reader-container .settings-panel span,
+.reader-container .settings-panel h3,
+.reader-container .settings-panel div {
+  color: inherit;
+  background: transparent;
+}
+.reader-container .settings-panel .theme-btn:hover,
+.reader-container
+  .settings-panel
+  .font-size-controls
+  button:hover:not(:disabled) {
+  background: rgba(127, 127, 127, 0.12) !important;
 }

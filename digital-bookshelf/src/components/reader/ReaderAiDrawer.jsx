@@ -1,3 +1,5 @@
+// src/components/ai/ReaderAiDrawer.jsx
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { aiService } from "../../services/aiService";
 
@@ -22,8 +24,9 @@ const ReaderAiDrawer = ({
   onClose,
   selectedText,
   bookTitle,
-  initialAction = "qa", // <- новое
-  autoSendOnOpen = false, // <- новое
+  initialAction = "qa",
+  autoSendOnOpen = false,
+  currentTheme = "theme-light", // <-- Принимаем тему для стилизации
 }) => {
   const [input, setInput] = useState("");
   const [action, setAction] = useState(initialAction);
@@ -41,7 +44,6 @@ const ReaderAiDrawer = ({
   const autoSentRef = useRef(false);
 
   useEffect(() => {
-    // если извне сменили initialAction — применим
     setAction(initialAction || "qa");
   }, [initialAction]);
 
@@ -59,36 +61,33 @@ const ReaderAiDrawer = ({
     return () => clearTimeout(t);
   }, [open, messages]);
 
+  // Авто-отправка при открытии
   useEffect(() => {
-    // авто-отправка при открытии (только один раз на открытие)
     if (!open) return;
     if (!autoSendOnOpen) return;
     if (autoSentRef.current) return;
-
-    // если нет выделения — не отправляем
     if (!selectedText || !selectedText.trim()) return;
 
     autoSentRef.current = true;
-
-    // Отправим пустой userMessage, чтобы сработал systemPrompt+selectedText
-    send(initialAction, "");
+    send(initialAction, ""); // Отправляем без сообщения пользователя
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, autoSendOnOpen, selectedText, initialAction]);
 
   const quickHint = useMemo(() => {
-    if (!selectedText) return "Выдели текст в книге, чтобы я работал точнее.";
-    return `Выделено: ${Math.min(selectedText.length, MAX_SELECTED)} символов`;
+    if (!selectedText) return "Выделите текст в книге для контекста.";
+    return `Выделено символов: ${Math.min(selectedText.length, MAX_SELECTED)}`;
   }, [selectedText]);
 
   const send = async (overrideAction = null, overrideMessage = null) => {
     const userMessage = (overrideMessage ?? input).trim();
     const act = overrideAction ?? action;
 
-    // можно отправить и без userMessage, если есть selectedText
+    // Не отправляем, если нет ни текста, ни сообщения
     if (!selectedText && !userMessage) return;
 
     let nextMessages = messages;
 
+    // Если пользователь написал сообщение — добавляем в чат
     if (userMessage) {
       nextMessages = [...messages, { role: "user", content: userMessage }];
       setMessages(nextMessages);
@@ -100,7 +99,7 @@ const ReaderAiDrawer = ({
         action: act,
         language,
         selectedText: trim(selectedText || "", MAX_SELECTED),
-        userMessage: userMessage || "",
+        userMessage: userMessage || "", // Сервер должен сам обработать пустое сообщение
         history: nextMessages
           .slice(-10)
           .filter((m) => m.role === "user" || m.role === "assistant")
@@ -137,8 +136,7 @@ const ReaderAiDrawer = ({
     setMessages([
       {
         role: "assistant",
-        content:
-          "Чат очищен. Выдели фрагмент и попроси перевод, объяснение или пересказ.",
+        content: "Чат очищен. Готов к работе.",
       },
     ]);
   };
@@ -146,13 +144,15 @@ const ReaderAiDrawer = ({
   if (!open) return null;
 
   return (
-    <div className="ai-drawer-backdrop" onClick={onClose}>
-      <aside className="ai-drawer" onClick={(e) => e.stopPropagation()}>
+    // УБРАН onClick={onClose} с фона, чтобы можно было кликать мимо
+    // Добавлен класс темы, чтобы переменные CSS работали внутри (т.к. position: fixed)
+    <div className={`ai-drawer-backdrop ${currentTheme}`}>
+      <aside className="ai-drawer">
         <header className="ai-drawer-header">
           <div className="ai-title">
             <SmartToyIcon />
             <div className="ai-title-text">
-              <div className="ai-title-main">AI помощник</div>
+              <div className="ai-title-main">AI Помощник</div>
               <div className="ai-title-sub">{bookTitle || "Читалка"}</div>
             </div>
           </div>
@@ -183,7 +183,6 @@ const ReaderAiDrawer = ({
               className={`ai-chip ${action === "translate" ? "active" : ""}`}
               onClick={() => setAction("translate")}
               disabled={loading}
-              title="Перевод"
             >
               <TranslateIcon fontSize="small" /> Перевод
             </button>
@@ -191,7 +190,6 @@ const ReaderAiDrawer = ({
               className={`ai-chip ${action === "explain" ? "active" : ""}`}
               onClick={() => setAction("explain")}
               disabled={loading}
-              title="Объяснение"
             >
               <PsychologyIcon fontSize="small" /> Объяснить
             </button>
@@ -199,7 +197,6 @@ const ReaderAiDrawer = ({
               className={`ai-chip ${action === "summarize" ? "active" : ""}`}
               onClick={() => setAction("summarize")}
               disabled={loading}
-              title="Пересказ"
             >
               <SummarizeIcon fontSize="small" /> Пересказ
             </button>
@@ -207,7 +204,6 @@ const ReaderAiDrawer = ({
               className={`ai-chip ${action === "qa" ? "active" : ""}`}
               onClick={() => setAction("qa")}
               disabled={loading}
-              title="Вопрос"
             >
               <SmartToyIcon fontSize="small" /> Вопрос
             </button>
@@ -217,7 +213,6 @@ const ReaderAiDrawer = ({
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
               disabled={loading}
-              title="Язык ответа"
             >
               <option value="ru">RU</option>
               <option value="en">EN</option>
@@ -231,6 +226,21 @@ const ReaderAiDrawer = ({
               <div className="ai-bubble">{m.content}</div>
             </div>
           ))}
+
+          {loading && (
+            <div className="ai-msg assistant">
+              <div
+                className="ai-bubble ai-bubble-typing"
+                aria-label="AI печатает"
+              >
+                <span className="typing-dots" aria-hidden="true">
+                  <span className="dot" />
+                  <span className="dot" />
+                  <span className="dot" />
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <footer className="ai-input">
@@ -238,8 +248,8 @@ const ReaderAiDrawer = ({
             className="ai-textarea"
             placeholder={
               selectedText
-                ? "Напиши вопрос (Ctrl+Enter отправить). Например: «Объясни смысл»"
-                : "Сначала выдели фрагмент в тексте (или просто задай общий вопрос)."
+                ? "Задайте вопрос по выделенному... (Ctrl+Enter)"
+                : "Выделите текст или напишите вопрос..."
             }
             value={input}
             onChange={(e) => setInput(e.target.value)}

@@ -11,12 +11,48 @@ import org.springframework.stereotype.Service;
 import com.diplom.diplom.Entity.DTO.AiChatRequest;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Flux;
 
 @Service
 @RequiredArgsConstructor
 public class AiChatService {
 
     private final ChatClient chatClient;
+
+    public Flux<String> chatStream(AiChatRequest req) {
+        return buildSpec(req)
+                .stream()
+                .content()
+                .map(chunk -> "data: " + chunk.replace("\n", "\\n") + "\n\n");
+    }
+
+    private ChatClient.ChatClientRequestSpec buildSpec(AiChatRequest req) {
+        String systemPrompt = buildSystemPrompt(req.action(), req.language());
+
+        ChatClient.ChatClientRequestSpec spec = chatClient
+                .prompt()
+                .messages(new SystemMessage(systemPrompt));
+
+        if (req.selectedText() != null && !req.selectedText().isBlank()) {
+            spec = spec.messages(new UserMessage("Текст:\n" + trim(req.selectedText(), 6000)));
+        }
+
+        if (req.history() != null) {
+            for (var m : req.history()) {
+                String role = m.role() == null ? "" : m.role().toLowerCase(Locale.ROOT);
+                if ("assistant".equals(role))
+                    spec = spec.messages(new AssistantMessage(m.content()));
+                if ("user".equals(role))
+                    spec = spec.messages(new UserMessage(m.content()));
+            }
+        }
+
+        if (req.userMessage() != null && !req.userMessage().isBlank()) {
+            spec = spec.messages(new UserMessage(req.userMessage()));
+        }
+
+        return spec;
+    }
 
     public String chat(AiChatRequest req) {
         String systemPrompt = buildSystemPrompt(req.action(), req.language());

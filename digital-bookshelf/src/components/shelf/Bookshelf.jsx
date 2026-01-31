@@ -1,10 +1,14 @@
 import {
   DndContext,
   DragOverlay,
+  PointerSensor,
   closestCenter,
   useDraggable,
   useDroppable,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
+
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,19 +40,27 @@ const DraggableBook = ({ book, onHover, onLeave }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: String(book.id || book.book?.id),
-      data: { book }, // Передаем данные книги
+      data: { book },
     });
 
   const style = {
     transform: CSS.Translate.toString(transform),
     zIndex: isDragging ? 999 : "auto",
-    opacity: isDragging ? 0 : 1, // Скрываем оригинал при перетаскивании
+    opacity: isDragging ? 0 : 1, // прячем оригинал, пока летит overlay
     touchAction: "none",
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
-      <BookSpine book={book} onHover={onHover} onLeave={onLeave} />
+    <div
+      ref={setNodeRef}
+      className="draggable-book"
+      style={style}
+      {...listeners}
+      {...attributes}
+    >
+      <div className="draggable-book-inner">
+        <BookSpine book={book} onHover={onHover} onLeave={onLeave} />
+      </div>
     </div>
   );
 };
@@ -106,10 +118,18 @@ const ShelfRow = ({
 };
 
 // --- Main Component ---
+// --- Main Component ---
 const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
   const measureRef = useRef(null);
   const [booksPerRow, setBooksPerRow] = useState(14);
   const [activeBook, setActiveBook] = useState(null); // Для DragOverlay
+
+  // 1) Здесь создаём sensors (после стейтов/рефов)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 }, // пока не сдвинули на 8px — это клик, не drag
+    }),
+  );
 
   // Распределение книг
   const reading = useMemo(
@@ -133,7 +153,7 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
       const containerWidth = el.getBoundingClientRect().width;
       const paddingLeftRight = 24;
       const usable = Math.max(0, containerWidth - paddingLeftRight);
-      setBooksPerRow(clamp(Math.floor(usable / 34), 5, 30)); // Упрощенный расчет
+      setBooksPerRow(clamp(Math.floor(usable / 34), 5, 30));
     };
     calc();
     const ro = new ResizeObserver(calc);
@@ -146,34 +166,28 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
   const finishedRows = chunkBooks(finished, booksPerRow);
 
   // --- DnD Handlers ---
-
   const handleDragStart = (event) => {
     setActiveBook(event.active.data.current.book);
-    onHoverChange?.(null); // Скрываем тултип при начале драга
+    onHoverChange?.(null);
   };
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveBook(null);
 
-    if (!over) return; // Бросили мимо полки
+    if (!over) return;
 
     const bookId = active.id;
-    const newStatus = over.id; // ID зоны дропа (READING, etc.)
+    const newStatus = over.id;
     const currentBook = active.data.current.book;
 
-    // Если статус изменился
     if (currentBook.status !== newStatus) {
-      console.log(`Moving book ${bookId} to ${newStatus}`);
-
-      // 1. Вызываем колбэк родителя для оптимистичного UI (если есть)
       if (onStatusChange) {
         onStatusChange(bookId, newStatus);
       } else {
-        // Или обновляем напрямую, если родитель не управляет стейтом
         try {
           await shelfService.updateUserBookStatus(bookId, newStatus);
-          window.location.reload(); // Простой способ обновить данные, лучше через стейт
+          window.location.reload();
         } catch (e) {
           console.error("Failed to move book", e);
         }
@@ -191,6 +205,7 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
 
   return (
     <DndContext
+      sensors={sensors} // 2) Передаём sensors сюда
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -206,7 +221,7 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
             <div className="cabinet-side right" />
 
             <div ref={measureRef} className="cabinet-content">
-              {/* Полки "Читаю" */}
+              {/* Читаю сейчас */}
               {readingRows.length > 0 ? (
                 readingRows.map((chunk, i) => (
                   <ShelfRow
@@ -220,7 +235,6 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
                   />
                 ))
               ) : (
-                // Пустая полка, чтобы можно было перетащить в "Читаю" даже если там пусто
                 <ShelfRow
                   status="READING"
                   title="Читаю сейчас"
@@ -229,7 +243,7 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
                 />
               )}
 
-              {/* Полки "В планах" */}
+              {/* В планах */}
               {plannedRows.length > 0 ? (
                 plannedRows.map((chunk, i) => (
                   <ShelfRow
@@ -251,7 +265,7 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
                 />
               )}
 
-              {/* Полки "Прочитано" */}
+              {/* Прочитано */}
               {finishedRows.length > 0 ? (
                 finishedRows.map((chunk, i) => (
                   <ShelfRow
@@ -281,7 +295,6 @@ const Bookshelf = ({ books = [], onHoverChange, onStatusChange }) => {
         </div>
       </div>
 
-      {/* Оверлей перетаскивания (то, что летит за курсором) */}
       <DragOverlay>
         {activeBook ? (
           <div style={{ transform: "rotate(5deg)" }}>
