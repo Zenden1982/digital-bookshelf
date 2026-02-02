@@ -9,8 +9,7 @@ RUN npm ci
 COPY digital-bookshelf/ .
 
 ARG REACT_API_URL=/api/v1
-RUN echo "VITE_API_URL=${REACT_API_URL}" > .env
-
+RUN echo "VITE_API_BASE_URL=${REACT_API_URL}" > .env
 RUN npm run build
 
 

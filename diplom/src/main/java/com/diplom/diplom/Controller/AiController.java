@@ -2,6 +2,7 @@ package com.diplom.diplom.Controller;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,7 @@ public class AiController {
     }
 
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chatStream(@RequestBody AiChatRequest req) {
+    public Flux<ServerSentEvent<String>> chatStream(@RequestBody AiChatRequest req) {
         return aiChatService.chatStream(req);
     }
 }

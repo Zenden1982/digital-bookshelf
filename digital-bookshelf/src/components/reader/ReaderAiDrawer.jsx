@@ -1,5 +1,4 @@
 // src/components/ai/ReaderAiDrawer.jsx
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { aiService } from "../../services/aiService";
 
@@ -26,12 +25,13 @@ const ReaderAiDrawer = ({
   bookTitle,
   initialAction = "qa",
   autoSendOnOpen = false,
-  currentTheme = "theme-light", // <-- Принимаем тему для стилизации
+  currentTheme = "theme-light",
 }) => {
   const [input, setInput] = useState("");
   const [action, setAction] = useState(initialAction);
   const [language, setLanguage] = useState("ru");
   const [loading, setLoading] = useState(false);
+
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -42,11 +42,13 @@ const ReaderAiDrawer = ({
 
   const listRef = useRef(null);
   const autoSentRef = useRef(false);
+  const abortRef = useRef(null);
 
   useEffect(() => {
     setAction(initialAction || "qa");
   }, [initialAction]);
 
+  // Автоскролл при открытии/сообщениях/стриминге
   useEffect(() => {
     if (!open) {
       autoSentRef.current = false;
@@ -59,7 +61,20 @@ const ReaderAiDrawer = ({
       });
     }, 0);
     return () => clearTimeout(t);
-  }, [open, messages]);
+  }, [open, messages, loading]);
+
+  // Остановить стрим, если Drawer закрыли
+  useEffect(() => {
+    if (open) return;
+    try {
+      abortRef.current?.abort?.();
+    } catch (e) {
+      // ignore
+    } finally {
+      abortRef.current = null;
+      setLoading(false);
+    }
+  }, [open]);
 
   // Авто-отправка при открытии
   useEffect(() => {
@@ -69,7 +84,7 @@ const ReaderAiDrawer = ({
     if (!selectedText || !selectedText.trim()) return;
 
     autoSentRef.current = true;
-    send(initialAction, ""); // Отправляем без сообщения пользователя
+    send(initialAction, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, autoSendOnOpen, selectedText, initialAction]);
 
@@ -78,51 +93,109 @@ const ReaderAiDrawer = ({
     return `Выделено символов: ${Math.min(selectedText.length, MAX_SELECTED)}`;
   }, [selectedText]);
 
+  const buildPayload = (act, userMessage, nextMessages) => ({
+    action: act,
+    language,
+    selectedText: trim(selectedText || "", MAX_SELECTED),
+    userMessage: userMessage || "",
+    history: (nextMessages || [])
+      .slice(-10)
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => ({ role: m.role, content: m.content })),
+    model: DEFAULT_MODEL,
+  });
+
   const send = async (overrideAction = null, overrideMessage = null) => {
     const userMessage = (overrideMessage ?? input).trim();
     const act = overrideAction ?? action;
 
-    // Не отправляем, если нет ни текста, ни сообщения
     if (!selectedText && !userMessage) return;
+    if (loading) return;
+
+    // Если уже был стрим — прерываем
+    try {
+      abortRef.current?.abort?.();
+    } catch (e) {
+      // ignore
+    }
+    abortRef.current = null;
 
     let nextMessages = messages;
 
-    // Если пользователь написал сообщение — добавляем в чат
+    // 1) Пишем сообщение пользователя (если есть)
     if (userMessage) {
       nextMessages = [...messages, { role: "user", content: userMessage }];
       setMessages(nextMessages);
     }
 
+    // 2) Готовим пустой bubble ассистента (будем дописывать токены)
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    setInput("");
     setLoading(true);
-    try {
-      const payload = {
-        action: act,
-        language,
-        selectedText: trim(selectedText || "", MAX_SELECTED),
-        userMessage: userMessage || "", // Сервер должен сам обработать пустое сообщение
-        history: nextMessages
-          .slice(-10)
-          .filter((m) => m.role === "user" || m.role === "assistant")
-          .map((m) => ({ role: m.role, content: m.content })),
-        model: DEFAULT_MODEL,
-      };
 
-      const res = await aiService.chat(payload);
-      const answer = res?.answer || "Пустой ответ от модели.";
+    const payload = buildPayload(act, userMessage, nextMessages);
 
-      setMessages((prev) => [...prev, { role: "assistant", content: answer }]);
-      setInput("");
-    } catch (e) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `Ошибка: ${e.message || "не удалось получить ответ"}`,
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    // 3) Стримим
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    await aiService.chatStream(payload, {
+      signal: controller.signal,
+
+      onToken: (fullText) => {
+        setMessages((prev) => {
+          if (!prev.length) return prev;
+          const copy = [...prev];
+          const lastIdx = copy.length - 1;
+
+          if (copy[lastIdx]?.role !== "assistant") {
+            copy.push({ role: "assistant", content: fullText });
+            return copy;
+          }
+
+          copy[lastIdx] = { ...copy[lastIdx], content: fullText };
+          return copy;
+        });
+      },
+
+      onDone: () => {
+        setLoading(false);
+        abortRef.current = null;
+      },
+
+      onError: (e) => {
+        // если это наш abort — ничего не показываем
+        if (controller.signal.aborted) return;
+        if (e?.name === "AbortError") return;
+
+        setLoading(false);
+        abortRef.current = null;
+
+        setMessages((prev) => {
+          if (!prev.length) return prev;
+          const copy = [...prev];
+          const lastIdx = copy.length - 1;
+
+          const errText = `Ошибка: ${e?.message || "network error"}`;
+
+          // Если последний assistant уже содержит ответ, лучше не затирать его ошибкой
+          if (
+            copy[lastIdx]?.role === "assistant" &&
+            (copy[lastIdx].content || "").trim().length > 0
+          ) {
+            return [...copy, { role: "assistant", content: errText }];
+          }
+
+          // Иначе заменяем пустой bubble ошибкой
+          if (copy[lastIdx]?.role === "assistant") {
+            copy[lastIdx] = { ...copy[lastIdx], content: errText };
+            return copy;
+          }
+
+          return [...copy, { role: "assistant", content: errText }];
+        });
+      },
+    });
   };
 
   const onKeyDown = (e) => {
@@ -133,6 +206,16 @@ const ReaderAiDrawer = ({
   };
 
   const clearChat = () => {
+    // если идёт стрим — прервём
+    try {
+      abortRef.current?.abort?.();
+    } catch (e) {
+      // ignore
+    } finally {
+      abortRef.current = null;
+      setLoading(false);
+    }
+
     setMessages([
       {
         role: "assistant",
@@ -144,8 +227,6 @@ const ReaderAiDrawer = ({
   if (!open) return null;
 
   return (
-    // УБРАН onClick={onClose} с фона, чтобы можно было кликать мимо
-    // Добавлен класс темы, чтобы переменные CSS работали внутри (т.к. position: fixed)
     <div className={`ai-drawer-backdrop ${currentTheme}`}>
       <aside className="ai-drawer">
         <header className="ai-drawer-header">
@@ -166,7 +247,22 @@ const ReaderAiDrawer = ({
             >
               <DeleteOutlineIcon />
             </button>
-            <button className="ai-icon-btn" onClick={onClose} title="Закрыть">
+            <button
+              className="ai-icon-btn"
+              onClick={() => {
+                // при закрытии тоже прерываем стрим
+                try {
+                  abortRef.current?.abort?.();
+                } catch (e) {
+                  // ignore
+                } finally {
+                  abortRef.current = null;
+                  setLoading(false);
+                }
+                onClose?.();
+              }}
+              title="Закрыть"
+            >
               <CloseIcon />
             </button>
           </div>
@@ -226,21 +322,6 @@ const ReaderAiDrawer = ({
               <div className="ai-bubble">{m.content}</div>
             </div>
           ))}
-
-          {loading && (
-            <div className="ai-msg assistant">
-              <div
-                className="ai-bubble ai-bubble-typing"
-                aria-label="AI печатает"
-              >
-                <span className="typing-dots" aria-hidden="true">
-                  <span className="dot" />
-                  <span className="dot" />
-                  <span className="dot" />
-                </span>
-              </div>
-            </div>
-          )}
         </div>
 
         <footer className="ai-input">
@@ -261,6 +342,7 @@ const ReaderAiDrawer = ({
             className="ai-send-btn"
             onClick={() => send()}
             disabled={loading}
+            title="Отправить (Ctrl+Enter)"
           >
             <SendIcon />
           </button>
